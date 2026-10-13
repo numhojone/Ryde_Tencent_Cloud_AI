@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RydeResolve | Multi-agent dispute resolution</title>
+<link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+<header class="topbar">
+  <div class="brand">
+    <div class="logo">R</div>
+    <div>
+      <h1>RydeResolve</h1>
+      <p class="tag" data-i18n="tagline">Multi-agent autonomous dispute resolution · Tencent Cloud AI CAN DO IT 2026</p>
+    </div>
+  </div>
+  <div class="controls">
+    <div class="lang-toggle" id="langToggle" role="group" aria-label="Language">
+      <button type="button" data-lang="en" class="on">EN</button>
+      <button type="button" data-lang="zh">中文</button>
+    </div>
+    <div class="mode-badge" id="modeBadge" data-i18n="loading">Loading…</div>
+    <select id="backendSelect" class="select select-sm" data-i18n-title="backendTitle" title="Choose the backend that drives the agents">
+      <option value="" data-i18n="beDefault">Default backend</option>
+      <option value="llm" data-i18n="beLlm">Real LLM</option>
+      <option value="deterministic" data-i18n="beDet">Deterministic fallback</option>
+    </select>
+    <select id="disputeSelect" class="select" disabled data-i18n-title="presetTitle" title="Preset tickets, one-click replay"></select>
+    <button id="runBtn" class="btn" disabled data-i18n="replay">Replay</button>
+  </div>
+</header>
+
+<section class="filer">
+  <div class="filer-main">
+    <div class="filer-head"><span data-i18n="fileHead">File a new dispute</span> <span class="hint" data-i18n="fileHint">Write it in your own words; the system works out the dispute type</span></div>
+    <textarea id="complaintInput" maxlength="2000" data-i18n-ph="placeholder"
+      placeholder="e.g. The driver went round and round and the fare was way higher than the estimate"></textarea>
+    <div class="chips">
+      <span class="chip-hint" data-i18n="tryHint">Try:</span>
+      <button class="chip" data-text="The driver took a much longer route than necessary and I was overcharged for it." data-i18n="chipEn">English</button>
+      <button class="chip" data-text="Driver never turn up leh, I wait so long still kena charge cancel fee. Not fair sia." data-i18n="chipSl">Singlish</button>
+      <button class="chip" data-text="Pemandu tidak datang ke tempat ambil saya, tetapi saya dikenakan caj pembatalan." data-i18n="chipMs">Malay</button>
+      <button class="chip" data-text="ஓட்டுநர் வரவில்லை, ஆனாலும் ரத்து கட்டணம் வசூலிக்கப்பட்டது." data-i18n="chipTa">Tamil</button>
+      <button class="chip" data-text="司机绕了一大圈才把我送到，本来三十公里走了四十多公里，多收了我不少钱" data-i18n="chipZh">Chinese</button>
+    </div>
+    <div class="filer-row">
+      <label class="lbl-sm" data-i18n="tripLbl">Trip</label>
+      <select id="tripSelect" class="select" disabled></select>
+      <button id="fileBtn" class="btn primary" disabled data-i18n="submit">Submit and rule</button>
+    </div>
+    <div class="filer-foot" data-i18n="fileFoot">Evidence can only come from a real trip: GPS, chat and app events are pulled by the platform, you don't supply them.</div>
+  </div>
+</section>
+
+<section class="agents-rail" id="agentsRail">
+  <div class="agent-card intake" data-agent="intake">
+    <div class="ac-head"><span class="dot"></span><span data-i18n="a_intake">Intake agent</span></div>
+    <div class="ac-status" data-i18n="idle">Idle</div>
+  </div>
+  <div class="agent-card rider" data-agent="rider_advocate">
+    <div class="ac-head"><span class="dot"></span><span data-i18n="a_rider">Rider advocate</span></div>
+    <div class="ac-status" data-i18n="idle">Idle</div>
+  </div>
+  <div class="agent-card driver" data-agent="driver_advocate">
+    <div class="ac-head"><span class="dot"></span><span data-i18n="a_driver">Driver advocate</span></div>
+    <div class="ac-status" data-i18n="idle">Idle</div>
+  </div>
+  <div class="agent-card judge" data-agent="judge">
+    <div class="ac-head"><span class="dot"></span><span data-i18n="a_judge">Judge</span></div>
+    <div class="ac-status" data-i18n="idle">Idle</div>
+  </div>
+  <div class="agent-card safety" data-agent="safety_net">
+    <div class="ac-head"><span class="dot"></span><span data-i18n="a_safety">Safety net</span></div>
+    <div class="ac-status" data-i18n="idle">Idle</div>
+  </div>
+</section>
+
+<main class="timeline" id="timeline">
+  <div class="empty-hint" id="emptyHint" data-i18n-html="emptyHint">
+    Write a complaint in your own words above, pick a trip and press "Submit and rule".<br>
+    The system first works out the dispute type, then two advocate agents gather evidence in parallel and a judge verifies it independently before ruling.<br>
+    <span style="font-size:12px">(The dropdown at the top right replays the preset tickets.)</span>
+  </div>
+</main>
+
+<template id="tpl-thinking">
+  <div class="msg thinking">
+    <div class="msg-head"><span class="who"></span><span class="lbl" data-i18n="reasoning">Reasoning</span></div>
+    <div class="msg-body"></div>
+  </div>
+</template>
+
+<script src="/static/app.js"></script>
+</body>
+</html>

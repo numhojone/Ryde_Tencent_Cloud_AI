@@ -1,0 +1,12 @@
+{
+  "dispute_id": "DISP-002",
+  "trip_id": "TRIP-1002",
+  "filed_by": "rider",
+  "rider_id": "RIDER-502",
+  "driver_id": "DRIVER-302",
+  "dispute_type": "no_show_charge",
+  "description": "The driver never reached my pickup point but I was still charged a S$25 cancellation fee. I want a full refund.",
+  "filed_at": "2026-01-16T09:15:00+08:00",
+  "requested_resolution": "full_refund_of_cancellation_fee",
+  "requested_amount": 25.0
+}

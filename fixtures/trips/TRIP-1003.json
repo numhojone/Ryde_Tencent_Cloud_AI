@@ -1,0 +1,61 @@
+{
+  "trip_id": "TRIP-1003",
+  "trip_data": {
+    "pickup": {
+      "address": "Tanjong Pagar Centre, Singapore",
+      "lat": 1.2766,
+      "lng": 103.8458
+    },
+    "dropoff": {
+      "address": "HarbourFront Centre, Singapore",
+      "lat": 1.2676,
+      "lng": 103.8608
+    },
+    "scheduled_time": "2026-01-17T08:30:00+08:00",
+    "actual_pickup_time": null,
+    "actual_dropoff_time": null,
+    "status": "cancelled_no_show_rider",
+    "cancellation_fee_charged": 25.0,
+    "currency": "SGD"
+  },
+  "gps_telemetry": [
+    {
+      "timestamp": "2026-01-17T08:44:00+08:00",
+      "lat": 1.2726,
+      "lng": 103.8498,
+      "speed_kmh": 15,
+      "status": "en_route"
+    },
+    {
+      "timestamp": "2026-01-17T08:45:00+08:00",
+      "lat": 1.2746,
+      "lng": 103.8478,
+      "speed_kmh": 18,
+      "status": "en_route"
+    }
+  ],
+  "chat_logs": [],
+  "app_events": [
+    {
+      "timestamp": "2026-01-17T08:35:00+08:00",
+      "event_type": "driver_assigned",
+      "details": "Driver accepted the booking"
+    },
+    {
+      "timestamp": "2026-01-17T08:44:00+08:00",
+      "event_type": "driver_arrived",
+      "details": "System marked the driver as arrived (location about 420 m from the pickup point)"
+    },
+    {
+      "timestamp": "2026-01-17T08:44:00+08:00",
+      "event_type": "wait_timer_started",
+      "details": "Free waiting timer started"
+    },
+    {
+      "timestamp": "2026-01-17T08:50:00+08:00",
+      "event_type": "cancellation_fee_charged",
+      "details": "Cancellation fee charged S$25"
+    }
+  ],
+  "traffic_reference": null
+}

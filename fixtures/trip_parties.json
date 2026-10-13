@@ -1,0 +1,27 @@
+{
+  "_comment": "Trip -> parties. For free-text complaints the system fills in rider_id / driver_id from the trip_id (riders never supply their own GPS logs).",
+  "TRIP-1001": {
+    "rider_id": "RIDER-501",
+    "driver_id": "DRIVER-301",
+    "route": "Jurong Gateway → Changi Airport T3",
+    "outcome": "Trip completed"
+  },
+  "TRIP-1002": {
+    "rider_id": "RIDER-502",
+    "driver_id": "DRIVER-302",
+    "route": "Bishan MRT → Raffles Place",
+    "outcome": "Trip cancelled, cancellation fee charged"
+  },
+  "TRIP-1003": {
+    "rider_id": "RIDER-503",
+    "driver_id": "DRIVER-303",
+    "route": "Tanjong Pagar Centre → HarbourFront",
+    "outcome": "Trip cancelled, cancellation fee charged"
+  },
+  "TRIP-2026-09945": {
+    "rider_id": "R-7823",
+    "driver_id": "D-2398",
+    "route": "Tiong Bahru Plaza → VivoCity",
+    "outcome": "Trip cancelled, cancellation fee charged"
+  }
+}

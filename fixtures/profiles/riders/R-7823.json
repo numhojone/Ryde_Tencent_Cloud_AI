@@ -1,0 +1,22 @@
+{
+  "rider_id": "R-7823",
+  "account_age_days": 210,
+  "total_trips": 34,
+  "avg_rating": 3.9,
+  "dispute_history": {
+    "total": 4,
+    "upheld": 1,
+    "rejected": 3
+  },
+  "fraud_flags": [
+    "frequent_late_cancellations"
+  ],
+  "fraud_flag_details": [
+    {
+      "flag": "frequent_late_cancellations",
+      "note": "Flagged for frequent late cancellations",
+      "severity": "medium"
+    }
+  ],
+  "payment_method": "e-wallet"
+}

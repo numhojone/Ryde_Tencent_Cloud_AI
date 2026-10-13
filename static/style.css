@@ -1,0 +1,169 @@
+:root{
+  --bg:#0e1117; --panel:#171c26; --panel2:#1e2533; --line:#2a3344;
+  --txt:#e6e9f0; --mut:#8893a7;
+  --rider:#3b9eff; --driver:#f59e0b; --judge:#a855f7;
+  --ok:#22c55e; --warn:#ef4444; --tool:#64748b; --safety:#14b8a6; --intake:#38bdf8;
+  --mono:'SFMono-Regular',ui-monospace,Menlo,Consolas,monospace;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--txt);font:14px/1.55 -apple-system,BlinkMacSystemFont,'PingFang SC','Microsoft YaHei',sans-serif}
+.topbar{display:flex;align-items:center;justify-content:space-between;padding:14px 22px;background:linear-gradient(90deg,#141a26,#1a2233);border-bottom:1px solid var(--line);position:sticky;top:0;z-index:10}
+.brand{display:flex;align-items:center;gap:12px}
+.logo{font-size:28px;font-weight:700}
+.brand h1{margin:0;font-size:20px;letter-spacing:.3px}
+.tag{margin:2px 0 0;color:var(--mut);font-size:12px}
+.controls{display:flex;align-items:center;gap:10px}
+.mode-badge{font-size:12px;padding:5px 10px;border-radius:20px;background:var(--panel2);border:1px solid var(--line);color:var(--mut)}
+.mode-badge.llm{color:#7dd3fc;border-color:#0e7490;background:rgba(8,145,178,.12)}
+.mode-badge.det{color:#fcd34d;border-color:#92400e;background:rgba(180,83,9,.12)}
+.select{background:var(--panel2);color:var(--txt);border:1px solid var(--line);border-radius:8px;padding:8px 10px;font-size:13px;max-width:260px}
+.select-sm{max-width:130px;font-size:12px;padding:7px 8px}
+.btn{border:1px solid var(--line);background:var(--panel2);color:var(--txt);padding:8px 16px;border-radius:8px;cursor:pointer;font-size:13px}
+.btn.primary{background:linear-gradient(90deg,#4f46e5,#7c3aed);border-color:transparent;font-weight:600}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.btn:not(:disabled):hover{filter:brightness(1.12)}
+
+/* ---- 提交新争议面板 ---- */
+.filer{padding:16px 22px 4px;display:flex;gap:16px}
+.filer-main{flex:1;background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:14px 16px}
+.filer-head{font-weight:600;font-size:14px;margin-bottom:8px}
+.filer-head .hint{font-weight:400;color:var(--mut);font-size:12px;margin-left:6px}
+.filer-main textarea{
+  width:100%;min-height:82px;resize:vertical;background:var(--panel2);color:var(--txt);
+  border:1px solid var(--line);border-radius:10px;padding:10px 12px;font:14px/1.6 inherit;
+}
+.filer-main textarea:focus{outline:none;border-color:#7c3aed}
+.chips{margin:8px 0 10px;display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.chip-hint{color:var(--mut);font-size:12px}
+.chip{border:1px dashed var(--line);background:transparent;color:#a5b4fc;border-radius:20px;
+  padding:4px 11px;font-size:12px;cursor:pointer}
+.chip:hover{border-color:#7c3aed;background:rgba(124,58,237,.12)}
+.filer-row{display:flex;align-items:center;gap:10px}
+.lbl-sm{color:var(--mut);font-size:12px;white-space:nowrap}
+.filer-row .select{flex:1;max-width:none}
+.filer-foot{margin-top:8px;color:var(--mut);font-size:11.5px}
+
+/* ---- 时间线里的投诉 / 分类卡 ---- */
+.complaint-box{margin:10px 0;padding:12px 14px;border-radius:12px;background:var(--panel);
+  border:1px solid var(--line);border-left:3px solid #64748b}
+.cb-head{font-weight:600;font-size:13px;margin-bottom:6px;display:flex;gap:8px;align-items:center}
+.cb-trip{font-weight:400;color:var(--mut);font-size:11px;padding:1px 8px;border-radius:10px;background:var(--panel2)}
+.cb-body{white-space:pre-wrap;word-break:break-word;line-height:1.7}
+.cb-foot{margin-top:6px;color:var(--mut);font-size:11.5px}
+
+.triage-box{margin:10px 0;padding:12px 14px;border-radius:12px;background:var(--panel);
+  border:1px solid var(--line);border-left:3px solid var(--intake)}
+.tg-head{font-weight:600;font-size:13px;margin-bottom:8px}
+.tg-line{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.tg-badge{background:rgba(20,184,166,.16);color:#5eead4;border:1px solid #0f766e;
+  padding:3px 12px;border-radius:20px;font-weight:600;font-size:13px}
+.tg-type{font-family:var(--mono);font-size:12px;color:var(--mut)}
+.tg-conf{font-size:12px;color:var(--mut)}
+.tg-claim{margin-top:8px;font-size:13.5px}
+.tg-reason{margin-top:6px;color:#c7d0e0;font-size:13px;line-height:1.65}
+.tg-sigs{margin-top:8px;display:flex;flex-wrap:wrap;gap:5px;font-size:11px;color:var(--mut)}
+.tg-sig{background:var(--panel2);border:1px solid var(--line);border-radius:6px;padding:2px 7px}
+.tg-foot{margin-top:8px;color:var(--mut);font-size:11.5px}
+
+.agents-rail{display:flex;gap:12px;padding:14px 22px;border-bottom:1px solid var(--line)}
+.agent-card{flex:1;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:12px 14px;border-left:3px solid var(--tool)}
+.agent-card.intake{border-left-color:var(--intake)}
+.agent-card.rider{border-left-color:var(--rider)}
+.agent-card.driver{border-left-color:var(--driver)}
+.agent-card.judge{border-left-color:var(--judge)}
+.ac-head{display:flex;align-items:center;gap:8px;font-weight:600;font-size:13px}
+.ac-head .dot{width:8px;height:8px;border-radius:50%;background:var(--mut)}
+.agent-card.active .dot{background:var(--ok);box-shadow:0 0 8px var(--ok);animation:pulse 1.2s infinite}
+.agent-card.done .dot{background:var(--ok)}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+.ac-status{margin-top:4px;color:var(--mut);font-size:12px}
+
+.timeline{max-width:880px;margin:0 auto;padding:22px 18px 80px}
+.empty-hint{color:var(--mut);text-align:center;margin-top:40px;font-size:14px;line-height:1.8}
+
+.phase{display:flex;align-items:center;gap:12px;margin:22px 0 10px}
+.phase .bar{flex:1;height:1px;background:var(--line)}
+.phase .ttl{font-size:11px;letter-spacing:1px;text-transform:uppercase;color:var(--mut);white-space:nowrap}
+
+.msg{margin:8px 0;padding:10px 14px;border-radius:12px;background:var(--panel);border:1px solid var(--line);animation:in .25s ease}
+@keyframes in{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+.msg.thinking{border-left:3px solid var(--tool)}
+.msg.thinking.intake{border-left-color:var(--intake)}
+.msg.thinking.rider{border-left-color:var(--rider)}
+.msg.thinking.driver{border-left-color:var(--driver)}
+.msg.thinking.judge{border-left-color:var(--judge)}
+.msg-head{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--mut);margin-bottom:4px}
+.msg-head .who{font-weight:600}
+.msg-head .lbl{padding:1px 7px;border-radius:10px;background:var(--panel2);font-size:10px}
+.msg-body{color:var(--txt);white-space:pre-wrap;word-break:break-word}
+
+.tool{margin:6px 0 6px 18px;padding:8px 12px;border-radius:9px;background:var(--panel2);border:1px dashed var(--line);font-size:12.5px}
+.tool .tc-head{display:flex;align-items:center;gap:8px;cursor:pointer}
+.tool .tc-head .fn{font-family:var(--mono);color:#93c5fd}
+.tool .tc-head .arr{color:var(--mut);font-family:var(--mono)}
+.tool .tc-status{margin-left:auto;font-size:11px}
+.tool .tc-status.ok{color:var(--ok)} .tool .tc-status.err{color:var(--warn)}
+.tool details{margin-top:6px}
+.tool details summary{cursor:pointer;color:var(--mut);font-size:11px}
+.tool pre{margin:6px 0 0;background:#0b0f16;border:1px solid var(--line);border-radius:7px;padding:9px;overflow:auto;font-size:11.5px;color:#cdd6e4;max-height:220px}
+
+.cases{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:8px 0}
+.case{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:12px}
+.case.rider{border-top:3px solid var(--rider)} .case.driver{border-top:3px solid var(--driver)}
+.case h4{margin:0 0 6px;font-size:13px}
+.case .claim{font-size:13px;margin-bottom:6px}
+.case .ev{font-size:11.5px;color:var(--mut);margin:3px 0;padding-left:12px;position:relative}
+.case .ev:before{content:'•';position:absolute;left:2px;color:var(--mut)}
+
+.ruling{margin-top:22px;border-radius:14px;padding:18px;background:linear-gradient(135deg,#1b2433,#222b3d);border:1px solid var(--line)}
+.ruling.escalated{border:1px solid var(--warn);background:linear-gradient(135deg,#2a1a1a,#331f1f)}
+.r-head{display:flex;align-items:center;gap:12px;margin-bottom:12px;flex-wrap:wrap}
+.badge{padding:5px 13px;border-radius:20px;font-weight:700;font-size:13px}
+.badge.upheld{background:rgba(34,197,94,.15);color:#86efac;border:1px solid #16a34a}
+.badge.rejected{background:rgba(239,68,68,.15);color:#fca5a5;border:1px solid #dc2626}
+.badge.partial{background:rgba(245,158,11,.15);color:#fcd34d;border:1px solid #d97706}
+.badge.escalated{background:rgba(168,85,247,.15);color:#d8b4fe;border:1px solid #9333ea}
+.conf{font-size:12px;color:var(--mut)} .conf b{color:var(--txt)}
+.refund{margin-left:auto;font-size:13px} .refund b{font-size:18px;color:#7dd3fc}
+.r-reason{margin:8px 0;line-height:1.7}
+.r-ev-title{font-size:12px;color:var(--mut);margin:10px 0 4px}
+.r-ev{font-size:12px;margin:3px 0;padding-left:14px;position:relative;color:#cdd6e4}
+.r-ev:before{content:'✓';position:absolute;left:0;color:var(--ok)}
+.esc-box{margin-top:12px;padding:12px;border-radius:9px;background:rgba(239,68,68,.08);border:1px solid var(--warn);font-size:12.5px;line-height:1.6}
+
+.err{color:var(--warn);font-family:var(--mono);font-size:12px;white-space:pre-wrap}
+
+/* ---------- 安全网（确定性校验层） ---------- */
+.msg.thinking.safety{border-left-color:var(--safety)}
+.agent-card.safety{border-left-color:var(--safety)}
+.safety-box{margin:10px 0 4px 18px;padding:12px 14px;border-radius:10px;font-size:12.5px;
+  background:var(--panel2);border:1px dashed var(--line)}
+.safety-box.triggered{border:1px solid var(--warn);background:rgba(239,68,68,.07)}
+.safety-box.passed{border-color:rgba(34,197,94,.45);background:rgba(34,197,94,.06)}
+.sn-head{font-weight:600;margin-bottom:8px;font-size:13px}
+.sn-row{display:flex;align-items:center;gap:10px;padding:3px 0;font-family:var(--mono);font-size:11.5px}
+.sn-k{color:var(--txt);min-width:150px}
+.sn-v{color:var(--mut)}
+.sn-f{margin-left:auto;font-weight:600}
+.sn-f.good{color:var(--ok)} .sn-f.bad{color:var(--warn)}
+.sn-reason{margin-top:6px;color:#fca5a5;font-size:12px;line-height:1.6}
+.sn-verdict{margin-top:9px;padding-top:8px;border-top:1px dashed var(--line);font-weight:600;font-size:12.5px}
+.safety-box.triggered .sn-verdict{color:var(--warn)}
+.safety-box.passed .sn-verdict{color:var(--ok)}
+.sn-flag{margin:10px 0;padding:9px 12px;border-radius:8px;font-size:12.5px;font-weight:600;
+  background:rgba(239,68,68,.12);border:1px solid var(--warn);color:#fca5a5}
+
+/* ---------- 裁决卡里的"模型原始判断"块 ---------- */
+.ma-box{margin-top:14px;padding:12px 14px;border-radius:10px;background:rgba(168,85,247,.07);
+  border:1px solid rgba(168,85,247,.4)}
+.ma-head{font-size:12px;font-weight:600;color:#c9a3f7;margin-bottom:7px}
+.ma-line{font-size:12.5px;color:var(--txt);margin-bottom:7px}
+.ma-line b{color:var(--mut);font-weight:500;margin-right:2px}
+.ma-reason{font-size:12px;color:#cdd6e4;line-height:1.65;white-space:pre-wrap;margin-bottom:6px}
+.ma-box .r-ev{color:var(--mut)}
+
+/* ---- language toggle ---- */
+.lang-toggle{display:inline-flex;border:1px solid var(--line);border-radius:20px;overflow:hidden;background:var(--panel2)}
+.lang-toggle button{background:transparent;border:0;color:var(--mut);font-size:12px;padding:5px 11px;cursor:pointer}
+.lang-toggle button.on{background:#334155;color:#fff;font-weight:600}
+.controls{flex-wrap:wrap;justify-content:flex-end}

@@ -1,0 +1,173 @@
+{
+  "trip_id": "TRIP-2026-09945",
+  "_source": "Official Ryde sample dataset, DISP-002 (Tencent Cloud AI CAN DO IT Hackathon Singapore 2026)",
+  "trip_data": {
+    "pickup": {
+      "address": "Tiong Bahru Plaza",
+      "lat": 1.2847,
+      "lng": 103.8382
+    },
+    "dropoff": {
+      "address": "VivoCity",
+      "lat": 1.2648,
+      "lng": 103.8223
+    },
+    "scheduled_time": "2026-09-13T08:45:00+08:00",
+    "actual_pickup_time": null,
+    "actual_dropoff_time": null,
+    "driver_arrival_time": "2026-09-13T08:43:00+08:00",
+    "cancellation_time": "2026-09-13T08:51:00+08:00",
+    "status": "cancelled_no_show_rider",
+    "cancellation_fee_charged": 5.0,
+    "currency": "SGD"
+  },
+  "gps_telemetry": [
+    {
+      "timestamp": "2026-09-13T08:31:00+08:00",
+      "lat": 1.292,
+      "lng": 103.845,
+      "speed_kmh": 42,
+      "status": "en_route"
+    },
+    {
+      "timestamp": "2026-09-13T08:34:00+08:00",
+      "lat": 1.289,
+      "lng": 103.843,
+      "speed_kmh": 38,
+      "status": "en_route"
+    },
+    {
+      "timestamp": "2026-09-13T08:38:00+08:00",
+      "lat": 1.2865,
+      "lng": 103.84,
+      "speed_kmh": 25,
+      "status": "en_route"
+    },
+    {
+      "timestamp": "2026-09-13T08:41:00+08:00",
+      "lat": 1.2852,
+      "lng": 103.8388,
+      "speed_kmh": 12,
+      "status": "en_route"
+    },
+    {
+      "timestamp": "2026-09-13T08:43:00+08:00",
+      "lat": 1.2847,
+      "lng": 103.8382,
+      "speed_kmh": 0,
+      "status": "arrived"
+    },
+    {
+      "timestamp": "2026-09-13T08:45:00+08:00",
+      "lat": 1.2847,
+      "lng": 103.8382,
+      "speed_kmh": 0,
+      "status": "waiting"
+    },
+    {
+      "timestamp": "2026-09-13T08:48:00+08:00",
+      "lat": 1.2847,
+      "lng": 103.8382,
+      "speed_kmh": 0,
+      "status": "waiting"
+    },
+    {
+      "timestamp": "2026-09-13T08:51:00+08:00",
+      "lat": 1.2847,
+      "lng": 103.8382,
+      "speed_kmh": 0,
+      "status": "cancelled"
+    }
+  ],
+  "chat_logs": [
+    {
+      "timestamp": "2026-09-13T08:43:00+08:00",
+      "sender": "driver",
+      "type": "message",
+      "content": "I've arrived at the pickup point, I'm at the lobby area."
+    },
+    {
+      "timestamp": "2026-09-13T08:45:20+08:00",
+      "sender": "driver",
+      "type": "message",
+      "content": "I'm waiting at the lobby area, white Honda HR-V plate SGP 4521 M."
+    },
+    {
+      "timestamp": "2026-09-13T08:47:05+08:00",
+      "sender": "driver",
+      "type": "call",
+      "content": "Outgoing call to rider \u2014 not answered (rang 22s, no response)."
+    },
+    {
+      "timestamp": "2026-09-13T08:49:30+08:00",
+      "sender": "driver",
+      "type": "message",
+      "content": "Hi, are you coming down? I've been waiting a while."
+    },
+    {
+      "timestamp": "2026-09-13T08:50:45+08:00",
+      "sender": "driver",
+      "type": "message",
+      "content": "Please let me know, otherwise I'll have to cancel the trip."
+    },
+    {
+      "timestamp": "2026-09-13T08:51:00+08:00",
+      "sender": "system",
+      "type": "system",
+      "content": "Trip cancelled by driver. Reason: rider_no_show. Cancellation fee of $5.00 applied."
+    }
+  ],
+  "app_events": [
+    {
+      "timestamp": "2026-09-13T08:30:00+08:00",
+      "event_type": "booking_confirmed",
+      "details": "Rider R-7823 booked trip TRIP-2026-09945 from Tiong Bahru Plaza to VivoCity. Scheduled pickup 08:45."
+    },
+    {
+      "timestamp": "2026-09-13T08:30:15+08:00",
+      "event_type": "driver_assigned",
+      "details": "Driver D-2398 (Lim Wei Ming, Honda HR-V SGP 4521 M) assigned. ETA 13 min."
+    },
+    {
+      "timestamp": "2026-09-13T08:30:20+08:00",
+      "event_type": "driver_en_route",
+      "details": "Driver started navigating to pickup location. Live tracking enabled."
+    },
+    {
+      "timestamp": "2026-09-13T08:43:00+08:00",
+      "event_type": "driver_arrived",
+      "details": "Driver GPS within 10m of pickup point. Speed 0 km/h. Auto-arrival confirmed."
+    },
+    {
+      "timestamp": "2026-09-13T08:43:05+08:00",
+      "event_type": "rider_notified",
+      "details": "Push notification + in-app alert sent to rider: 'Your driver has arrived.'"
+    },
+    {
+      "timestamp": "2026-09-13T08:43:10+08:00",
+      "event_type": "wait_timer_started",
+      "details": "Free wait timer started. 5 min free wait period ends at 08:48."
+    },
+    {
+      "timestamp": "2026-09-13T08:47:05+08:00",
+      "event_type": "driver_called_rider",
+      "details": "Driver initiated in-app call to rider. Call rang 22s, no answer."
+    },
+    {
+      "timestamp": "2026-09-13T08:48:10+08:00",
+      "event_type": "wait_timer_expired",
+      "details": "Free 5-min wait period expired. Rider had not boarded. Cancellation fee now applicable per policy."
+    },
+    {
+      "timestamp": "2026-09-13T08:51:00+08:00",
+      "event_type": "cancellation_fee_applied",
+      "details": "No-show threshold (8 min) reached. $5.00 cancellation fee charged to rider payment method (e-wallet)."
+    },
+    {
+      "timestamp": "2026-09-13T08:51:05+08:00",
+      "event_type": "driver_released",
+      "details": "Driver D-2398 released from trip. Trip status: cancelled (rider_no_show)."
+    }
+  ],
+  "traffic_reference": null
+}

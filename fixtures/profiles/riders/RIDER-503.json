@@ -1,0 +1,21 @@
+{
+  "rider_id": "RIDER-503",
+  "account_age_days": 10,
+  "total_trips": 3,
+  "avg_rating": 3.9,
+  "dispute_history": {
+    "total": 2,
+    "upheld": 0,
+    "rejected": 2
+  },
+  "fraud_flags": [
+    "frequent_cancellation_disputes"
+  ],
+  "fraud_flag_details": [
+    {
+      "flag": "frequent_cancellation_disputes",
+      "note": "Filed 2 no-show cancellation-fee disputes within 30 days, both rejected",
+      "severity": "medium"
+    }
+  ]
+}

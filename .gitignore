@@ -1,0 +1,31 @@
+# ---------- secrets and local config ----------
+.env
+.env.*
+!.env.example
+*.key
+*.pem
+secrets.json
+
+# ---------- tooling / runtime artefacts ----------
+__pycache__/
+*.py[cod]
+*$py.class
+.venv/
+venv/
+env/
+*.egg-info/
+.idea/
+.vscode/
+.DS_Store
+
+# ---------- WorkBuddy / CodeBuddy session data (absolute paths, keep out of git) ----------
+.codebuddy/
+.codebuddy*/
+
+# ---------- run output: dumps / logs / screenshots (may contain keys or local paths) ----------
+transcripts/
+*.log
+demo-shot*.png
+demo-*.png
+shot-*.png
+pub-*.png

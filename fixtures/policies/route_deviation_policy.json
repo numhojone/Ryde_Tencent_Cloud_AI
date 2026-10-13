@@ -1,0 +1,22 @@
+{
+  "policy_id": "route_deviation_policy",
+  "applies_to": "route_deviation",
+  "max_tolerated_deviation_pct": 15.0,
+  "per_km_rate": 4.0,
+  "traffic_justification_exempt": true,
+  "clauses": [
+    {
+      "id": "RD-1",
+      "text": "An actual distance up to and including 15% above the optimal distance is a reasonable detour; no refund."
+    },
+    {
+      "id": "RD-2",
+      "text": "The part above 15% is refunded at per_km_rate: refund = max(0, actual_km - optimal_km*(1+15%)) * per_km_rate."
+    },
+    {
+      "id": "RD-3",
+      "text": "If third-party traffic data shows the detour saved time because of heavy congestion (actual_duration <= optimal_duration_with_traffic), it is treated as justified and refund = 0."
+    }
+  ],
+  "refund_formula": "overcharged_km = max(0, actual_km - optimal_km*(1+max_tolerated_deviation_pct/100)); if traffic_justified(actual_duration <= optimal_est_duration_with_traffic): refund=0 else refund = overcharged_km * per_km_rate"
+}

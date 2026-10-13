@@ -1,0 +1,12 @@
+{
+  "dispute_id": "DISP-001",
+  "trip_id": "TRIP-1001",
+  "filed_by": "rider",
+  "rider_id": "RIDER-501",
+  "driver_id": "DRIVER-301",
+  "dispute_type": "route_deviation",
+  "description": "My driver deliberately took a much longer route from Jurong Gateway to Changi Airport. It should be about 30 km but he drove 42 km, so I was overcharged. I want the extra fare refunded.",
+  "filed_at": "2026-01-15T09:40:00+08:00",
+  "requested_resolution": "full_refund_of_overcharge",
+  "requested_amount": 48.0
+}
