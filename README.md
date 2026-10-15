@@ -18,24 +18,30 @@ The rider types what happened in their own words. The system:
 
 **The honest limit:** the story only selects the category and the trip. The ruling comes from the platform's records for that trip (GPS, chat, fare logs, app events), never from the story. `claim_check` is shown to the reader and is not passed to the agents that rule. Extracted facts are only what the story states; anything it does not say is `null`. In LLM mode the model's facts are checked against the story (numbers must appear in it) and replaced by the rule extractor if malformed. In deterministic mode the extractor is regex / keyword based: it knows the place names in the trip fixtures and common phrasings in English, Singlish, Malay, Tamil and Chinese, and will miss wording outside those.
 
-## Three-pane demo
+## Three-pane demo, with rider login
 
-The default page (`/`) shows one case live in three panes. The original single chat is still at `/classic`.
+`/` starts with a demo login ("Ryde Support"): pick a demo rider (name and rider ID) or **Support agent**. There is no password; this is a demo login, not real authentication. The server sets a signed session cookie (HMAC with `SECRET_KEY` from `.env`, HttpOnly, SameSite=Lax) and reads the rider ID only from it, never from the browser or the story. Every data endpoint answers 401 without a session; the support-console endpoints answer 403 to riders. The original single chat is still at `/classic` (behind the same login).
 
 | Pane | What it is |
 |---|---|
-| **Rider** (left) | The customer's app: a chat where the rider types their story and later sees one plain-language outcome card (decision, amount, one-line reason, policy section; no confidence scores or jargon). When a person has to decide, the rider is told the case has been passed to a Ryde support agent, with a reference and no amount promised. |
-| **Agent room** (middle) | The existing group chat: trip match, intake, both advocates, judge, policy thresholds and safety net, paced so it can be followed. |
-| **Support console** (right) | Idle ("No cases need review") until a case is escalated (route over 2 km, repair claim, fare over S$50, low confidence, fraud flag, safety incident, or a safety-net override). Then: a summary card (who, trip, category, claim, key facts, evidence found and missing, each advocate in one line, the AI recommendation and the clause or threshold that escalated it), evidence chips, "Ask about this case", and a decision bar. |
+| **Rider** (left) | The customer's app. Stage 1: the rider says what happened and confirms which of **their own** trips it was. Stage 2: the case runs. Stage 3: one plain-language outcome card (decision, amount, one-line reason, policy section), or "passed to a Ryde support agent" with a reference and no amount promised, plus any questions from support. For the support agent this pane is a read-only view of the rider's conversation. |
+| **Agent room** (middle) | The existing group chat. Idle ("Waiting for a case") until the rider confirms a trip; then trip, intake, both advocates, judge, policy thresholds and safety net run live. |
+| **Support console** (right) | For the support agent only: a queue of cases handed to a person (any rider), then the summary card, evidence chips, "Ask about this case" and the decision bar. A rider sees "No cases need review" here. |
 
-Run an escalated case end to end (offline, no key needed):
+**Stage 1, finding the trip** (`app/rider_match.py`, deterministic in both modes): the intake rules pick the category (no signal at all: one clarifying question, no guess); only the signed-in rider's trips are considered; trip data decides which ones the category is possible for (no-show: cancelled with a no-show fee; fare: final fare above the quote; route: completed with a longer actual distance; damage: a cleaning or damage fee; safety: any trip); the story ranks them (places, amounts, dates, weekdays, today / yesterday, time of day, driver name). Then: no trip fits, so the rider sees their recent trips; one clear match, so "Is this the one?" with Yes / No, pick another; several close ones, so a picker with date, route, fare, status and why each might match. The case, and the agent room, start only after the rider confirms. The chosen trip is checked on the server against the session (another rider's trip: 403).
 
-1. `LLM_MODE=deterministic ./run.sh` and open http://localhost:8000. Pick **Offline demo** in the demo strip.
-2. Click **Route deviation** under "Fill story", then **Send** in the Rider pane. The agent room runs; the rider is told the case is with a support agent; the console shows DISP-xxx: 4.3 km deviation, over the 2 km limit (6.1), AI recommendation partial S$3.44.
-3. In the console, type `did teh drvier tell the rider abt the route change` and press **Check wording**. Compare "You wrote" with "Will be sent as", then **Confirm and ask**: the answer comes from the chat log and trip record, with sources.
-4. Ask `Did the rider have any luggage?`. Nothing in the record mentions it, so the console says so, the question goes to the rider as a message from Ryde Support, and the status becomes "Waiting for rider reply".
-5. In the Rider pane, reply (e.g. `Yes, I had two big suitcases in the boot.`). The reply lands in the case record and the console answers the original question citing that message.
-6. Press **Approve AI recommendation** (or Adjust / Reject / Request more information), add a note, **Submit decision**. The note is tidied by the rephrase agent, the rider gets the outcome card, and both panes show "Resolved".
+**Scoping:** every tool that returns trip data (`get_trip_data`, GPS, chat, app events, fare breakdown, damage evidence, traffic) and the rider / driver profiles only return the case's own rider's data; another rider's trip gives the same "not found" as a trip that does not exist. A rider sees only their own cases, disputes and trips; the support agent sees any case that was handed to a person.
+
+**Test data:** each demo rider has 3 to 6 trips. The extra ones are synthetic, in `fixtures/trips_synthetic.json` (generated by `scripts/build_trips_synthetic.py`), with display names and suggested stories in `fixtures/demo_accounts.json`. Official files (DISP-001 to 003, their trips and rider profiles) are unchanged.
+
+Demo, end to end (offline, no key needed):
+
+1. `LLM_MODE=deterministic ./run.sh`, open http://localhost:8000, sign in as **Daniel Lim (R-7823)**. Pick **Offline demo** in the demo strip.
+2. Click **No-show fee (two trips fit)**, then **Send**. Two of Daniel's cancelled trips fit, so a picker appears. Choose **Redhill MRT → Great World** (24 Sep). The agent room starts; the driver messaged but never called (2.3), so the AI refunds S$5.00 and the rider sees the outcome card. The support console stays empty.
+3. **Sign out**, sign in as **Sarah Tan (R-4521)**. Click **Detour to Changi T3**, **Send**, then **Yes, this one**. The deviation is 4.3 km, over the 2 km limit (6.1), so the rider is told a support agent has the case.
+4. Open a **private window** at the same address and sign in as **Support agent**. The case is in "Cases for review"; open it. The left pane shows Sarah's conversation read-only, the middle the agent room, the right the summary (AI recommendation partial S$3.44 and why it was escalated).
+5. Ask `Did the rider have any luggage?`, **Check wording**, **Confirm and ask**. Nothing in the record says, so the question goes to Sarah. In Sarah's window, reply `Yes, two suitcases.`; the console answers the original question citing that message.
+6. **Approve AI recommendation**, add a note, **Submit decision**. Sarah's window shows the outcome card; both show "Resolved".
 
 How the two new agents work (`app/agents/rephrase.py`, `app/agents/case_qa.py`, both on the existing `BaseAgent`):
 
@@ -114,13 +120,15 @@ python -m pytest -q      # offline tests (pip install pytest)
 With no API key it runs in **deterministic mode** (scripted agents, same tools, same policy maths). To use a real model:
 
 ```bash
-cp .env.example .env     # set LLM_MODE=llm and LLM_API_KEY=...
+cp .env.example .env     # set LLM_MODE=llm and LLM_API_KEY=... (and a random SECRET_KEY for the login cookie)
 ./run.sh
 ```
 
 Any OpenAI-compatible endpoint works (default: Google AI Studio, Gemini; Tencent Hunyuan via `LLM_BASE_URL` / `LLM_MODEL`). **Never commit `.env`**; it is git-ignored. In LLM mode the model reasons freely, and the section 6 thresholds are still enforced in code from the tool data; the judge's output is cross-checked against the deterministic policy computation (`policy_check`).
 
 ## Using it
+
+This section describes the classic single-chat UI at `/classic` (sign in first at `/`). As a rider it only offers your own trips and preset tickets; as the support agent, all of them.
 
 - Write a complaint in your own words (English, Singlish, Malay, Tamil or Chinese) and press **Submit and rule**. The trip selector defaults to **Auto-detect from my story**; you can still pick a trip by hand. You never choose the dispute type. If the story does not point to one trip, the intake agent asks which one and offers the candidates as buttons.
 - **EN | 中文** toggle switches the interface and the agents' output language; rulings, clause numbers and amounts are identical in both.
@@ -135,13 +143,17 @@ Any OpenAI-compatible endpoint works (default: Google AI Studio, Gemini; Tencent
 | `GET /api/file/stream?complaint=&trip_id=&lang=en\|zh&mode=` | free-text complaint, SSE stream of every step. `trip_id` optional: empty or `auto` matches it from the story; an explicit one skips matching |
 | `POST /api/file` | same, synchronous; returns `status: trip_unresolved` with candidates and no ruling when no trip matches |
 | `GET /api/resolve/{id}/stream`, `POST /api/resolve/{id}` | replay a preset ticket |
-| `POST /api/cases` `{story, trip_id?, mode?, lang?}` | three-pane demo: start a case with the rider's first message |
-| `GET /api/cases`, `GET /api/cases/{id}` | case list (with `needs_human`), one case's snapshot |
+| `GET /api/auth/accounts`, `POST /api/auth/login` `{rider_id}` or `{role: "support"}`, `POST /api/auth/logout`, `GET /api/auth/me` | demo login (no password); sets / clears the signed session cookie |
+| `POST /api/rider/find-trip` `{story, lang?}` | stage 1 (rider only): `state` clarify / none / confirm / pick, with trip cards from the signed-in rider's trips only |
+| `POST /api/cases` `{story, trip_id, mode?, lang?}` | rider only: start a case on a confirmed trip of the signed-in rider (403 for anyone else's trip) |
+| `GET /api/cases`, `GET /api/cases/{id}` | a rider's own cases; for support, every case handed to a person. Someone else's case is 404 |
 | `GET /api/cases/{id}/events` | one SSE stream per case; every event carries `pane`: `rider`, `room`, `human` or `case` (status). The tag is `pane` because orchestrator events already use `role` for the agent |
 | `POST /api/cases/{id}/rider-message` `{text, trip_id?}` | the rider's reply (or which trip it was) |
-| `POST /api/cases/{id}/human/rephrase` `{text, purpose: qa\|rider\|note}` | "You wrote" / "Will be sent as" |
+| `POST /api/cases/{id}/human/rephrase` `{text, purpose: qa\|rider\|note}` | support only: "You wrote" / "Will be sent as" |
 | `POST /api/cases/{id}/human/ask` `{question, original?}` | case-QA answer, or the question goes to the rider |
 | `POST /api/cases/{id}/human/decision` `{action: approve\|adjust\|reject\|request_info, amount?, note?}` | the person's decision (adjust needs an amount and a note) |
+
+All endpoints except `/api/health` and the login ones need a session (401 otherwise); `human/*` need the support role (403 for riders). A rider's event stream and case snapshot never include the console's data.
 
 Free-text SSE events (existing ones unchanged): `trip_matched {trip_id, route, confidence, reasons, candidates}`, `trip_unresolved {message, candidates}` (followed by `done`, no ruling), `ticket_filed {ticket}`.
 Case statuses: `intake`, `in_review`, `resolved_by_ai`, `with_agent`, `waiting_for_rider`, `resolved_by_human`.
@@ -156,6 +168,8 @@ Case statuses: `intake`, `in_review`, `resolved_by_ai`, `with_agent`, `waiting_f
 app/main.py            FastAPI + SSE; / is the three-pane demo, /classic the original chat
 app/case_store.py      in-memory cases for the three-pane demo, event fan-out by pane, human decisions
 app/case_views.py      rider outcome card, support-console summary (built from the recorded case)
+app/auth.py            demo login: signed session cookie, rider / support roles
+app/rider_match.py     stage 1: which of the signed-in rider's trips a story is about
 app/orchestrator.py    trip match -> intake -> advocates (parallel) -> judge -> thresholds -> safety net; safety incident path
 app/trip_match.py      story -> trip scoring, claim_check (story vs records, informational)
 app/extract.py         rule-based story -> extracted_facts, missing_info
@@ -164,8 +178,9 @@ app/agents/            base loop, intake, advocates, judge, cases.py, analysis.p
 app/thresholds.py      policy section 6 in code
 app/safety_net.py      evidence-sufficiency check per dispute type
 app/tools/             11 tools + OpenAI-style schemas
-static/                three.html/js/css (three-pane demo, embeds app.js for the agent room); index.html (classic)
-scripts/smoke_three_pane.py  browser smoke test (Playwright) for the three panes
+static/                login.html/js/css; three.html/js/css (three-pane demo, embeds app.js for the agent room); index.html (classic)
+scripts/smoke_three_pane.py  browser smoke test (Playwright): login, stage 1, escalation, support queue
+scripts/build_trips_synthetic.py  writes fixtures/trips_synthetic.json and fixtures/demo_accounts.json
 fixtures/              trips, profiles, policy, precedents, tickets, expected (tests only)
 tests/                 pytest suite (offline)
 architecture.svg/png   diagram
@@ -180,4 +195,5 @@ PROJECT_DESCRIPTION.md submission write-up
 - The LLM path of the new ticket extraction has not been run against a live model; its validation and fallback are covered by offline tests only.
 - "At the pickup location" has no distance in the policy; we use 100 m as an operational definition. The confidence weights are our own.
 - Free-tier LLM quotas can return 429; the UI offers the deterministic fallback.
+- The login is a demo: pick an account, no password. The session cookie is signed but not `Secure` (the demo runs on plain http); without a `SECRET_KEY` in `.env` a random key is used and sessions end when the server restarts. Stage 1 matching is rule-based in both modes (the model is not used to classify or extract there). "Today" / "yesterday" are read against the real date, so they do not match the September 2026 fixture trips.
 - Three-pane demo: the Live AI paths of the rephrase and case-QA agents have not been run against a live model (to save the free quota); their fallbacks, citation check and "no retrieval, no model call" rule are covered by offline tests. Offline answers are the retrieved snippets in a template, not prose. Retrieval is keyword and topic based, so a question worded unlike the record can miss and be sent to the rider instead. Cases are in memory, single process.

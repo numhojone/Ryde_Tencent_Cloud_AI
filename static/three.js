@@ -1,16 +1,24 @@
-/* RydeResolve three-pane demo: Rider app | Agent room | Support console, all on one live case.
-   The agent room is the existing group chat (static/app.js, embedded); this file wires the case,
-   the rider app and the support console. Every pane subscribes to the case's event stream and
-   keeps only the events tagged for it (`pane`: rider | room | human, plus `case` status events). */
+/* RydeResolve three-pane demo: Rider app | Agent room | Support console.
+   Who is using the page comes from the server session (demo login): a rider, or the support agent.
+
+   Rider:   stage 1  describe the problem and confirm the trip (left pane only; nothing else runs)
+            stage 2  the case runs: the story and trip go to the agent room
+            stage 3  the outcome, or "passed to a support agent", plus questions from support
+   Support: a queue of cases that were handed to a person (any rider); opening one fills all three panes,
+            the rider's conversation read-only on the left.
+
+   The agent room is the existing group chat (static/app.js, embedded). Every pane subscribes to the case's
+   event stream and keeps only the events tagged for it (`pane`: rider | room | human, plus `case` status). */
 (() => {
 const R = window.RoomUI;
 Object.assign(R.I18N.en, {
-  tpTitle:'RydeResolve | Three-pane demo', tpTag:'Rider, agents and support, live on one case',
+  tpTitle:'Ryde Support | Three-pane demo', tpTag:'Rider, agents and support, live on one case',
   tpDemo:'Demo', tpReset:'Reset case', tpFill:'Fill story:',
   tpRider:'Rider', tpRoom:'Agent room', tpHuman:'Support console', tpHelp:'Help with a trip',
-  tpRiderEmpty:'Tell us what went wrong with your trip, in your own words.', tpRiderPh:'Type a message', tpSend:'Send',
-  tpRoomEmpty:'The agents start working as soon as the rider sends a message.',
+  tpRiderEmpty:'Tell us what happened.', tpRiderPh:'Type a message', tpSend:'Send',
+  tpRoomEmpty:'Waiting for a case. The agents start once the rider confirms which trip it is about.',
   tpNoCases:'No cases need review', tpNoCasesSub:'Cases appear here only when the policy or the safety net needs a person.',
+  tpRiderConsole:'The support console is for support agents. To handle this case, open a private window and sign in as Support agent.',
   tpAsk:'Ask about this case', tpAskPh:'e.g. did the driver tell the rider about the route change?',
   tpCheck:'Check wording', tpYouWrote:'You wrote', tpSentAs:'Will be sent as', tpEdit:'Back to edit', tpConfirmAsk:'Confirm and ask',
   tpUnchanged:'Already clear, sent unchanged.', tpChanged:'Spelling, grammar and tone tidied; the meaning is unchanged. You can still edit it.',
@@ -18,22 +26,27 @@ Object.assign(R.I18N.en, {
   tpAmount:'Refund amount (S$)', tpCancel:'Cancel', tpSubmitDecision:'Submit decision',
   tpNoteOpt:'Note to the rider (optional)', tpNoteReq:'Note to the rider (required)', tpNoteInfo:'What do you need from the rider? (required)',
   tpErrNote:'Please write a note.', tpErrAmt:'Please enter an amount of 0 or more.',
-  fillNoShow:'No-show', fillRoute:'Route deviation', fillFare:'Fare dispute', fillDamage:'Damage', fillSafety:'Safety',
+  tpSignOut:'Sign out', tpSignedIn:(n, id) => `Signed in as ${n} (${id})`, tpSignedSupport:'Signed in as Support agent',
+  tpSupportView:"Viewing as support agent. The rider's conversation for the open case is shown read-only.",
+  tpQueue:'Cases for review', tpOpen:'Open', tpOpened:'Open now',
   sRyde:'Ryde', sSupport:'Ryde Support', sYou:'You',
+  hello:n => `Hi ${n}. Tell us what happened.`, finding:'Finding your trip…',
+  isThis:'Is this the one?', yes:'Yes, this one', noOther:'No, pick another', pickOne:'Choose this trip',
+  chose:t => `That one: ${t}`, otherTrips:'Your recent trips:', whyMatch:'Why it might match',
+  st_completed:'completed', st_cancelled:'cancelled', feeOf:m => `${m} fee charged`,
   rs:{intake:'Checking your trip', in_review:'In review', resolved_by_ai:'Resolved', with_agent:'With a support agent',
       waiting_for_rider:'Waiting for your reply', resolved_by_human:'Resolved'},
   hs:{intake:'Intake', in_review:'Agents working', resolved_by_ai:'Resolved by AI', with_agent:'Needs review',
       waiting_for_rider:'Waiting for rider reply', resolved_by_human:'Resolved'},
   live:{idle:'Idle', typing:'Typing', working:'Working', waiting:'Waiting for rider', resolved:'Resolved', review:'Needs review',
-        online:'Online', answering:'Answering', done:'Done'},
+        online:'Online', answering:'Answering', done:'Done', finding:'Finding trip', readonly:'Read-only'},
   ocRef:'Reference', ocByAi:'Decided from your trip records', ocByHuman:'Reviewed by a Ryde support agent',
-  ocGoodwill:'Goodwill credit', ocNote:'Message from support', ocPolicy:'Policy',
-  tripPick:'Choose a trip',
+  ocGoodwill:'Goodwill credit', ocNote:'Message from support',
   smWhy:'Why it needs a person', smRec:'AI recommendation', smNoRec:'No AI recommendation: the AI may not rule on safety incidents (policy 5.2).',
   smWho:'Who', smRiderL:'Rider', smDriverL:'Driver', smTrip:'Trip', smClaim:'What the rider claims', smAsks:'Asks for',
   smFacts:'Key facts from the records', smFound:'Evidence found', smMissing:'Missing or thin', smArgs:'Advocates',
   smArgR:'Rider advocate', smArgD:'Driver advocate', smEvidence:'Evidence', smCaseFile:'Safety case file',
-  smInterim:'Interim measures (policy 5.3)', smReplies:'Rider replies', smClause:'clause', smNone:'none',
+  smInterim:'Interim measures (policy 5.3)', smReplies:'Rider replies', smNone:'none',
   qaAnswering:'Searching the case record…', qaAnswered:'Answered from the record', qaAsked:'Not in the record: asked the rider',
   qaAfter:'Answered with the rider\'s reply', qaInfo:'Information requested from the rider',
   qaSentRider:'Sent to the rider', qaReply:'Rider replied', qaSources:'Sources', qaYouWrote:'You wrote',
@@ -41,12 +54,13 @@ Object.assign(R.I18N.en, {
   errGeneric:'Something went wrong. Please try again.',
 });
 Object.assign(R.I18N.zh, {
-  tpTitle:'RydeResolve | 三栏演示', tpTag:'乘客、智能体与客服，同一案件实时联动',
+  tpTitle:'Ryde 客服 | 三栏演示', tpTag:'乘客、智能体与客服，同一案件实时联动',
   tpDemo:'演示', tpReset:'重置案件', tpFill:'填入示例：',
   tpRider:'乘客', tpRoom:'智能体会话', tpHuman:'客服工作台', tpHelp:'行程求助',
-  tpRiderEmpty:'用您自己的话告诉我们这趟行程出了什么问题。', tpRiderPh:'输入消息', tpSend:'发送',
-  tpRoomEmpty:'乘客一发出消息，智能体就会开始工作。',
+  tpRiderEmpty:'告诉我们发生了什么。', tpRiderPh:'输入消息', tpSend:'发送',
+  tpRoomEmpty:'等待案件。乘客确认是哪一趟行程后，智能体才会开始工作。',
   tpNoCases:'暂无需要审核的案件', tpNoCasesSub:'只有政策或安全网要求人工处理的案件才会出现在这里。',
+  tpRiderConsole:'客服工作台仅供客服专员使用。如需处理此案件，请打开无痕窗口并以客服专员身份登录。',
   tpAsk:'就本案提问', tpAskPh:'例如：司机有没有告诉乘客改道？',
   tpCheck:'检查措辞', tpYouWrote:'您输入的', tpSentAs:'将发送为', tpEdit:'返回修改', tpConfirmAsk:'确认并提问',
   tpUnchanged:'表述已清楚，原样发送。', tpChanged:'已修正拼写、语法和语气，含义不变。仍可修改。',
@@ -54,22 +68,27 @@ Object.assign(R.I18N.zh, {
   tpAmount:'退款金额（S$）', tpCancel:'取消', tpSubmitDecision:'提交决定',
   tpNoteOpt:'给乘客的备注（可选）', tpNoteReq:'给乘客的备注（必填）', tpNoteInfo:'需要乘客提供什么？（必填）',
   tpErrNote:'请填写备注。', tpErrAmt:'请输入 0 或以上的金额。',
-  fillNoShow:'爽约', fillRoute:'绕路', fillFare:'车费', fillDamage:'清洁费', fillSafety:'安全',
+  tpSignOut:'退出登录', tpSignedIn:(n, id) => `已登录：${n}（${id}）`, tpSignedSupport:'已登录：客服专员',
+  tpSupportView:'以客服专员身份查看。左侧只读显示当前案件中乘客的对话。',
+  tpQueue:'待审核案件', tpOpen:'打开', tpOpened:'正在查看',
   sRyde:'Ryde', sSupport:'Ryde 客服', sYou:'我',
+  hello:n => `${n}，您好。请告诉我们发生了什么。`, finding:'正在查找您的行程…',
+  isThis:'是这一趟吗？', yes:'是，就是这趟', noOther:'不是，选其他行程', pickOne:'选择这趟行程',
+  chose:t => `是这一趟：${t}`, otherTrips:'您最近的行程：', whyMatch:'可能符合的原因',
+  st_completed:'已完成', st_cancelled:'已取消', feeOf:m => `已收费 ${m}`,
   rs:{intake:'正在核对行程', in_review:'审核中', resolved_by_ai:'已解决', with_agent:'已转客服专员',
       waiting_for_rider:'等待您的回复', resolved_by_human:'已解决'},
   hs:{intake:'受理中', in_review:'智能体处理中', resolved_by_ai:'AI 已解决', with_agent:'待人工审核',
       waiting_for_rider:'等待乘客回复', resolved_by_human:'已解决'},
   live:{idle:'待命', typing:'输入中', working:'处理中', waiting:'等待乘客', resolved:'已解决', review:'待审核',
-        online:'在线', answering:'回答中', done:'完成'},
+        online:'在线', answering:'回答中', done:'完成', finding:'查找行程', readonly:'只读'},
   ocRef:'参考编号', ocByAi:'依据您的行程记录作出', ocByHuman:'由 Ryde 客服专员审核',
-  ocGoodwill:'善意补偿', ocNote:'客服留言', ocPolicy:'政策',
-  tripPick:'选择行程',
+  ocGoodwill:'善意补偿', ocNote:'客服留言',
   smWhy:'为何需要人工', smRec:'AI 建议', smNoRec:'无 AI 建议：安全事件 AI 不得裁决（政策 5.2）。',
   smWho:'当事人', smRiderL:'乘客', smDriverL:'司机', smTrip:'行程', smClaim:'乘客主张', smAsks:'请求',
   smFacts:'记录中的关键事实', smFound:'已有证据', smMissing:'缺失或不足', smArgs:'双方辩护',
   smArgR:'乘客辩护智能体', smArgD:'司机辩护智能体', smEvidence:'证据', smCaseFile:'安全案件材料',
-  smInterim:'临时措施（政策 5.3）', smReplies:'乘客回复', smClause:'条款', smNone:'无',
+  smInterim:'临时措施（政策 5.3）', smReplies:'乘客回复', smNone:'无',
   qaAnswering:'正在检索案件记录…', qaAnswered:'已根据记录回答', qaAsked:'记录中没有：已询问乘客',
   qaAfter:'已结合乘客回复回答', qaInfo:'已请乘客补充信息',
   qaSentRider:'已发送给乘客', qaReply:'乘客回复', qaSources:'来源', qaYouWrote:'您输入的',
@@ -81,25 +100,11 @@ const $ = id => document.getElementById(id);
 const mk = (tag, cls, text) => { const n = document.createElement(tag); if (cls) n.className = cls; if (text != null) n.textContent = text; return n; };
 const money = v => (typeof v === 'number' && isFinite(v)) ? CUR + v.toFixed(2) : String(v);
 
-const FILLS = {
-  en: [
-    ['fillNoShow', 'I waited at Tiong Bahru Plaza but the driver never came, and I was still charged a $5 cancellation fee.'],
-    ['fillRoute', 'The driver took a much longer route from Orchard Central to Changi Airport T3. The fare was $35 when I usually pay $28, and he never told me about any change.'],
-    ['fillFare', 'The fare was $16.50 but the upfront quote at Bugis Junction was $12.00. Nobody told me the price had gone up.'],
-    ['fillDamage', 'I was charged a S$35 cleaning fee after my ride from Orchard MRT, but I never spilled anything.'],
-    ['fillSafety', 'The driver was speeding over 100 km/h and shouted at me when I asked him to slow down. I felt really unsafe.'],
-  ],
-  zh: [
-    ['fillNoShow', '我在中峇鲁广场等了很久，司机一直没来，还被收了$5取消费。'],
-    ['fillRoute', '司机从Orchard Central到樟宜机场绕了一大圈，多收了我不少钱，也没有告诉我为什么改道。'],
-    ['fillFare', '在白沙浮广场上车时报价是$12.00，最后收了$16.50，没有人告诉我涨价。'],
-    ['fillDamage', '从乌节地铁站坐车后被收了S$35清洁费，但我根本没有弄脏车。'],
-    ['fillSafety', '司机开到100 km/h以上严重超速，我让他开慢点他还吼我，我觉得很不安全。'],
-  ],
-};
-
-let health = null, caseId = null, status = null, streams = [], summary = null, qa = {}, riderBusy = false;
+let me = null, health = null;
+let caseId = null, status = null, streams = [], summary = null, qa = {}, busy = false;
 let roomWorking = false, askBusy = false, decisionAction = null;
+let stage = 'describe', storyParts = [], finding = false, queueTimer = null;
+const isSupport = () => me && me.role === 'support';
 
 /* ---------------------------------------------------------------- live status indicators */
 function setLive(pane, key, tone){
@@ -109,7 +114,9 @@ function setLive(pane, key, tone){
 }
 function refreshLive(){
   const inp = $('riderInput');
-  if (document.activeElement === inp && inp.value.trim()) setLive('rider', 'typing');
+  if (isSupport()) setLive('rider', 'readonly', 'idle');
+  else if (finding) setLive('rider', 'finding', 'busy');
+  else if (document.activeElement === inp && inp.value.trim()) setLive('rider', 'typing');
   else if (status === 'waiting_for_rider') setLive('rider', 'waiting', 'attn');
   else if (status === 'resolved_by_ai' || status === 'resolved_by_human') setLive('rider', 'resolved', 'ok');
   else setLive('rider', 'online', 'idle');
@@ -143,6 +150,7 @@ document.querySelectorAll('#tabs button').forEach(b => b.addEventListener('click
 /* ---------------------------------------------------------------- API */
 async function api(path, body){
   const r = await fetch(path, body === undefined ? {} : {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(body)});
+  if (r.status === 401){ location.href = '/'; throw new Error(T('errGeneric')); }    // session gone: back to login
   let data = null; try { data = await r.json(); } catch (e) {}
   if (!r.ok) throw new Error((data && data.detail) || T('errGeneric'));
   return data;
@@ -152,6 +160,7 @@ async function api(path, body){
 function subscribe(id){
   closeStreams();
   ['rider', 'room', 'human'].forEach(pane => {
+    if (pane === 'human' && !isSupport()) return;          // riders never receive the console's events
     const es = new EventSource(`/api/cases/${encodeURIComponent(id)}/events`);
     es.onmessage = e => {
       let ev; try { ev = JSON.parse(e.data); } catch (err){ return; }
@@ -175,7 +184,8 @@ function onStatus(ev){
   $('tbStatus').dataset.s = ev.status;
   riderTyping(ev.status === 'intake' || ev.status === 'in_review');
   if (summary) renderSummary();
-  syncDecisionBar();
+  syncDecisionBar(); syncRiderInput();
+  if (isSupport()) renderQueue();
   refreshLive();
 }
 
@@ -190,33 +200,27 @@ function riderRow(side, sender, cls){
   riderChat.insertBefore(row, $('riderTyping') || null);
   return b;
 }
-function riderTyping(on){
+function riderTyping(on, label){
   let t = $('riderTyping');
   if (on && !t){
     t = mk('div', 'rm left rm-typing'); t.id = 'riderTyping';
-    t.innerHTML = '<div class="rm-bubble"><span class="dots"><i></i><i></i><i></i></span></div>';
+    const b = mk('div', 'rm-bubble');
+    b.innerHTML = '<span class="dots"><i></i><i></i><i></i></span>';
+    if (label) b.appendChild(mk('span', 'rm-typing-lbl', label));
+    t.appendChild(b);
     riderChat.appendChild(t);
   } else if (!on && t) t.remove();
   riderScroll();
 }
 function onRider(ev){
   switch (ev.type){
-    case 'rider_message': riderRow('right', null, 'me').textContent = ev.text; break;
+    case 'rider_message':
+      if (ev.initial && !isSupport()) break;           // already in the rider's own chat from stage 1
+      riderRow('right', null, 'me').textContent = ev.text; break;
     case 'assistant_message': riderRow('left', T('sRyde')).textContent = ev.text; break;
     case 'support_message': riderRow('left', T('sSupport'), 'support').textContent = ev.text; break;
-    case 'trip_choice': {
-      const b = riderRow('left', T('sRyde'));
-      b.appendChild(mk('p', null, ev.text));
-      const list = mk('div', 'rm-trips');
-      (ev.candidates || []).forEach(c => {
-        const btn = mk('button', 'rm-trip', c.label); btn.type = 'button';
-        btn.addEventListener('click', () => sendRider(c.label, c.trip_id));
-        list.appendChild(btn);
-      });
-      b.appendChild(list);
-      break;
-    }
-    case 'ticket_update': break;            // the ticket bar follows the case status
+    case 'trip_choice': break;                         // trips are confirmed in stage 1 now
+    case 'ticket_update': break;                       // the ticket bar follows the case status
     case 'handoff': { const b = riderRow('left', T('sRyde'), 'handoff'); b.textContent = ev.text; break; }
     case 'outcome': riderOutcome(ev.card); break;
   }
@@ -236,30 +240,103 @@ function riderOutcome(c){
   b.appendChild(foot);
 }
 
-async function sendRider(text, tripId){
-  text = (text || '').trim();
-  if ((!text && !tripId) || riderBusy) return;
-  if (caseId && (status === 'resolved_by_ai' || status === 'resolved_by_human')) resetCase();
-  riderBusy = true; $('riderSend').disabled = true;
+/* ---- stage 1: find and confirm the trip */
+const tripLabel = c => `${c.pickup} → ${c.dropoff}${c.time ? ', ' + R.fmtTime(c.time) : ''}`;
+function tripCard(c, opts){
+  const card = mk('div', 'tc');
+  card.appendChild(mk('div', 'tc-route', `${c.pickup} → ${c.dropoff}`));
+  const amt = c.fare != null ? (c.fare_kind === 'fee' ? T('feeOf')(money(c.fare)) : money(c.fare)) : null;
+  const meta = [R.fmtTime(c.time), amt, T('st_' + c.status) || c.status].filter(Boolean).join(' · ');
+  card.appendChild(mk('div', 'tc-meta', meta));
+  if (c.why && opts.why !== false) card.appendChild(mk('div', 'tc-why', `${T('whyMatch')}: ${c.why}`));
+  if (opts.button){
+    const btn = mk('button', 'btn primary tc-btn', opts.button); btn.type = 'button';
+    btn.addEventListener('click', () => chooseTrip(c));
+    card.appendChild(btn);
+  }
+  return card;
+}
+function showPicker(msg, cards){
+  const b = riderRow('left', T('sRyde'), 'picker');
+  b.appendChild(mk('p', null, msg));
+  const list = mk('div', 'tc-list'); list.setAttribute('role', 'list');
+  cards.forEach(c => { const card = tripCard(c, {button: T('pickOne')}); card.setAttribute('role', 'listitem'); list.appendChild(card); });
+  b.appendChild(list);
+}
+function showConfirm(res){
+  const c = res.candidates[0];
+  const b = riderRow('left', T('sRyde'), 'picker');
+  b.appendChild(mk('p', null, res.message.replace(/ ?(Is this the one\?|是这一趟吗？)$/, '')));
+  b.appendChild(tripCard(c, {}));
+  b.appendChild(mk('p', 'tc-q', T('isThis')));
+  const row = mk('div', 'tc-actions');
+  const yes = mk('button', 'btn primary', T('yes')); yes.type = 'button';
+  yes.addEventListener('click', () => chooseTrip(c));
+  const no = mk('button', 'btn', T('noOther')); no.type = 'button';
+  no.addEventListener('click', () => {
+    disableCards(b);
+    const others = (res.recent || []).filter(x => x.trip_id !== c.trip_id);
+    showPicker(T('otherTrips'), others);
+    riderScroll();
+  });
+  row.appendChild(yes); row.appendChild(no); b.appendChild(row);
+}
+function disableCards(scope){ (scope || riderChat).querySelectorAll('.picker button').forEach(x => { x.disabled = true; }); }
+
+async function findTrip(){
+  finding = true; refreshLive(); riderTyping(true, T('finding'));
   try {
-    if (!caseId){
-      showPane('rider');
-      const snap = await api('/api/cases', {story: text, mode: $('modeSelect').value, lang: R.getLang()});
-      caseId = snap.id; status = snap.status; roomWorking = true;
-      R.reset(); $('chat').querySelectorAll('.empty-state').forEach(n => n.remove());
-      subscribe(caseId);
+    const res = await api('/api/rider/find-trip', {story: storyParts.join('\n'), lang: R.getLang()});
+    riderTyping(false);
+    if (res.state === 'clarify') riderRow('left', T('sRyde')).textContent = res.message;
+    else if (res.state === 'none') showPicker(res.message, res.recent || []);
+    else if (res.state === 'confirm') showConfirm(res);
+    else showPicker(res.message, res.candidates || []);
+  } catch (e){
+    riderTyping(false); riderRow('left', T('sRyde'), 'error').textContent = e.message;
+  } finally { finding = false; refreshLive(); riderScroll(); }
+}
+
+async function chooseTrip(c){
+  if (busy || caseId) return;
+  disableCards();
+  riderRow('right', null, 'me').textContent = T('chose')(tripLabel(c));
+  busy = true; syncRiderInput();
+  try {
+    const snap = await api('/api/cases', {story: storyParts.join('\n'), trip_id: c.trip_id, mode: $('modeSelect').value, lang: R.getLang()});
+    caseId = snap.id; status = snap.status; roomWorking = true; stage = 'case';
+    R.reset(); $('chat').querySelectorAll('.empty-state').forEach(n => n.remove());
+    subscribe(caseId);
+  } catch (e){
+    riderRow('left', T('sRyde'), 'error').textContent = e.message;
+  } finally { busy = false; syncRiderInput(); refreshLive(); riderScroll(); }
+}
+
+async function sendRider(text){
+  text = (text || '').trim();
+  if (!text || busy || finding || isSupport()) return;
+  if (caseId && (status === 'resolved_by_ai' || status === 'resolved_by_human')) resetCase();
+  busy = true; $('riderSend').disabled = true;
+  try {
+    if (!caseId){                                    // stage 1: nothing exists yet but the rider's words
+      riderRow('right', null, 'me').textContent = text;
+      storyParts.push(text);
+      $('riderInput').value = ''; growRider();
+      busy = false;
+      await findTrip();
     } else {
-      await api(`/api/cases/${caseId}/rider-message`, {text, trip_id: tripId || null});
-      if (tripId) roomWorking = true;
+      await api(`/api/cases/${caseId}/rider-message`, {text});
+      $('riderInput').value = ''; growRider();
     }
-    $('riderInput').value = ''; growRider();
   } catch (e){
     riderRow('left', T('sRyde'), 'error').textContent = e.message;
   } finally {
-    riderBusy = false; $('riderSend').disabled = false; refreshLive();      // never leave Send stuck
+    busy = false; syncRiderInput(); refreshLive(); riderScroll();      // never leave Send stuck
   }
 }
-window.RR_PICK_TRIP = (tripId, label) => sendRider(label, tripId);
+function syncRiderInput(){
+  $('riderSend').disabled = busy || finding || isSupport();
+}
 
 function growRider(){ const i = $('riderInput'); i.style.height = 'auto'; i.style.height = Math.min(120, Math.max(42, i.scrollHeight)) + 'px'; }
 $('riderInput').addEventListener('input', () => { growRider(); refreshLive(); });
@@ -274,6 +351,11 @@ function onRoom(ev){
   R.enqueue(ev);
   if (ev.type === 'done' || ev.type === 'error'){ roomWorking = false; refreshLive(); }
 }
+function roomIdle(){
+  R.reset();
+  const es = mk('div', 'empty-state', T('tpRoomEmpty')); es.dataset.i18n = 'tpRoomEmpty';
+  $('chat').insertBefore(es, $('typingZone'));
+}
 
 /* ---------------------------------------------------------------- RIGHT: support console */
 function onHuman(ev){
@@ -284,6 +366,36 @@ function onHuman(ev){
   syncDecisionBar(); refreshLive();
 }
 function showConsole(){ $('consoleIdle').hidden = true; $('consoleCase').hidden = false; }
+
+/* support: the queue of cases handed to a person, from any rider */
+let queue = [];
+async function loadQueue(){
+  try { queue = (await api('/api/cases')).cases || []; } catch (e) { return; }
+  renderQueue();
+}
+function renderQueue(){
+  if (!isSupport()) return;
+  const box = $('queue'), list = $('queueList');
+  box.hidden = !queue.length; list.innerHTML = '';
+  queue.slice().reverse().forEach(c => {
+    const st = c.id === caseId ? status : c.status;
+    const b = mk('button', 'q-item' + (c.id === caseId ? ' on' : '')); b.type = 'button';
+    b.appendChild(mk('span', 'q-ref', c.reference));
+    b.appendChild(mk('span', 'q-meta', [c.rider_id, R.typeLabel(c.dispute_type || ''), c.trip_id].filter(Boolean).join(' · ')));
+    b.appendChild(mk('span', 'q-st q-' + st, (T('hs') || {})[st] || st));
+    b.setAttribute('aria-current', c.id === caseId ? 'true' : 'false');
+    b.addEventListener('click', () => openCase(c.id));
+    list.appendChild(b);
+  });
+  if (!caseId) $('consoleIdle').hidden = queue.length > 0;
+}
+function openCase(id){
+  if (id === caseId) return;
+  clearCaseViews();
+  caseId = id; roomWorking = false;
+  R.reset(); $('chat').querySelectorAll('.empty-state').forEach(n => n.remove());
+  subscribe(id); renderQueue();
+}
 
 function block(title, node, cls){
   const s = mk('div', 'sm-block' + (cls ? ' ' + cls : ''));
@@ -319,8 +431,7 @@ function renderSummary(){
   top.appendChild(mk('span', 'sm-status', (T('hs') || {})[status] || status));
   card.appendChild(top);
 
-  const why = block(T('smWhy'), R.bullets(s.escalation_reasons || []), 'why');
-  card.appendChild(why);
+  card.appendChild(block(T('smWhy'), R.bullets(s.escalation_reasons || []), 'why'));
   const rec = s.recommendation;
   const recNode = rec
     ? mk('div', 'sm-rec', `${R.rulingLabel(rec.ruling)}${rec.refund_amount != null ? ' · ' + money(rec.refund_amount) : ''}${rec.goodwill_credit ? ' · +' + money(rec.goodwill_credit) : ''}`)
@@ -417,7 +528,7 @@ $('qcSend').addEventListener('click', async () => {
 function syncDecisionBar(){
   const bar = $('decisionBar');
   const open = status === 'with_agent' || status === 'waiting_for_rider';
-  bar.hidden = !(summary && (open || status === 'resolved_by_human'));
+  bar.hidden = !(isSupport() && summary && (open || status === 'resolved_by_human'));
   bar.querySelectorAll('.db-buttons button').forEach(b => { b.disabled = !open; });
   bar.querySelector('.db-buttons').hidden = status === 'resolved_by_human';
   $('dbApprove').disabled = !open || !(summary && summary.recommendation);
@@ -459,39 +570,75 @@ function renderDecided(d){
   done.textContent = `${T('dbDecided')}: ${(T(({approve:'tpApprove', adjust:'tpAdjust', reject:'tpReject'})[d.action]) || d.action)}${amount}. ${T('dbDone')}`;
 }
 
-/* ---------------------------------------------------------------- demo strip */
+/* ---------------------------------------------------------------- demo strip, identity, reset */
 function renderFills(){
   const box = $('fills'); box.innerHTML = '';
-  (FILLS[R.getLang()] || FILLS.en).forEach(([k, text]) => {
-    const b = mk('button', 'chip', T(k)); b.type = 'button';
-    b.addEventListener('click', () => { const i = $('riderInput'); i.value = text; growRider(); i.focus(); showPane('rider'); refreshLive(); });
+  const stories = (me && me.stories) || [];
+  $('fills').parentElement.querySelector('.tp-fill-lbl').hidden = !stories.length;
+  stories.forEach(st => {
+    const lang = R.getLang();
+    const b = mk('button', 'chip', lang === 'zh' ? st.label_zh : st.label_en); b.type = 'button';
+    b.addEventListener('click', () => {           // fills the text box only; never sends
+      const i = $('riderInput'); i.value = lang === 'zh' ? st.zh : st.en; growRider(); i.focus(); showPane('rider'); refreshLive();
+    });
     box.appendChild(b);
   });
 }
-function resetCase(){
+function renderIdentity(){
+  $('whoami').textContent = isSupport() ? T('tpSignedSupport') : T('tpSignedIn')(me.name || me.rider_id, me.rider_id);
+}
+function greet(){
+  if (isSupport()) return;
+  riderRow('left', T('sRyde')).textContent = T('hello')(me.name || me.rider_id);
+}
+function clearCaseViews(){
   closeStreams();
-  caseId = null; status = null; summary = null; qa = {}; roomWorking = false; askBusy = false; decisionAction = null;
+  status = null; summary = null; qa = {}; roomWorking = false; askBusy = false; decisionAction = null;
   riderChat.querySelectorAll('.rm').forEach(n => n.remove());
-  $('riderEmpty').hidden = false; $('ticketBar').hidden = true;
-  R.reset();
-  const es = mk('div', 'empty-state', T('tpRoomEmpty')); es.dataset.i18n = 'tpRoomEmpty';
-  $('chat').insertBefore(es, $('typingZone'));
+  $('ticketBar').hidden = true;
   $('summary').innerHTML = ''; $('qaThread').innerHTML = '';
   $('consoleIdle').hidden = false; $('consoleCase').hidden = true;
   $('askConfirm').hidden = true; $('askForm').hidden = false; $('dbForm').hidden = true;
   const done = $('decisionBar').querySelector('.db-done'); if (done) done.remove();
-  syncDecisionBar(); refreshLive();
+}
+function resetCase(){
+  clearCaseViews();
+  caseId = null; stage = 'describe'; storyParts = []; finding = false; busy = false;
+  roomIdle();
+  $('riderEmpty').hidden = !isSupport();
+  greet();
+  if (isSupport()) renderQueue();
+  syncDecisionBar(); syncRiderInput(); refreshLive();
 }
 $('resetBtn').addEventListener('click', resetCase);
+$('signOutBtn').addEventListener('click', async () => {
+  closeStreams();
+  try { await fetch('/api/auth/logout', {method: 'POST'}); } catch (e) {}
+  location.href = '/';
+});
 $('langSelect').addEventListener('change', e => {
-  R.setLang(e.target.value); renderFills(); refreshLive();
+  R.setLang(e.target.value); renderFills(); renderIdentity(); refreshLive();
   if (status) $('tbStatus').textContent = (T('rs') || {})[status] || status;
-  renderSummary(); renderQA();
+  if (!isSupport()) $('consoleIdleSub').textContent = T('tpRiderConsole');
+  renderSummary(); renderQA(); renderQueue();
 });
 
 async function boot(){
   $('langSelect').value = R.getLang();
-  R.applyStatic(); renderFills(); refreshLive(); syncDecisionBar();
+  R.applyStatic();
+  try { me = await api('/api/auth/me'); } catch (e) { return; }      // 401: api() already went to the login page
+  document.body.classList.toggle('as-support', isSupport());
+  renderIdentity(); renderFills();
+  if (isSupport()){
+    $('supportView').hidden = false; $('riderForm').hidden = true; $('riderEmpty').hidden = true;
+    showPane('human');
+    loadQueue(); queueTimer = setInterval(loadQueue, 3000);
+  } else {
+    $('consoleIdleSub').textContent = T('tpRiderConsole');
+    $('riderEmpty').hidden = true;
+    greet();
+  }
+  refreshLive(); syncDecisionBar(); syncRiderInput();
   try {
     health = await api('/api/health');
     const llmOpt = $('modeSelect').querySelector('option[value="llm"]');

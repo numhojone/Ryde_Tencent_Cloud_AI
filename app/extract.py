@@ -291,6 +291,14 @@ _PARTS = {
 }
 
 
+_WEEKDAYS = {
+    0: ("monday", "isnin", "星期一", "周一", "礼拜一"), 1: ("tuesday", "selasa", "星期二", "周二", "礼拜二"),
+    2: ("wednesday", "rabu", "星期三", "周三", "礼拜三"), 3: ("thursday", "khamis", "星期四", "周四", "礼拜四"),
+    4: ("friday", "jumaat", "星期五", "周五", "礼拜五"), 5: ("saturday", "sabtu", "星期六", "周六", "礼拜六"),
+    6: ("sunday", "ahad", "星期日", "星期天", "周日", "礼拜天"),
+}
+
+
 def _month(s: str) -> int | None:
     s = s.lower()
     return _MONTHS.get(s) or _MONTHS.get(s[:4]) or _MONTHS.get(s[:3])
@@ -350,7 +358,15 @@ def extract_times(text: str) -> list[dict]:
         i = low.find(w)
         if i >= 0 and not _overlaps((i, i + len(w)), taken):
             taken.append((i, i + len(w)))
-            out.append({"text": text[i:i + len(w)], "_pos": i})
+            ago = 1 if w in ("yesterday", "semalam", "昨天", "நேற்று") else 0
+            out.append({"text": text[i:i + len(w)], "_pos": i, "days_ago": ago})
+    for wd, words in _WEEKDAYS.items():
+        for w in words:
+            m = re.search(rf"(?<![a-z]){re.escape(w)}(?![a-z])", low) if w.isascii() else (re.search(re.escape(w), text))
+            if m and not _overlaps((m.start(), m.end()), taken):
+                taken.append((m.start(), m.end()))
+                out.append({"text": text[m.start():m.end()], "_pos": m.start(), "weekday": wd})
+                break
     out.sort(key=lambda x: x.pop("_pos"))
     return out
 

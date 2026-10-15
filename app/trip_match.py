@@ -20,6 +20,7 @@ and is never passed to the agents that rule.
 from __future__ import annotations
 
 import datetime as _dt
+import re
 
 from app.extract import extract_numbers, extract_times, find_places
 from app.i18n import L, CUR
@@ -70,7 +71,7 @@ def _money(v: float) -> str:
 
 
 def _score_trip(t: dict, story: str, places: list[dict], nums: dict, times: list[dict],
-                category: str | None, lang: str) -> tuple[float, list[str]]:
+                category: str | None, lang: str, now: _dt.datetime | None = None) -> tuple[float, list[str]]:
     score, reasons = 0.0, []
     names = {"pickup": (t.get("pickup_location") or {}).get("name"),
              "dropoff": (t.get("dropoff_location") or {}).get("name")}
@@ -133,6 +134,14 @@ def _score_trip(t: dict, story: str, places: list[dict], nums: dict, times: list
                 h = tt.hour
                 part_hit |= {"morning": 5 <= h < 12, "afternoon": 12 <= h < 18,
                              "evening": h >= 17 or h < 2, "late_night": h < 5}[x["part"]]
+        if not date_hit:
+            for x in times:
+                if x.get("weekday") is not None and x["weekday"] == tt.weekday():
+                    score += 1.0
+                    reasons.append(L(lang, f"on a {tt.strftime('%A')}", f"星期{'一二三四五六日'[tt.weekday()]}"))
+                    break
+                if x.get("days_ago") is not None and (now or _dt.datetime.now(tt.tzinfo)).date() - _dt.timedelta(days=x["days_ago"]) == tt.date():
+                    date_hit = True
         if date_hit:
             score += 1.5
             reasons.append(L(lang, f"date {tt.day} {tt.strftime('%b')}", f"日期 {tt.month}月{tt.day}日"))
@@ -142,6 +151,15 @@ def _score_trip(t: dict, story: str, places: list[dict], nums: dict, times: list
         elif part_hit:
             score += 0.5
             reasons.append(L(lang, "time of day fits", "时段相符"))
+
+    # ---- driver's name (first or full name written in the story)
+    dn = (t.get("driver_name") or "").strip()
+    if dn:
+        low = (story or "").lower()
+        parts = [w for w in dn.lower().split() if len(w) >= 3]
+        if dn.lower() in low or any(re.search(rf"(?<![a-z]){re.escape(w)}(?![a-z])", low) for w in parts):
+            score += 2.0
+            reasons.append(L(lang, f"driver {dn}", f"司机 {dn}"))
 
     # ---- is the category possible for this trip?
     if category:

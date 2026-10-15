@@ -6,6 +6,7 @@ resolve() 是异步生成器，逐条 yield 事件，供 SSE 实时推送。
 from __future__ import annotations
 
 import asyncio
+import contextvars
 import datetime as _dt
 import time
 import uuid as _uuid
@@ -22,7 +23,7 @@ from app.agents.rider_advocate import RiderAdvocate
 from app.config import settings
 from app.i18n import L, norm_lang
 from app.safety_net import apply as apply_safety_net
-from app.tools.fixtures import get_trip_parties, load_dispute_ticket, load_rider_trips
+from app.tools.fixtures import get_trip_parties, load_dispute_ticket, load_rider_trips, set_scope
 from app.tools import call_tool, summarize_for_log
 
 
@@ -118,7 +119,11 @@ async def _triage_draft(draft: dict, emit, mode: str | None, lang: str = "en") -
         "requested_amount": triage.get("requested_amount"),
         "complaint": draft["complaint"],
     })
-    await emit({"type": "ticket_filed", "ticket": official,
+    trip_summary = {"trip_id": draft["trip_id"],
+                    "route": f"{(record.get('pickup_location') or {}).get('name', '?')} → {(record.get('dropoff_location') or {}).get('name', '?')}",
+                    "time": record.get("start_time") or record.get("scheduled_time"), "status": record.get("status"),
+                    "fare": record.get("actual_fare", record.get("fare_charged", record.get("cancellation_fee")))}
+    await emit({"type": "ticket_filed", "ticket": official, "trip_summary": trip_summary,
                 "dispute_type_label": type_label(official["dispute_type"], lang),
                 "classification_confidence": triage["classification_confidence"],
                 "detected_signals": triage.get("detected_signals", []),
@@ -232,7 +237,7 @@ async def _run_flow(dispute_id: str, emit, mode: str | None = None,
 
 
 async def resolve(dispute_id: str | None = None, mode: str | None = None,
-                  draft: dict | None = None, lang: str = "en") -> AsyncGenerator[dict, None]:
+                  draft: dict | None = None, lang: str = "en", rider_id: str | None = None) -> AsyncGenerator[dict, None]:
     """异步生成器：逐条产出事件，供 SSE 推送。
 
     mode:  None（跟随全局 .env） / "llm"（真实 LLM） / "deterministic"（确定性回退）。
@@ -254,7 +259,10 @@ async def resolve(dispute_id: str | None = None, mode: str | None = None,
         finally:
             await queue.put(_SENTINEL)
 
-    task = asyncio.create_task(flow())
+    # rider_id scopes every tool call of this run to that rider's own data (None: unrestricted).
+    ctx = contextvars.copy_context()
+    ctx.run(set_scope, rider_id)
+    task = asyncio.create_task(flow(), context=ctx)
     while True:
         ev = await queue.get()
         if ev is _SENTINEL:

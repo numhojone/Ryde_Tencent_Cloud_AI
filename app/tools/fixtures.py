@@ -8,6 +8,8 @@
 from __future__ import annotations
 
 import json
+from contextlib import contextmanager
+from contextvars import ContextVar
 from pathlib import Path
 from typing import Any
 
@@ -20,7 +22,31 @@ class ToolError(Exception):
 
 # Directories a tool may read. fixtures/expected (ground truth) is never one of them.
 _READABLE = ("disputes", "trips", "profiles", "policies")
-_READABLE_FILES = ("precedents.json", "trip_parties.json")
+_READABLE_FILES = ("precedents.json", "trip_parties.json", "trips_synthetic.json", "demo_accounts.json")
+
+# ---------- rider scoping ----------
+# The rider whose data the current request / case may read. None = unrestricted (support agent, internal code).
+# Every lookup that returns trip data checks it, and another rider's trip looks exactly like a missing one,
+# so its existence is not leaked.
+_SCOPE: ContextVar[str | None] = ContextVar("rr_rider_scope", default=None)
+
+
+def current_scope() -> str | None:
+    return _SCOPE.get()
+
+
+@contextmanager
+def rider_scope(rider_id: str | None):
+    token = _SCOPE.set(rider_id)
+    try:
+        yield
+    finally:
+        _SCOPE.reset(token)
+
+
+def set_scope(rider_id: str | None) -> None:
+    """For a context created with contextvars.copy_context() (a new task): bind it to a rider."""
+    _SCOPE.set(rider_id)
 
 
 def _load_json(rel_path: str) -> Any:
@@ -36,12 +62,62 @@ def _load_json(rel_path: str) -> Any:
 
 
 def _load_dispute(dispute_id: str) -> dict:
-    return _load_json(f"disputes/{dispute_id}.json")
+    d = _load_json(f"disputes/{dispute_id}.json")
+    scope = current_scope()
+    if scope and d.get("rider_id") != scope:
+        raise ToolError(f"Data not found: disputes/{dispute_id}.json")
+    return d
+
+
+def _synthetic_trips() -> dict[str, dict]:
+    """Extra demo trips (fixtures/trips_synthetic.json, all synthetic), keyed by trip_id."""
+    p = FIXTURES_DIR / "trips_synthetic.json"
+    if not p.exists():
+        return {}
+    return {t["trip_id"]: t for t in _load_json("trips_synthetic.json").get("trips", [])}
+
+
+def all_trip_ids() -> list[str]:
+    ids = [p.stem for p in sorted((FIXTURES_DIR / "trips").glob("*.json"))]
+    return ids + [t for t in _synthetic_trips() if t not in ids]
+
+
+def _raw_trip(trip_id: str) -> dict:
+    syn = _synthetic_trips()
+    if "/" not in trip_id and "\\" not in trip_id and trip_id in syn and not (FIXTURES_DIR / "trips" / f"{trip_id}.json").exists():
+        return syn[trip_id]
+    return _load_json(f"trips/{trip_id}.json")
+
+
+def trip_owner(trip: dict, trip_id: str | None = None) -> str | None:
+    td = trip.get("trip_data") or {}
+    if td.get("rider_id"):
+        return td["rider_id"]
+    try:
+        return (_load_json("trip_parties.json").get(trip_id or trip.get("trip_id")) or {}).get("rider_id")
+    except ToolError:
+        return None
 
 
 def _load_trip(trip_id: str) -> dict:
-    """整条 trip 文件包含 trip_data/gps_telemetry/chat_logs/app_events/traffic_reference。"""
-    return _load_json(f"trips/{trip_id}.json")
+    """整条 trip 文件包含 trip_data/gps_telemetry/chat_logs/app_events/traffic_reference。
+
+    Rider-scoped: another rider's trip raises the same "not found" as a missing trip.
+    """
+    trip = _raw_trip(trip_id)
+    scope = current_scope()
+    if scope and trip_owner(trip, trip_id) != scope:
+        raise ToolError(f"Data not found: trips/{trip_id}.json")
+    return trip
+
+
+def _scoped_driver_ids(rider_id: str) -> set[str]:
+    out = set()
+    for tid in all_trip_ids():
+        t = _raw_trip(tid)
+        if trip_owner(t, tid) == rider_id:
+            out.add((t.get("trip_data") or {}).get("driver_id") or get_trip_parties(tid, _check=False).get("driver_id"))
+    return out
 
 
 # ---------- 8 个对外工具 ----------
@@ -72,11 +148,17 @@ def get_app_events(trip_id: str) -> dict:
 
 def get_rider_profile(rider_id: str) -> dict:
     """获取乘客画像：账龄、总单量、评分、争议历史、欺诈标记。"""
+    scope = current_scope()
+    if scope and rider_id != scope:
+        raise ToolError(f"Data not found: profiles/riders/{rider_id}.json")
     return {"rider_id": rider_id, **_load_json(f"profiles/riders/{rider_id}.json")}
 
 
 def get_driver_profile(driver_id: str) -> dict:
-    """获取司机画像（同乘客画像字段，另含车辆信息）。"""
+    """获取司机画像（同乘客画像字段，另含车辆信息）。Rider-scoped: only drivers of the rider's own trips."""
+    scope = current_scope()
+    if scope and driver_id not in _scoped_driver_ids(scope):
+        raise ToolError(f"Data not found: profiles/drivers/{driver_id}.json")
     return {"driver_id": driver_id, **_load_json(f"profiles/drivers/{driver_id}.json")}
 
 
@@ -145,32 +227,42 @@ def load_dispute_ticket(dispute_id: str) -> dict:
     return _load_dispute(dispute_id)
 
 
+def _route(td: dict) -> str:
+    return f"{(td.get('pickup_location') or {}).get('name', '?')} → {(td.get('dropoff_location') or {}).get('name', '?')}"
+
+
 def list_trips() -> list[dict]:
-    """列出所有有证据数据的行程（供自由文本提交时选择 trip_id）。"""
+    """Trips a complaint can be filed against (scoped to the current rider when there is one)."""
     parties = _load_json("trip_parties.json")
     out = []
-    for p in sorted((FIXTURES_DIR / "trips").glob("*.json")):
-        trip_id = p.stem
-        trip = _load_trip(trip_id)
+    for trip_id in all_trip_ids():
+        try:
+            trip = _load_trip(trip_id)
+        except ToolError:
+            continue
         td = trip.get("trip_data", {}) or {}
         meta = parties.get(trip_id, {}) or {}
         out.append({
             "trip_id": trip_id,
-            "route": meta.get("route") or f"{td.get('pickup', '?')} → {td.get('dropoff', '?')}",
+            "route": meta.get("route") or _route(td),
             "outcome": meta.get("outcome") or td.get("status", ""),
-            "scheduled_time": td.get("scheduled_time"),
+            "scheduled_time": td.get("scheduled_time") or td.get("start_time"),
             "status": td.get("status"),
-            "rider_id": meta.get("rider_id"),
-            "driver_id": meta.get("driver_id"),
+            "rider_id": meta.get("rider_id") or td.get("rider_id"),
+            "driver_id": meta.get("driver_id") or td.get("driver_id"),
+            "synthetic": str(trip.get("_source", "")).lower().startswith("synthetic"),
         })
     return out
 
 
 def list_place_names() -> list[str]:
-    """Every pickup / drop-off place name in the trip fixtures (the gazetteer for story extraction)."""
+    """Every pickup / drop-off place name in the trip data (the gazetteer for story extraction).
+
+    Place names are public places, so this list is not rider-scoped.
+    """
     names: list[str] = []
-    for p in sorted((FIXTURES_DIR / "trips").glob("*.json")):
-        td = _load_trip(p.stem).get("trip_data", {}) or {}
+    for tid in all_trip_ids():
+        td = _raw_trip(tid).get("trip_data", {}) or {}
         for k in ("pickup_location", "dropoff_location"):
             n = (td.get(k) or {}).get("name")
             if n and n not in names:
@@ -178,37 +270,58 @@ def list_place_names() -> list[str]:
     return names
 
 
-def load_rider_trips() -> list[dict]:
+def _driver_name(trip: dict) -> str | None:
+    td = trip.get("trip_data") or {}
+    if td.get("driver_name"):
+        return td["driver_name"]
+    return next((m.get("sender_name") for m in trip.get("chat_logs", []) if m.get("sender") == "driver" and m.get("sender_name")), None)
+
+
+def load_rider_trips(rider_id: str | None = None) -> list[dict]:
     """The rider's recent trips as the platform recorded them, for matching a story to a trip.
 
-    Each item is the trip_data record plus the app events and the GPS peak speed. Platform records only:
-    nothing from fixtures/expected.
+    Only the current scope's (or the given rider's) trips. Each item is the trip_data record plus the app
+    events, the GPS peak speed and the driver's name. Platform records only: nothing from fixtures/expected.
     """
+    rid = rider_id or current_scope()
     out = []
-    for p in sorted((FIXTURES_DIR / "trips").glob("*.json")):
-        trip = _load_trip(p.stem)
+    for tid in all_trip_ids():
+        try:
+            trip = _load_trip(tid)
+        except ToolError:
+            continue
+        if rid and trip_owner(trip, tid) != rid:
+            continue
         td = dict(trip.get("trip_data", {}) or {})
-        td["trip_id"] = p.stem
+        td["trip_id"] = tid
         td["app_events"] = trip.get("app_events", [])
         td["gps_max_speed_kmh"] = max([pt.get("speed_kmh", 0) or 0 for pt in trip.get("gps_telemetry", [])], default=None)
+        td["driver_name"] = _driver_name(trip)
+        td["rider_id"] = td.get("rider_id") or trip_owner(trip, tid)
+        td["has_damage_claim"] = bool(trip.get("damage_evidence"))
         out.append(td)
     return out
 
 
-def get_trip_parties(trip_id: str) -> dict:
+def get_trip_parties(trip_id: str, _check: bool = True) -> dict:
     """按 trip_id 取当事双方 ID。自由文本投诉里乘客不会提供自己的 ID，由系统按行程补齐。"""
-    parties = _load_json("trip_parties.json")
-    meta = parties.get(trip_id)
-    if not meta:
+    trip = _load_trip(trip_id) if _check else _raw_trip(trip_id)
+    meta = _load_json("trip_parties.json").get(trip_id) or {}
+    td = trip.get("trip_data") or {}
+    rider, driver = meta.get("rider_id") or td.get("rider_id"), meta.get("driver_id") or td.get("driver_id")
+    if not rider or not driver:
         raise ToolError(f"Unknown trip, no party record: {trip_id}")
-    return {"trip_id": trip_id, "rider_id": meta["rider_id"], "driver_id": meta["driver_id"]}
+    return {"trip_id": trip_id, "rider_id": rider, "driver_id": driver}
 
 
 def list_disputes() -> list[dict]:
-    """列出所有可用样例争议（供前端下拉）。"""
+    """Preset tickets for the dropdown (scoped to the current rider when there is one)."""
     out = []
+    scope = current_scope()
     for p in sorted((FIXTURES_DIR / "disputes").glob("*.json")):
         d = _load_json(f"disputes/{p.name}")
+        if scope and d.get("rider_id") != scope:
+            continue
         out.append({
             "dispute_id": d["dispute_id"],
             "trip_id": d["trip_id"],
@@ -217,3 +330,15 @@ def list_disputes() -> list[dict]:
             "description": d["description"],
         })
     return out
+
+
+def list_rider_ids() -> list[str]:
+    return [p.stem for p in sorted((FIXTURES_DIR / "profiles" / "riders").glob("*.json"))]
+
+
+def demo_accounts() -> dict:
+    """Display names and demo stories for the login screen (fixtures/demo_accounts.json, synthetic)."""
+    try:
+        return _load_json("demo_accounts.json")
+    except ToolError:
+        return {"riders": {}}

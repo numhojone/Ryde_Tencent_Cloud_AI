@@ -30,6 +30,7 @@ from app.extract import detect_language
 from app.i18n import L
 from app.orchestrator import resolve
 from app.tools import call_tool
+from app.tools.fixtures import rider_scope
 
 _SGT = ZoneInfo("Asia/Singapore")
 STATUSES = ("intake", "in_review", "resolved_by_ai", "with_agent", "waiting_for_rider", "resolved_by_human")
@@ -53,6 +54,8 @@ class Case:
     lang: str                      # language of the console and the agent room
     rider_lang: str                # language of rider-facing messages
     story: str
+    rider_id: str | None = None    # the signed-in rider who opened the case (from the session only)
+    escalated: bool = False        # ever handed to a person: only then may a support agent open it
     status: str = "intake"
     ticket: dict | None = None
     rider_messages: list = field(default_factory=list)
@@ -87,6 +90,7 @@ class Case:
 
     def snapshot(self) -> dict:
         return {"id": self.id, "reference": self.reference, "status": self.status, "lang": self.lang,
+                "rider_id": self.rider_id, "escalated": self.escalated,
                 "rider_lang": self.rider_lang, "ticket": self.ticket, "rider_messages": self.rider_messages,
                 "human_messages": self.human_messages, "qa_log": self.qa_log, "decision": self.decision,
                 "outcome": self.outcome, "needs_human": self.status in ("with_agent", "waiting_for_rider"),
@@ -134,12 +138,13 @@ def set_status(case: Case, status: str) -> None:
         publish(case, "case", "case_status", status=status, reference=case.reference)
 
 
-def _add_rider_message(case: Case, text: str, trip_id: str | None = None, room: bool = True) -> dict:
+def _add_rider_message(case: Case, text: str, trip_id: str | None = None, room: bool = True, initial: bool = False) -> dict:
     m = {"text": text, "at": _now()}
     if trip_id:
         m["trip_id"] = trip_id
     case.rider_messages.append(m)
-    publish(case, "rider", "rider_message", text=text, at=m["at"])
+    # initial: the story the rider already sees in their own chat from stage 1
+    publish(case, "rider", "rider_message", text=text, at=m["at"], initial=initial)
     if room:                       # the first story reaches the room as the orchestrator's complaint_received
         publish(case, "room", "rider_message", text=text, at=m["at"], role="rider", agent="rider")
     return m
@@ -151,6 +156,11 @@ def _assistant(case: Case, en: str, zh: str, **extra) -> None:
 
 
 def _gather_tools(case: Case) -> None:
+    with rider_scope(case.rider_id):
+        _gather_tools_scoped(case)
+
+
+def _gather_tools_scoped(case: Case) -> None:
     t = case.ticket or {}
     tid = t.get("trip_id")
     out = {}
@@ -182,7 +192,8 @@ async def _run_pipeline(case: Case, story: str, trip_id: str | None) -> None:
     case.busy = True
     case.awaiting_trip, case.ruling, case.error = False, None, None
     try:
-        async for ev in resolve(None, mode=case.mode, draft={"trip_id": trip_id, "complaint": story}, lang=case.lang):
+        async for ev in resolve(None, mode=case.mode, draft={"trip_id": trip_id, "complaint": story}, lang=case.lang,
+                                rider_id=case.rider_id):
             t = ev.get("type")
             publish(case, "room", t, **{k: v for k, v in ev.items() if k != "type"})
             if t == "trip_matched":
@@ -230,6 +241,7 @@ def _after_pipeline(case: Case) -> None:
         return
     else:
         set_status(case, "with_agent")
+    case.escalated = True
     publish(case, "rider", "handoff", text=handoff_message(case.reference, case.rider_lang), reference=case.reference)
     publish(case, "human", "case_escalated", summary=human_summary(case, case.lang), ruling=case.ruling)
 
@@ -238,17 +250,19 @@ def _start_task(case: Case, story: str, trip_id: str | None) -> None:
     case.task = asyncio.create_task(_run_pipeline(case, story, trip_id))
 
 
-async def start_case(story: str, *, trip_id: str | None = None, mode: str | None = None, lang: str = "en") -> Case:
+async def start_case(story: str, *, trip_id: str | None = None, mode: str | None = None, lang: str = "en",
+                     rider_id: str | None = None) -> Case:
     story = (story or "").strip()
     if not story:
         raise CaseError(400, L(lang, "A story is required", "需要填写投诉内容"))
     if len(story) > 2000:
         raise CaseError(400, L(lang, "Message too long (max 2000 characters)", "内容过长（上限 2000 字）"))
     rider_lang = "zh" if (lang == "zh" or detect_language(story) == "zh") else "en"
-    case = Case(id=f"CASE-{uuid.uuid4().hex[:6].upper()}", mode=mode, lang=lang, rider_lang=rider_lang, story=story)
+    case = Case(id=f"CASE-{uuid.uuid4().hex[:6].upper()}", mode=mode, lang=lang, rider_lang=rider_lang, story=story,
+                rider_id=rider_id)
     CASES[case.id] = case
     publish(case, "case", "case_status", status=case.status, reference=case.reference)
-    _add_rider_message(case, story, room=False)
+    _add_rider_message(case, story, room=False, initial=True)
     _assistant(case, "Thanks for telling us. I'm checking your trip records now.",
                      "感谢您的反馈，我正在核查您的行程记录。")
     _start_task(case, story, trip_id or None)
@@ -275,6 +289,10 @@ async def rider_message(case: Case, text: str, trip_id: str | None = None) -> di
         else:                                            # the rider described the trip: match again on everything said
             case.story = story = f"{case.story}\n{text}"
         case.awaiting_trip = False
+        if trip_id and case.rider_id:
+            from app.rider_match import owns_trip
+            if not owns_trip(case.rider_id, trip_id):
+                raise CaseError(403, L(case.lang, "That trip is not in your account.", "该行程不在您的账户中。"))
         _start_task(case, story, trip_id)
         return {"status": case.status, "rerun": True}
 
@@ -380,7 +398,19 @@ async def human_decision(case: Case, action: str, amount: float | None = None, n
     return {"status": case.status, "decision": case.decision, "card": card}
 
 
-def list_cases() -> list[dict]:
-    return [{"id": c.id, "reference": c.reference, "status": c.status,
-             "needs_human": c.status in ("with_agent", "waiting_for_rider"),
-             "dispute_type": (c.ticket or {}).get("dispute_type")} for c in CASES.values()]
+def can_view(case: Case, sess: dict | None) -> bool:
+    """A rider sees only their own cases; a support agent sees any case that was handed to a person.
+    No session (internal callers and tests) sees everything."""
+    if sess is None:
+        return True
+    if sess.get("role") == "support":
+        return case.escalated
+    return case.rider_id is not None and case.rider_id == sess.get("rider_id")
+
+
+def list_cases(sess: dict | None = None) -> list[dict]:
+    return [{"id": c.id, "reference": c.reference, "status": c.status, "rider_id": c.rider_id,
+             "needs_human": c.status in ("with_agent", "waiting_for_rider"), "escalated": c.escalated,
+             "dispute_type": (c.ticket or {}).get("dispute_type"),
+             "trip_id": (c.ticket or {}).get("trip_id"), "updated": c.events[-1]["at"] if c.events else None}
+            for c in CASES.values() if can_view(c, sess)]

@@ -219,6 +219,7 @@ function renderDropdowns(){
 
 /* Participant strip: who is in this chat, and who is working right now. */
 function renderRoster(){
+  if (!roster) return;
   const state = {};
   roster.querySelectorAll('.roster-item').forEach(n => {
     state[n.dataset.who] = n.classList.contains('active') ? 'active' : (n.classList.contains('done') ? 'done' : '');
@@ -536,8 +537,9 @@ function addTicket(ev){
   line.appendChild(badge); line.appendChild(raw); line.appendChild(cf);
   b.appendChild(line);
 
-  const tm = ev.trip_match;
-  const trip = t.trip_id + (tm ? ` · ${tm.route} · ${T('tkAutoMatched')} ${conf2(tm.confidence)}` : '');
+  const tm = ev.trip_match, ts = ev.trip_summary;
+  const trip = t.trip_id + (tm ? ` · ${tm.route} · ${T('tkAutoMatched')} ${conf2(tm.confidence)}`
+    : (ts && ts.route ? ` · ${ts.route}${ts.time ? ' · ' + fmtTime(ts.time) : ''}` : ''));
   const kv = kvList([
     [T('tkAmount'), t.requested_amount != null ? money(t.requested_amount) : T('tkNotStated')],
     [T('tkRes'), t.requested_resolution || '-'],

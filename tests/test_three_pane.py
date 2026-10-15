@@ -18,6 +18,9 @@ from app.config import settings  # noqa: E402
 from app.main import app  # noqa: E402
 from app.tools import call_tool  # noqa: E402
 
+sys.path.insert(0, str(ROOT / "tests"))
+from session import login  # noqa: E402
+
 ROUTE = ("The driver took a much longer route from Orchard Central to Changi Airport T3. The fare was $35 when I "
          "usually pay $28, and he never told me about any change.")
 FARE = "The fare was $16.50 but the upfront quote at Bugis Junction was $12.00. Nobody told me the price had gone up."
@@ -258,11 +261,15 @@ def test_api_key_never_appears_in_events(monkeypatch):
 
 def test_http_endpoints():
     with TestClient(app) as client:
+        assert "Sign in" in client.get("/").text                        # no session: the login screen
+        assert client.get("/classic", follow_redirects=False).status_code == 303
+        login(client, "R-9001")
         assert client.get("/").status_code == 200 and "Three-pane" in client.get("/").text
         assert "Multi-agent dispute resolution" in client.get("/classic").text
-        assert client.post("/api/cases", json={"story": "  "}).status_code == 400
+        assert client.post("/api/cases", json={"story": "  ", "trip_id": "TRIP-2026-10023"}).status_code == 400
+        assert client.post("/api/cases", json={"story": FARE}).status_code == 400          # trip not confirmed yet
         assert client.get("/api/cases/CASE-NOPE").status_code == 404
-        snap = client.post("/api/cases", json={"story": FARE, "mode": "deterministic"}).json()
+        snap = client.post("/api/cases", json={"story": FARE, "trip_id": "TRIP-2026-10023", "mode": "deterministic"}).json()
         cid = snap["id"]
         for _ in range(200):
             s = client.get(f"/api/cases/{cid}").json()
@@ -270,7 +277,12 @@ def test_http_endpoints():
                 break
             client.get("/api/health")
         assert s["status"] == "resolved_by_ai" and s["outcome"]["refund_amount"] == 4.5
+        assert "qa_log" not in s and "summary" not in s                 # console data is not sent to riders
+        # a rider never reaches the console endpoints
+        assert client.post(f"/api/cases/{cid}/human/decision", json={"action": "reject"}).status_code == 403
+        assert client.post(f"/api/cases/{cid}/human/rephrase", json={"text": "wat time"}).status_code == 403
+        login(client, support=True)
+        # an AI-resolved case was never handed to a person, so the support agent does not see it
+        assert client.get(f"/api/cases/{cid}").status_code == 404
         r = client.post(f"/api/cases/{cid}/human/decision", json={"action": "reject"})
-        assert r.status_code == 409
-        r = client.post(f"/api/cases/{cid}/human/rephrase", json={"text": "wat time did teh driver arrive"})
-        assert r.json()["rephrased"] == "What time did the driver arrive?"
+        assert r.status_code == 404

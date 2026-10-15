@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ryde Support | Sign in</title>
+<link rel="stylesheet" href="/static/style.css">
+<link rel="stylesheet" href="/static/login.css">
+</head>
+<body class="login">
+<main class="lg-wrap">
+  <div class="lg-lang">
+    <select id="langSelect" class="select select-sm" aria-label="Language">
+      <option value="en">English</option>
+      <option value="zh">中文</option>
+    </select>
+  </div>
+  <div class="lg-brand">
+    <div class="brand-mark" aria-hidden="true">R</div>
+    <h1 data-i18n="lgTitle">Ryde Support</h1>
+    <p data-i18n="lgSub">Get help with a trip</p>
+  </div>
+  <form class="lg-card" id="loginForm">
+    <div class="lg-role" role="radiogroup" data-i18n-title="lgRoleTitle" title="Sign in as">
+      <label class="lg-opt"><input type="radio" name="role" value="rider" checked><span data-i18n="lgRider">Rider</span></label>
+      <label class="lg-opt"><input type="radio" name="role" value="support"><span data-i18n="lgSupport">Support agent</span></label>
+    </div>
+    <label class="lg-field" id="riderField">
+      <span data-i18n="lgAccount">Rider account</span>
+      <select id="accountSelect" class="select" required></select>
+    </label>
+    <p class="lg-supportnote" id="supportNote" data-i18n="lgSupportNote" hidden>Handles cases the AI has passed to a person, from any rider.</p>
+    <p class="lg-note" data-i18n="lgNote">Demo accounts. No password needed.</p>
+    <p class="lg-err" id="loginErr" role="alert"></p>
+    <button type="submit" class="btn primary lg-btn" id="signInBtn" data-i18n="lgSignIn">Sign in</button>
+  </form>
+  <p class="lg-foot" data-i18n="lgFoot">Tip: to play the rider and the support agent at the same time, sign in as the support agent in a private window.</p>
+</main>
+<script>window.RR_EMBED = true;</script>
+<script src="/static/app.js"></script>
+<script src="/static/login.js"></script>
+</body>
+</html>

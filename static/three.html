@@ -47,6 +47,11 @@
       <h2 id="h-rider" data-i18n="tpRider">Rider</h2>
       <span class="live" id="st-rider"><i></i><span></span></span>
     </header>
+    <div class="whoami">
+      <span id="whoami"></span>
+      <button type="button" class="btn btn-xs" id="signOutBtn" data-i18n="tpSignOut">Sign out</button>
+    </div>
+    <p class="support-view" id="supportView" hidden data-i18n="tpSupportView">Viewing as support agent. The rider's conversation for the open case is shown read-only.</p>
     <div class="phone">
       <div class="phone-bar">
         <span class="phone-app">Ryde</span>
@@ -76,7 +81,7 @@
     <div class="room-scroll" data-room-scroll>
       <main class="chat">
         <div class="chat-inner" id="chat">
-          <div class="empty-state" id="emptyState" data-i18n="tpRoomEmpty">The agents start working as soon as the rider sends a message.</div>
+          <div class="empty-state" id="emptyState" data-i18n="tpRoomEmpty">Waiting for a case. The agents start once the rider confirms which trip it is about.</div>
           <div class="typing-zone" id="typingZone" aria-live="polite"></div>
         </div>
       </main>
@@ -90,10 +95,14 @@
       <span class="live" id="st-human"><i></i><span></span></span>
     </header>
     <div class="console-scroll" id="consoleScroll">
+      <section class="queue" id="queue" hidden aria-labelledby="h-queue">
+        <h3 id="h-queue" data-i18n="tpQueue">Cases for review</h3>
+        <div class="queue-list" id="queueList"></div>
+      </section>
       <div class="console-idle" id="consoleIdle">
         <div class="ci-mark" aria-hidden="true"></div>
         <p data-i18n="tpNoCases">No cases need review</p>
-        <span data-i18n="tpNoCasesSub">Cases appear here only when the policy or the safety net needs a person.</span>
+        <span id="consoleIdleSub" data-i18n="tpNoCasesSub">Cases appear here only when the policy or the safety net needs a person.</span>
       </div>
       <div class="console-case" id="consoleCase" hidden>
         <div id="summary"></div>

@@ -8,6 +8,9 @@ Endpoints:
 - POST /api/file                  same, synchronous (tests / integration)
 - GET  /api/resolve/{id}/stream   SSE for a preset dispute
 - POST /api/resolve/{id}          synchronous run of a preset dispute
+- Demo login: GET /api/auth/accounts, POST /api/auth/login | logout, GET /api/auth/me. Every data endpoint needs the
+  signed session cookie (401 otherwise); the rider_id always comes from the session. Console endpoints need the
+  support role (403 for riders). POST /api/rider/find-trip: stage 1, which of the rider's trips the story is about.
 - Three-pane demo (one in-memory Case per rider dispute, see app/case_store.py):
   POST /api/cases, GET /api/cases, GET /api/cases/{id}, GET /api/cases/{id}/events (SSE, every event tagged with `pane`),
   POST /api/cases/{id}/rider-message, POST /api/cases/{id}/human/rephrase | ask | decision
@@ -21,16 +24,18 @@ import json
 import os
 import sys
 
-from fastapi import FastAPI, HTTPException
-from fastapi.responses import StreamingResponse, FileResponse, JSONResponse
+from fastapi import Depends, FastAPI, HTTPException, Request
+from fastapi.responses import FileResponse, JSONResponse, RedirectResponse, StreamingResponse
 from fastapi.staticfiles import StaticFiles
 from pathlib import Path
 
+from app import auth as A
 from app import case_store as CS
+from app.rider_match import find_trip, owns_trip
 from app.config import settings, STATIC_DIR
 from app.i18n import norm_lang, L
 from app.orchestrator import resolve
-from app.tools.fixtures import list_disputes, list_trips
+from app.tools.fixtures import list_disputes, list_trips, rider_scope
 
 app = FastAPI(title="RydeResolve", version="0.1.0",
               description="Multi-agent autonomous dispute resolution for ride-hailing; Tencent Cloud AI CAN DO IT Hackathon 2026")
@@ -49,15 +54,67 @@ async def health():
     }
 
 
+# ---- demo login ----
+@app.get("/api/auth/accounts")
+async def auth_accounts():
+    """Demo accounts for the login screen. Demo only: no password."""
+    return {"riders": A.accounts(), "support": {"role": "support"}}
+
+
+@app.post("/api/auth/login")
+async def auth_login(payload: dict):
+    """Sign in as a demo rider ({"rider_id": ...}) or as the support agent ({"role": "support"})."""
+    if payload.get("role") == "support":
+        sess = {"role": "support"}
+    else:
+        rid = (payload.get("rider_id") or "").strip()
+        if rid not in {a["rider_id"] for a in A.accounts()}:
+            raise HTTPException(status_code=400, detail="Unknown demo account")
+        sess = {"role": "rider", "rider_id": rid}
+    resp = JSONResponse({"ok": True, **sess})
+    resp.set_cookie(A.COOKIE, A.sign(sess), max_age=A.MAX_AGE, httponly=True, samesite="lax", path="/")
+    return resp
+
+
+@app.post("/api/auth/logout")
+async def auth_logout():
+    resp = JSONResponse({"ok": True})
+    resp.delete_cookie(A.COOKIE, path="/")
+    return resp
+
+
+@app.get("/api/auth/me")
+async def auth_me(sess: dict = Depends(A.session)):
+    if sess["role"] == "support":
+        return {"role": "support", "rider_id": None, "name": None, "stories": []}
+    names = {a["rider_id"]: a["name"] for a in A.accounts()}
+    return {"role": "rider", "rider_id": sess["rider_id"], "name": names.get(sess["rider_id"]),
+            "stories": A.stories_for(sess["rider_id"])}
+
+
 @app.get("/api/disputes")
-async def get_disputes():
-    return {"disputes": list_disputes()}
+async def get_disputes(sess: dict = Depends(A.session)):
+    with rider_scope(sess["rider_id"]):
+        return {"disputes": list_disputes()}
 
 
 @app.get("/api/trips")
-async def get_trips():
-    """Trips a complaint can be filed against (evidence must come from a real trip)."""
-    return {"trips": list_trips()}
+async def get_trips(sess: dict = Depends(A.session)):
+    """Trips a complaint can be filed against: the signed-in rider's own (all of them for support)."""
+    with rider_scope(sess["rider_id"]):
+        return {"trips": list_trips()}
+
+
+@app.post("/api/rider/find-trip")
+async def rider_find_trip(payload: dict, sess: dict = Depends(A.rider_session)):
+    """Stage 1: which of the signed-in rider's trips is this story about? No case is created here."""
+    lang = norm_lang(payload.get("lang"))
+    story = (payload.get("story") or "").strip()
+    if not story:
+        raise HTTPException(status_code=400, detail=L(lang, "Tell us what happened first", "请先描述发生了什么"))
+    if len(story) > 2000:
+        raise HTTPException(status_code=400, detail=L(lang, "Message too long (max 2000 characters)", "内容过长（上限 2000 字）"))
+    return find_trip(story, sess["rider_id"], lang)
 
 
 def _norm_draft(trip_id: str | None, complaint: str | None, lang: str = "en") -> dict | None:
@@ -77,7 +134,8 @@ def _norm_draft(trip_id: str | None, complaint: str | None, lang: str = "en") ->
 
 
 @app.get("/api/file/stream")
-async def file_stream(complaint: str, trip_id: str | None = None, mode: str | None = None, lang: str | None = None):
+async def file_stream(complaint: str, trip_id: str | None = None, mode: str | None = None, lang: str | None = None,
+                      sess: dict = Depends(A.session)):
     """Free-text complaint + SSE stream.
 
     The rider supplies only their own words, and optionally a trip (omitted / "auto": matched from the story);
@@ -87,11 +145,12 @@ async def file_stream(complaint: str, trip_id: str | None = None, mode: str | No
     draft = _norm_draft(trip_id, complaint, lang)
     if draft is None:
         raise HTTPException(status_code=400, detail=L(lang, "complaint text is required", "缺少 complaint 投诉原文"))
+    _check_trip(sess, draft.get("trip_id"), lang)
     m = _norm_mode(mode)
 
     async def event_gen():
         try:
-            async for ev in resolve(None, mode=m, draft=draft, lang=lang):
+            async for ev in resolve(None, mode=m, draft=draft, lang=lang, rider_id=sess["rider_id"]):
                 yield f"data: {json.dumps(ev, ensure_ascii=False)}\n\n"
         except Exception as e:  # noqa: BLE001
             yield f"data: {json.dumps({'type': 'error', 'message': str(e)}, ensure_ascii=False)}\n\n"
@@ -100,16 +159,23 @@ async def file_stream(complaint: str, trip_id: str | None = None, mode: str | No
                              headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"})
 
 
+def _check_trip(sess: dict, trip_id: str | None, lang: str) -> None:
+    """A rider may only file against their own trip (rider_id from the session, never from the request)."""
+    if trip_id and sess["role"] == "rider" and not owns_trip(sess["rider_id"], trip_id):
+        raise HTTPException(status_code=403, detail=L(lang, "That trip is not in your account.", "该行程不在您的账户中。"))
+
+
 @app.post("/api/file")
-async def file_sync(payload: dict):
+async def file_sync(payload: dict, sess: dict = Depends(A.session)):
     """Free-text complaint, synchronous: returns the ruling and all events (tests / integration)."""
     lang = norm_lang(payload.get("lang"))
     draft = _norm_draft(payload.get("trip_id"), payload.get("complaint"), lang)
     if draft is None:
         raise HTTPException(status_code=400, detail=L(lang, "complaint text is required", "缺少 complaint 投诉原文"))
+    _check_trip(sess, draft.get("trip_id"), lang)
     events: list[dict] = []
     ruling = None
-    async for ev in resolve(None, mode=_norm_mode(payload.get("mode")), draft=draft, lang=lang):
+    async for ev in resolve(None, mode=_norm_mode(payload.get("mode")), draft=draft, lang=lang, rider_id=sess["rider_id"]):
         events.append(ev)
         if ev.get("type") == "ruling":
             ruling = ev.get("ruling")
@@ -152,18 +218,26 @@ def _norm_mode(mode: str | None) -> str | None:
     return None
 
 
+def _check_dispute(sess: dict, dispute_id: str) -> None:
+    with rider_scope(sess["rider_id"]):
+        if dispute_id not in {d["dispute_id"] for d in list_disputes()}:
+            raise HTTPException(status_code=404, detail="Dispute not found")
+
+
 @app.get("/api/resolve/{dispute_id}/stream")
-async def resolve_stream(dispute_id: str, mode: str | None = None, lang: str | None = None):
+async def resolve_stream(dispute_id: str, mode: str | None = None, lang: str | None = None,
+                         sess: dict = Depends(A.session)):
     """SSE stream; each event is pushed as `data: <json>`.
 
     ?mode=llm forces the real LLM; ?mode=deterministic forces the scripted fallback; default follows .env.
     """
+    _check_dispute(sess, dispute_id)
     m = _norm_mode(mode)
     lang = norm_lang(lang)
 
     async def event_gen():
         try:
-            async for ev in resolve(dispute_id, mode=m, lang=lang):
+            async for ev in resolve(dispute_id, mode=m, lang=lang, rider_id=sess["rider_id"]):
                 yield f"data: {json.dumps(ev, ensure_ascii=False)}\n\n"
         except Exception as e:  # noqa: BLE001
             yield f"data: {json.dumps({'type': 'error', 'message': str(e)}, ensure_ascii=False)}\n\n"
@@ -173,12 +247,14 @@ async def resolve_stream(dispute_id: str, mode: str | None = None, lang: str | N
 
 
 @app.post("/api/resolve/{dispute_id}")
-async def resolve_sync(dispute_id: str, mode: str | None = None, lang: str | None = None):
+async def resolve_sync(dispute_id: str, mode: str | None = None, lang: str | None = None,
+                       sess: dict = Depends(A.session)):
     """Run the whole flow synchronously; return the final ruling and all events."""
+    _check_dispute(sess, dispute_id)
     lang = norm_lang(lang)
     events: list[dict] = []
     ruling = None
-    async for ev in resolve(dispute_id, mode=_norm_mode(mode), lang=lang):
+    async for ev in resolve(dispute_id, mode=_norm_mode(mode), lang=lang, rider_id=sess["rider_id"]):
         events.append(ev)
         if ev.get("type") == "ruling":
             ruling = ev.get("ruling")
@@ -188,11 +264,15 @@ async def resolve_sync(dispute_id: str, mode: str | None = None, lang: str | Non
 
 
 # ---- three-pane demo: cases ----
-def _case_or_404(case_id: str) -> "CS.Case":
+def _case_or_404(case_id: str, sess: dict) -> "CS.Case":
+    """The case, if this session may see it. Someone else's case looks exactly like a missing one."""
     try:
-        return CS.get_case(case_id)
+        case = CS.get_case(case_id)
     except CS.CaseError as e:
         raise HTTPException(status_code=e.status, detail=e.message)
+    if not CS.can_view(case, sess):
+        raise HTTPException(status_code=404, detail="Unknown case")
+    return case
 
 
 async def _call(coro):
@@ -203,33 +283,42 @@ async def _call(coro):
 
 
 @app.post("/api/cases")
-async def create_case(payload: dict):
-    """Start a case with the rider's first message. Optional trip_id ("auto" or empty: matched from the story)."""
+async def create_case(payload: dict, sess: dict = Depends(A.rider_session)):
+    """Start a case once the rider has confirmed a trip (stage 1). The trip must be one of the signed-in rider's;
+    any rider_id in the body is ignored."""
     lang = norm_lang(payload.get("lang"))
     tid = (payload.get("trip_id") or "").strip()
-    case = await _call(CS.start_case(payload.get("story") or payload.get("complaint") or "",
-                                     trip_id=None if tid.lower() in ("", "auto") else tid,
-                                     mode=_norm_mode(payload.get("mode")), lang=lang))
+    if not tid or tid.lower() == "auto":
+        raise HTTPException(status_code=400, detail=L(lang, "Confirm the trip first", "请先确认行程"))
+    _check_trip(sess, tid, lang)
+    case = await _call(CS.start_case(payload.get("story") or payload.get("complaint") or "", trip_id=tid,
+                                     mode=_norm_mode(payload.get("mode")), lang=lang, rider_id=sess["rider_id"]))
     return case.snapshot()
 
 
 @app.get("/api/cases")
-async def cases_list():
-    return {"cases": CS.list_cases()}
+async def cases_list(sess: dict = Depends(A.session)):
+    """A rider's own cases; for the support agent, every case that was handed to a person."""
+    return {"cases": CS.list_cases(sess)}
 
 
 @app.get("/api/cases/{case_id}")
-async def case_get(case_id: str):
-    return _case_or_404(case_id).snapshot()
+async def case_get(case_id: str, sess: dict = Depends(A.session)):
+    snap = _case_or_404(case_id, sess).snapshot()
+    if sess["role"] == "rider":                 # the console's view of the case is for support agents only
+        for k in ("summary", "qa_log", "human_messages"):
+            snap.pop(k, None)
+    return snap
 
 
 @app.get("/api/cases/{case_id}/events")
-async def case_events(case_id: str, after: int = 0):
+async def case_events(case_id: str, after: int = 0, sess: dict = Depends(A.session)):
     """SSE: every event of the case (history after `after`, then live). Each carries `pane`: rider | room | human | case."""
-    case = _case_or_404(case_id)
+    case = _case_or_404(case_id, sess)
     q: asyncio.Queue = asyncio.Queue()
     case.subscribers.add(q)
-    backlog = [e for e in case.events if e["seq"] > after]
+    hidden = ("human",) if sess["role"] == "rider" else ()       # riders never receive the console's events
+    backlog = [e for e in case.events if e["seq"] > after and e["pane"] not in hidden]
 
     async def gen():
         last = after
@@ -243,7 +332,7 @@ async def case_events(case_id: str, after: int = 0):
                 except asyncio.TimeoutError:
                     yield ": keepalive\n\n"
                     continue
-                if ev["seq"] <= last:
+                if ev["seq"] <= last or ev["pane"] in hidden:
                     continue
                 last = ev["seq"]
                 yield f"data: {json.dumps(ev, ensure_ascii=False)}\n\n"
@@ -255,26 +344,26 @@ async def case_events(case_id: str, after: int = 0):
 
 
 @app.post("/api/cases/{case_id}/rider-message")
-async def case_rider_message(case_id: str, payload: dict):
-    case = _case_or_404(case_id)
+async def case_rider_message(case_id: str, payload: dict, sess: dict = Depends(A.rider_session)):
+    case = _case_or_404(case_id, sess)
     return await _call(CS.rider_message(case, payload.get("text") or "", payload.get("trip_id")))
 
 
 @app.post("/api/cases/{case_id}/human/rephrase")
-async def case_rephrase(case_id: str, payload: dict):
-    case = _case_or_404(case_id)
+async def case_rephrase(case_id: str, payload: dict, sess: dict = Depends(A.support_session)):
+    case = _case_or_404(case_id, sess)
     return await _call(CS.human_rephrase(case, payload.get("text") or "", payload.get("purpose") or "qa"))
 
 
 @app.post("/api/cases/{case_id}/human/ask")
-async def case_ask(case_id: str, payload: dict):
-    case = _case_or_404(case_id)
+async def case_ask(case_id: str, payload: dict, sess: dict = Depends(A.support_session)):
+    case = _case_or_404(case_id, sess)
     return await _call(CS.human_ask(case, payload.get("question") or "", payload.get("original")))
 
 
 @app.post("/api/cases/{case_id}/human/decision")
-async def case_decision(case_id: str, payload: dict):
-    case = _case_or_404(case_id)
+async def case_decision(case_id: str, payload: dict, sess: dict = Depends(A.support_session)):
+    case = _case_or_404(case_id, sess)
     amt = payload.get("amount")
     try:
         amt = float(amt) if amt not in (None, "") else None
@@ -291,19 +380,22 @@ if STATIC_DIR.exists():
 def _page(name: str):
     p = STATIC_DIR / name
     if p.exists():
-        return FileResponse(str(p))
+        # "/" is the login page or the app depending on the session: never let the browser reuse a cached copy
+        return FileResponse(str(p), headers={"Cache-Control": "no-store"})
     return JSONResponse({"message": "Front-end not found; use /api/disputes and /api/resolve/{id}/stream"})
 
 
 @app.get("/")
-async def index():
-    """The three-pane demo (rider app, agent room, support console)."""
-    return _page("three.html")
+async def index(request: Request):
+    """Signed in: the three-pane demo. Otherwise: the demo login screen."""
+    return _page("three.html" if A.verify(request.cookies.get(A.COOKIE)) else "login.html")
 
 
 @app.get("/classic")
-async def classic():
-    """The original single group-chat UI."""
+async def classic(request: Request):
+    """The original single group-chat UI (needs a session too)."""
+    if not A.verify(request.cookies.get(A.COOKIE)):
+        return RedirectResponse("/", status_code=303)
     return _page("index.html")
 
 

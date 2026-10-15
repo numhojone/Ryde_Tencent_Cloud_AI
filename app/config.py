@@ -49,6 +49,9 @@ class Settings:
     strict_escalation: bool = field(default_factory=lambda: os.environ.get("STRICT_ESCALATION", "false").lower() in ("1", "true", "yes"))
     escalation_threshold: float = field(default_factory=lambda: float(os.environ.get("ESCALATION_THRESHOLD", "0.6")))
 
+    # --- demo login: signs the session cookie. Unset -> a random key per process (sessions end on restart).
+    secret_key: str = field(default_factory=lambda: os.environ.get("SECRET_KEY", "").strip())
+
     # --- 服务 ---
     host: str = field(default_factory=lambda: os.environ.get("HOST", "0.0.0.0"))
     port: int = field(default_factory=lambda: int(os.environ.get("PORT", "8000")))
