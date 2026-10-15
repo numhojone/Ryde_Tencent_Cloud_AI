@@ -23,10 +23,10 @@
     </div>
     <div class="mode-badge" id="modeBadge" data-i18n="loading">Loading…</div>
     <select id="backendSelect" class="select select-sm" data-i18n-title="backendTitle" title="Choose the backend that drives the agents">
-      <option value="" data-i18n="beDefault">Default backend</option>
-      <option value="llm" data-i18n="beLlm">Real LLM</option>
-      <option value="deterministic" data-i18n="beDet">Deterministic fallback</option>
+      <option value="llm" data-i18n="beLlm">Live AI</option>
+      <option value="deterministic" data-i18n="beDet">Offline demo</option>
     </select>
+    <span class="mode-badge det" id="offlineTag" data-i18n="offlineDemoTag" hidden>Offline demo (scripted agents)</span>
     <select id="disputeSelect" class="select" disabled data-i18n-title="presetTitle" title="Preset tickets, one-click replay"></select>
     <button id="runBtn" class="btn" disabled data-i18n="replay">Replay</button>
   </div>

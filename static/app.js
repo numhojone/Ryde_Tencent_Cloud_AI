@@ -6,7 +6,7 @@ const I18N = {
   en: {
     tagline:'Multi-agent autonomous dispute resolution · Tencent Cloud AI CAN DO IT 2026',
     loading:'Loading…', backendTitle:'Choose the backend that drives the agents',
-    beDefault:'Default backend', beLlm:'Real LLM', beDet:'Deterministic fallback',
+    beLlm:'Live AI', beDet:'Offline demo', offlineDemoTag:'Offline demo (scripted agents)',
     presetTitle:'Preset tickets, one-click replay', replay:'Replay', replaying:'Replaying…',
     fileHint:'Write it in your own words; the system works out the dispute type',
     placeholder:'Describe what went wrong, in your own words…',
@@ -53,7 +53,7 @@ const I18N = {
   zh: {
     tagline:'多智能体自主争议裁决 · 腾讯云 AI CAN DO IT 2026',
     loading:'载入中…', backendTitle:'选择驱动智能体的后端',
-    beDefault:'默认后端', beLlm:'真实 LLM', beDet:'确定性回退',
+    beLlm:'实时 AI', beDet:'离线演示', offlineDemoTag:'离线演示（脚本化智能体）',
     presetTitle:'预置工单，一键重放', replay:'重放', replaying:'重放中…',
     fileHint:'用你自己的话写，系统自己判定争议类型',
     placeholder:'用你自己的话说说发生了什么…',
@@ -127,6 +127,7 @@ const chat = el('chat'), typingZone = el('typingZone'), roster = el('roster');
 const runBtn = el('runBtn'), fileBtn = el('fileBtn');
 const sel = el('disputeSelect'), tripSel = el('tripSelect');
 const complaintInput = el('complaintInput'), modeBadge = el('modeBadge');
+const backendSelect = el('backendSelect'), offlineTag = el('offlineTag');
 
 let health = null, disputes = [], trips = [];
 let busy = null;                 // 'file' | 'run' | null
@@ -159,6 +160,9 @@ function renderBadge(){
   const llm = health.llm_mode === 'llm';
   modeBadge.textContent = llm ? T('badgeLlm')(health.llm_provider || 'LLM', health.model || health.hunyuan_model) : T('badgeDet');
   modeBadge.className = 'mode-badge ' + (llm ? 'llm' : 'det');
+  const hasKey = health.has_api_key !== false;
+  backendSelect.hidden = !hasKey;
+  offlineTag.hidden = hasKey;
 }
 
 function renderDropdowns(){
@@ -741,7 +745,7 @@ function resetUI(){
 }
 
 function extraQuery(){
-  const be = (el('backendSelect') || {}).value || '';
+  const be = backendSelect.value || '';
   return (be ? `&mode=${encodeURIComponent(be)}` : '') + `&lang=${LANG}`;
 }
 
@@ -797,7 +801,11 @@ runBtn.addEventListener('click', runPreset);
 
 async function boot(){
   applyStatic();
-  try { health = await fetch('/api/health').then(r => r.json()); renderBadge(); }
+  try {
+    health = await fetch('/api/health').then(r => r.json());
+    backendSelect.value = health.llm_mode === 'llm' ? 'llm' : 'deterministic';
+    renderBadge();
+  }
   catch (e) { modeBadge.textContent = T('badgeFail'); }
   try {
     disputes = (await fetch('/api/disputes').then(r => r.json())).disputes || [];
