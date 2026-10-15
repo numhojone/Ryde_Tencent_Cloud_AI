@@ -27,6 +27,8 @@ Disputes are high volume and small per ticket, so manual triage is slow and inco
 ```
 Complaint -> Trip match -> Intake -> Advocates (parallel) -> Judge -> Policy thresholds (6) -> Safety net -> Ruling | Human review
                  \-> safety indicators (5.2) -> Safety case file -> Human review (no AI ruling)
+Human review = support console: summary card + case-QA agent (answers only from the recorded case, cites sources,
+               asks the rider when the record is silent) + rephrase agent (everything sent to the rider) -> a person decides
 ```
 
 - **Story in, ticket out**: the rider types only their story. Code matches it to one of their recent trips (places, amounts, distances, times, category vs trip status) and asks "which trip?" with the top 3 candidates when it is not clearly one; nothing is ruled without a trip. The intake turns the story into a ticket in the official sample format, plus `extracted_facts` (only what the story states), `missing_info`, and an informational `claim_check` against the trip's records. The story picks the category and the trip; the platform's records decide the ruling.
@@ -36,6 +38,7 @@ Complaint -> Trip match -> Intake -> Advocates (parallel) -> Judge -> Policy thr
 - **Policy thresholds** (`app/thresholds.py`): fare under S$10 AI final; S$10 to S$50 needs 80%; over S$50 human; route deviation over 2 km needs human approval; repair claims human; a party fraud flag raises the bar to 95%.
 - **Safety net**: Rule A (fewer than 3 distinct evidence points) and a per-dispute-type Rule B (required sources too thin). It forces `escalated` and preserves the model's verdict in `model_assessment`.
 - **Safety incidents**: the AI gathers evidence, summarises the rider's account and suggests interim measures (5.3). It does not rule, assign fault or recommend a resolution (5.2).
+- **Human in the loop** (three-pane demo, default page): the rider's app, the agent room and a support console run live on one case. An escalated case appears in the console with a consolidated summary. A **case-QA agent** answers the support agent's questions from the recorded case only, after a deterministic retrieval step; if nothing is retrieved no model is called and the question is sent to the rider, whose reply then answers it. A **rephrase agent** fixes spelling, grammar and tone of the agent's questions and of everything sent to the rider. Nothing is final in an escalated case until a person approves, adjusts (with a note), rejects or asks for more information. Offline both agents are deterministic (typo dictionary and templates; keyword and topic retrieval with template answers); in Live AI mode the model writes the wording and the answer, is called only when needed, and its citations are checked against the retrieved sources.
 - Interface and agent output in English and Chinese; rulings, clause numbers and amounts never change with language. An LLM backend (OpenAI-compatible) and a deterministic backend share the same event flow.
 
 ### Worked examples (offline, deterministic backend)
@@ -67,4 +70,5 @@ Complaint -> Trip match -> Intake -> Advocates (parallel) -> Judge -> Policy thr
 - The official route sample recommends a partial refund although 6.1 sends deviations over 2 km to a human; we return the recommendation flagged as needing human approval.
 - Confidence weighting (40/30/15/15) and the 100 m pickup radius are our own definitions.
 - Fixture-based: no live GPS, payments or refund execution.
+- The rephrase and case-QA agents' Live AI paths have not been run against a live model; the three-pane flow is verified offline (pytest and a Playwright run in English and Chinese, desktop and phone width). Cases are held in memory.
 - Trip auto-match and fact extraction are tested offline on the six fixture trips with stories in English, Singlish, Malay, Tamil and Chinese; the deterministic extractor is keyword based and the LLM extraction path has not been run against a live model.

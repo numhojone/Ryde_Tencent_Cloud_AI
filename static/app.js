@@ -130,6 +130,9 @@ const I18N = {
 };
 const CUR = 'S$';
 
+/* Embedded mode (three-pane page): only the agent-room renderer is used; the page wires everything else. */
+const EMBED = !!window.RR_EMBED;
+
 let LANG = 'en';
 try { const s = localStorage.getItem('rr_lang'); if (s === 'zh' || s === 'en') LANG = s; } catch (e) {}
 const T = k => (I18N[LANG][k] !== undefined ? I18N[LANG][k] : I18N.en[k]);
@@ -179,14 +182,14 @@ function applyStatic(){
   document.querySelectorAll('[data-i18n-title]').forEach(n => { n.title = T(n.dataset.i18nTitle); });
   document.querySelectorAll('[data-i18n-ph]').forEach(n => { n.placeholder = T(n.dataset.i18nPh); });
   document.querySelectorAll('#langToggle button').forEach(b => b.classList.toggle('on', b.dataset.lang === LANG));
-  document.title = LANG === 'zh' ? 'RydeResolve | 多智能体争议裁决' : 'RydeResolve | Multi-agent dispute resolution';
+  document.title = EMBED ? T('tpTitle') : (LANG === 'zh' ? 'RydeResolve | 多智能体争议裁决' : 'RydeResolve | Multi-agent dispute resolution');
   renderBadge(); renderDropdowns(); renderRoster();
-  if (busy !== 'file') fileBtn.textContent = T('submit');
-  if (busy !== 'run') runBtn.textContent = T('replay');
+  if (fileBtn && busy !== 'file') fileBtn.textContent = T('submit');
+  if (runBtn && busy !== 'run') runBtn.textContent = T('replay');
 }
 
 function renderBadge(){
-  if (!health) return;
+  if (!health || !modeBadge) return;
   const llm = health.llm_mode === 'llm';
   modeBadge.textContent = llm ? T('badgeLlm')(health.llm_provider || 'LLM', health.model || health.hunyuan_model) : T('badgeDet');
   modeBadge.className = 'mode-badge ' + (llm ? 'llm' : 'det');
@@ -196,6 +199,7 @@ function renderBadge(){
 }
 
 function renderDropdowns(){
+  if (!sel || !tripSel) return;
   const cur = sel.value, curT = tripSel.value;
   sel.innerHTML = ''; tripSel.innerHTML = '';
   disputes.forEach(x => {
@@ -239,18 +243,24 @@ function setRoster(who, status){
 
 /* ---------------------------------------------------------------- scrolling */
 let stick = true, scrollQueued = false;
-const atBottom = () => (window.innerHeight + window.scrollY) >= document.documentElement.scrollHeight - 260;
+/* The classic page scrolls the window; the three-pane page scrolls the room pane's own container. */
+const SCROLLER = document.querySelector('[data-room-scroll]');
+const atBottom = () => SCROLLER
+  ? SCROLLER.scrollTop + SCROLLER.clientHeight >= SCROLLER.scrollHeight - 160
+  : (window.innerHeight + window.scrollY) >= document.documentElement.scrollHeight - 260;
 /* Only a deliberate scroll by the reader detaches the view; the smooth scrolling we do
    ourselves fires plenty of mid-flight scroll events and must not switch following off. */
+const scrollHost = SCROLLER || window;
 ['wheel','touchmove','keydown'].forEach(t =>
-  window.addEventListener(t, () => { stick = atBottom(); }, {passive:true}));
-window.addEventListener('scroll', () => { if (atBottom()) stick = true; }, {passive:true});
+  scrollHost.addEventListener(t, () => { stick = atBottom(); }, {passive:true}));
+scrollHost.addEventListener('scroll', () => { if (atBottom()) stick = true; }, {passive:true});
 function autoscroll(){
   if (!stick || scrollQueued) return;
   scrollQueued = true;
   requestAnimationFrame(() => {
     scrollQueued = false;
-    window.scrollTo({top: document.documentElement.scrollHeight, behavior:'smooth'});
+    if (SCROLLER) SCROLLER.scrollTo({top: SCROLLER.scrollHeight, behavior:'smooth'});
+    else window.scrollTo({top: document.documentElement.scrollHeight, behavior:'smooth'});
   });
 }
 
@@ -488,7 +498,10 @@ function addTripUnresolved(ev){
     sub.textContent = [c.trip_id, fmtTime(c.time), T('st_' + c.status) || c.status].filter(Boolean).join(' · ');
     btn.appendChild(top); btn.appendChild(sub);
     if ((c.reasons || []).length) btn.appendChild(tagList(c.reasons.slice(0, 3)));
-    btn.addEventListener('click', () => { if (!busy) resubmitWithTrip(c.trip_id); });
+    btn.addEventListener('click', () => {
+      if (window.RR_PICK_TRIP) window.RR_PICK_TRIP(c.trip_id, `${p} → ${d}`);
+      else if (!busy) resubmitWithTrip(c.trip_id);
+    });
     list.appendChild(btn);
   });
   b.appendChild(list);
@@ -571,6 +584,16 @@ function addTicket(ev){
   b.appendChild(det);
   append(row);
   seal('intake');
+}
+
+/* A later message from the rider (a reply to support, or which trip it was). */
+function addRiderMessage(text){
+  sealAll();
+  const {row, stack} = msgRow('rider');
+  const b = bubble(stack, 'complaint');
+  const q = document.createElement('div'); q.className = 'c-quote'; q.textContent = text;
+  b.appendChild(q);
+  append(row);
 }
 
 function addCaseCard(who, c){
@@ -808,6 +831,7 @@ function render(ev){
       break;
     case '_case': addCaseCard(ev.who, ev.case); break;
     case 'complaint_received': addComplaint(ev.complaint, ev.trip_id); showTyping('intake'); break;
+    case 'rider_message': addRiderMessage(ev.text); break;
     case 'trip_matched': addTripMatched(ev); break;
     case 'trip_unresolved': hideTyping('intake'); setRoster('intake','done'); sealAll(); addTripUnresolved(ev); break;
     // The ticket card (ticket_filed) replaces the triage card; keep the triage for its confidence and reasoning.
@@ -838,7 +862,7 @@ function render(ev){
 const PACE_BUDGET = 2200, PACE_MIN = 160, PACE_MAX = 520;
 const WEIGHT = {
   thinking:1, complaint_received:1, triage_result:0, safety_net:1, warning:1, error:1, _case:1,
-  trip_matched:1, trip_unresolved:1, ticket_filed:1,
+  trip_matched:1, trip_unresolved:1, ticket_filed:1, rider_message:1,
   phase:0.55, ruling:0.6, tool_call:0.15, tool_result:0, agent_start:0, agent_final:0, done:0,
 };
 let queue = [], pumping = false, paceLeft = PACE_BUDGET;
@@ -918,43 +942,56 @@ function runPreset(){
   openStream(`/api/resolve/${id}/stream?${extraQuery().replace(/^&/,'')}`, runBtn, T('replaying'), 'run');
 }
 
-/* ---------------------------------------------------------------- wiring */
-document.querySelectorAll('#langToggle button').forEach(b => b.addEventListener('click', () => {
-  LANG = b.dataset.lang;
-  try { localStorage.setItem('rr_lang', LANG); } catch (e) {}
-  applyStatic();
-  // Results already on screen stay in the language they were produced in; re-run to see them in the new one.
-}));
+/* ---------------------------------------------------------------- embedding API
+   The three-pane page (static/three.js) drives the agent room through this object. */
+window.RoomUI = {
+  I18N, T: k => T(k), esc, conf2, money, fmtTime, typeLabel, toolLabel, rulingLabel, kvList, tagList, bullets, note,
+  enqueue: ev => { ev.agent = ev.agent || ev.role; enqueue(ev); },
+  reset: () => resetUI(),
+  setLang: l => { LANG = l === 'zh' ? 'zh' : 'en'; try { localStorage.setItem('rr_lang', LANG); } catch (e) {} applyStatic(); },
+  getLang: () => LANG,
+  applyStatic: () => applyStatic(),
+};
 
-document.querySelectorAll('.chip').forEach(c => c.addEventListener('click', () => {
-  complaintInput.value = c.dataset.text;
-  growInput(); complaintInput.focus();
-}));
+if (!EMBED){
+  /* ---------------------------------------------------------------- wiring */
+  document.querySelectorAll('#langToggle button').forEach(b => b.addEventListener('click', () => {
+    LANG = b.dataset.lang;
+    try { localStorage.setItem('rr_lang', LANG); } catch (e) {}
+    applyStatic();
+    // Results already on screen stay in the language they were produced in; re-run to see them in the new one.
+  }));
 
-function growInput(){
-  complaintInput.style.height = 'auto';
-  complaintInput.style.height = Math.min(140, Math.max(46, complaintInput.scrollHeight)) + 'px';
-}
-complaintInput.addEventListener('input', growInput);
-complaintInput.addEventListener('keydown', e => {
-  if (e.key === 'Enter' && !e.shiftKey && !e.isComposing){ e.preventDefault(); runFreeform(); }
-});
-fileBtn.addEventListener('click', runFreeform);
-runBtn.addEventListener('click', runPreset);
+  document.querySelectorAll('.chip').forEach(c => c.addEventListener('click', () => {
+    complaintInput.value = c.dataset.text;
+    growInput(); complaintInput.focus();
+  }));
 
-async function boot(){
-  applyStatic();
-  try {
-    health = await fetch('/api/health').then(r => r.json());
-    backendSelect.value = health.llm_mode === 'llm' ? 'llm' : 'deterministic';
-    renderBadge();
+  function growInput(){
+    complaintInput.style.height = 'auto';
+    complaintInput.style.height = Math.min(140, Math.max(46, complaintInput.scrollHeight)) + 'px';
   }
-  catch (e) { modeBadge.textContent = T('badgeFail'); }
-  try {
-    disputes = (await fetch('/api/disputes').then(r => r.json())).disputes || [];
-    trips = (await fetch('/api/trips').then(r => r.json())).trips || [];
-  } catch (e) {}
-  renderDropdowns();
-  sel.disabled = false; runBtn.disabled = false; tripSel.disabled = false; fileBtn.disabled = false;
+  complaintInput.addEventListener('input', growInput);
+  complaintInput.addEventListener('keydown', e => {
+    if (e.key === 'Enter' && !e.shiftKey && !e.isComposing){ e.preventDefault(); runFreeform(); }
+  });
+  fileBtn.addEventListener('click', runFreeform);
+  runBtn.addEventListener('click', runPreset);
+
+  async function boot(){
+    applyStatic();
+    try {
+      health = await fetch('/api/health').then(r => r.json());
+      backendSelect.value = health.llm_mode === 'llm' ? 'llm' : 'deterministic';
+      renderBadge();
+    }
+    catch (e) { modeBadge.textContent = T('badgeFail'); }
+    try {
+      disputes = (await fetch('/api/disputes').then(r => r.json())).disputes || [];
+      trips = (await fetch('/api/trips').then(r => r.json())).trips || [];
+    } catch (e) {}
+    renderDropdowns();
+    sel.disabled = false; runBtn.disabled = false; tripSel.disabled = false; fileBtn.disabled = false;
+  }
+  boot();
 }
-boot();

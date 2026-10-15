@@ -8,6 +8,9 @@ Endpoints:
 - POST /api/file                  same, synchronous (tests / integration)
 - GET  /api/resolve/{id}/stream   SSE for a preset dispute
 - POST /api/resolve/{id}          synchronous run of a preset dispute
+- Three-pane demo (one in-memory Case per rider dispute, see app/case_store.py):
+  POST /api/cases, GET /api/cases, GET /api/cases/{id}, GET /api/cases/{id}/events (SSE, every event tagged with `pane`),
+  POST /api/cases/{id}/rider-message, POST /api/cases/{id}/human/rephrase | ask | decision
 
 All run endpoints accept `lang=en|zh` (default en) for the language of human-readable output.
 """
@@ -23,6 +26,7 @@ from fastapi.responses import StreamingResponse, FileResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 from pathlib import Path
 
+from app import case_store as CS
 from app.config import settings, STATIC_DIR
 from app.i18n import norm_lang, L
 from app.orchestrator import resolve
@@ -183,17 +187,124 @@ async def resolve_sync(dispute_id: str, mode: str | None = None, lang: str | Non
     return {"dispute_id": dispute_id, "ruling": ruling, "events": events}
 
 
+# ---- three-pane demo: cases ----
+def _case_or_404(case_id: str) -> "CS.Case":
+    try:
+        return CS.get_case(case_id)
+    except CS.CaseError as e:
+        raise HTTPException(status_code=e.status, detail=e.message)
+
+
+async def _call(coro):
+    try:
+        return await coro
+    except CS.CaseError as e:
+        raise HTTPException(status_code=e.status, detail=e.message)
+
+
+@app.post("/api/cases")
+async def create_case(payload: dict):
+    """Start a case with the rider's first message. Optional trip_id ("auto" or empty: matched from the story)."""
+    lang = norm_lang(payload.get("lang"))
+    tid = (payload.get("trip_id") or "").strip()
+    case = await _call(CS.start_case(payload.get("story") or payload.get("complaint") or "",
+                                     trip_id=None if tid.lower() in ("", "auto") else tid,
+                                     mode=_norm_mode(payload.get("mode")), lang=lang))
+    return case.snapshot()
+
+
+@app.get("/api/cases")
+async def cases_list():
+    return {"cases": CS.list_cases()}
+
+
+@app.get("/api/cases/{case_id}")
+async def case_get(case_id: str):
+    return _case_or_404(case_id).snapshot()
+
+
+@app.get("/api/cases/{case_id}/events")
+async def case_events(case_id: str, after: int = 0):
+    """SSE: every event of the case (history after `after`, then live). Each carries `pane`: rider | room | human | case."""
+    case = _case_or_404(case_id)
+    q: asyncio.Queue = asyncio.Queue()
+    case.subscribers.add(q)
+    backlog = [e for e in case.events if e["seq"] > after]
+
+    async def gen():
+        last = after
+        try:
+            for ev in backlog:
+                last = ev["seq"]
+                yield f"data: {json.dumps(ev, ensure_ascii=False)}\n\n"
+            while True:
+                try:
+                    ev = await asyncio.wait_for(q.get(), timeout=15)
+                except asyncio.TimeoutError:
+                    yield ": keepalive\n\n"
+                    continue
+                if ev["seq"] <= last:
+                    continue
+                last = ev["seq"]
+                yield f"data: {json.dumps(ev, ensure_ascii=False)}\n\n"
+        finally:
+            case.subscribers.discard(q)
+
+    return StreamingResponse(gen(), media_type="text/event-stream",
+                             headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"})
+
+
+@app.post("/api/cases/{case_id}/rider-message")
+async def case_rider_message(case_id: str, payload: dict):
+    case = _case_or_404(case_id)
+    return await _call(CS.rider_message(case, payload.get("text") or "", payload.get("trip_id")))
+
+
+@app.post("/api/cases/{case_id}/human/rephrase")
+async def case_rephrase(case_id: str, payload: dict):
+    case = _case_or_404(case_id)
+    return await _call(CS.human_rephrase(case, payload.get("text") or "", payload.get("purpose") or "qa"))
+
+
+@app.post("/api/cases/{case_id}/human/ask")
+async def case_ask(case_id: str, payload: dict):
+    case = _case_or_404(case_id)
+    return await _call(CS.human_ask(case, payload.get("question") or "", payload.get("original")))
+
+
+@app.post("/api/cases/{case_id}/human/decision")
+async def case_decision(case_id: str, payload: dict):
+    case = _case_or_404(case_id)
+    amt = payload.get("amount")
+    try:
+        amt = float(amt) if amt not in (None, "") else None
+    except (TypeError, ValueError):
+        raise HTTPException(status_code=400, detail="amount must be a number")
+    return await _call(CS.human_decision(case, payload.get("action") or "", amt, payload.get("note")))
+
+
 # ---- static front-end ----
 if STATIC_DIR.exists():
     app.mount("/static", StaticFiles(directory=str(STATIC_DIR)), name="static")
 
 
+def _page(name: str):
+    p = STATIC_DIR / name
+    if p.exists():
+        return FileResponse(str(p))
+    return JSONResponse({"message": "Front-end not found; use /api/disputes and /api/resolve/{id}/stream"})
+
+
 @app.get("/")
 async def index():
-    idx = STATIC_DIR / "index.html"
-    if idx.exists():
-        return FileResponse(str(idx))
-    return JSONResponse({"message": "Front-end not found; use /api/disputes and /api/resolve/{id}/stream"})
+    """The three-pane demo (rider app, agent room, support console)."""
+    return _page("three.html")
+
+
+@app.get("/classic")
+async def classic():
+    """The original single group-chat UI."""
+    return _page("index.html")
 
 
 def main():

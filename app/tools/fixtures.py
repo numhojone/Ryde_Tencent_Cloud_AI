@@ -18,8 +18,17 @@ class ToolError(Exception):
     """工具执行错误，会被 agent 捕获并回传给模型。"""
 
 
+# Directories a tool may read. fixtures/expected (ground truth) is never one of them.
+_READABLE = ("disputes", "trips", "profiles", "policies")
+_READABLE_FILES = ("precedents.json", "trip_parties.json")
+
+
 def _load_json(rel_path: str) -> Any:
-    p = FIXTURES_DIR / rel_path
+    p = (FIXTURES_DIR / rel_path).resolve()
+    rel = p.relative_to(FIXTURES_DIR.resolve()) if p.is_relative_to(FIXTURES_DIR.resolve()) else None
+    if rel is None or not (rel.parts[0] in _READABLE or str(rel) in _READABLE_FILES):
+        # An id such as "../expected/DISP-001" must not reach the ground truth
+        raise ToolError(f"Data not found: {rel_path}")
     if not p.exists():
         raise ToolError(f"Data not found: {rel_path}")
     with p.open("r", encoding="utf-8") as f:

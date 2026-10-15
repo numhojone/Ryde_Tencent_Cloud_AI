@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RydeResolve | Three-pane demo</title>
+<link rel="stylesheet" href="/static/style.css">
+<link rel="stylesheet" href="/static/three.css">
+</head>
+<body class="tp">
+
+<header class="tp-strip">
+  <div class="brand">
+    <div class="brand-mark" aria-hidden="true">RR</div>
+    <div>
+      <h1>RydeResolve</h1>
+      <p class="tag" data-i18n="tpTag">Rider, agents and support, live on one case</p>
+    </div>
+  </div>
+  <div class="tp-demo" role="group" data-i18n-title="tpDemo" title="Demo controls">
+    <span class="tp-demo-lbl" data-i18n="tpDemo">Demo</span>
+    <button type="button" class="btn" id="resetBtn" data-i18n="tpReset">Reset case</button>
+    <select id="modeSelect" class="select select-sm" data-i18n-title="backendTitle" title="Choose the backend that drives the agents">
+      <option value="llm" data-i18n="beLlm">Live AI</option>
+      <option value="deterministic" data-i18n="beDet">Offline demo</option>
+    </select>
+    <select id="langSelect" class="select select-sm" aria-label="Language">
+      <option value="en">English</option>
+      <option value="zh">中文</option>
+    </select>
+    <span class="tp-fill-lbl" data-i18n="tpFill">Fill story:</span>
+    <div class="tp-fills" id="fills"></div>
+  </div>
+</header>
+
+<nav class="tp-tabs" id="tabs" role="tablist">
+  <button type="button" role="tab" data-pane="rider" class="on"><span data-i18n="tpRider">Rider</span><i class="tp-dot"></i></button>
+  <button type="button" role="tab" data-pane="room"><span data-i18n="tpRoom">Agent room</span><i class="tp-dot"></i></button>
+  <button type="button" role="tab" data-pane="human"><span data-i18n="tpHuman">Support console</span><i class="tp-dot"></i></button>
+</nav>
+
+<main class="tp-panes" id="panes">
+
+  <!-- LEFT: the rider app -->
+  <section class="pane pane-rider on" id="pane-rider" data-pane="rider" aria-labelledby="h-rider">
+    <header class="pane-head">
+      <h2 id="h-rider" data-i18n="tpRider">Rider</h2>
+      <span class="live" id="st-rider"><i></i><span></span></span>
+    </header>
+    <div class="phone">
+      <div class="phone-bar">
+        <span class="phone-app">Ryde</span>
+        <span class="phone-sub" data-i18n="tpHelp">Help with a trip</span>
+      </div>
+      <div class="ticket-bar" id="ticketBar" hidden>
+        <span class="tb-ref" id="tbRef"></span>
+        <span class="tb-status" id="tbStatus"></span>
+      </div>
+      <div class="phone-chat" id="riderChat" aria-live="polite">
+        <div class="phone-empty" id="riderEmpty" data-i18n="tpRiderEmpty">Tell us what went wrong with your trip, in your own words.</div>
+      </div>
+      <form class="phone-input" id="riderForm">
+        <textarea id="riderInput" rows="1" maxlength="2000" data-i18n-ph="tpRiderPh" placeholder="Type a message"></textarea>
+        <button type="submit" class="btn primary" id="riderSend" data-i18n="tpSend">Send</button>
+      </form>
+    </div>
+  </section>
+
+  <!-- MIDDLE: the agent room (the existing group chat) -->
+  <section class="pane pane-room" id="pane-room" data-pane="room" aria-labelledby="h-room">
+    <header class="pane-head">
+      <h2 id="h-room" data-i18n="tpRoom">Agent room</h2>
+      <span class="live" id="st-room"><i></i><span></span></span>
+    </header>
+    <nav class="roster" id="roster" aria-label="Participants"></nav>
+    <div class="room-scroll" data-room-scroll>
+      <main class="chat">
+        <div class="chat-inner" id="chat">
+          <div class="empty-state" id="emptyState" data-i18n="tpRoomEmpty">The agents start working as soon as the rider sends a message.</div>
+          <div class="typing-zone" id="typingZone" aria-live="polite"></div>
+        </div>
+      </main>
+    </div>
+  </section>
+
+  <!-- RIGHT: the human support console -->
+  <section class="pane pane-human" id="pane-human" data-pane="human" aria-labelledby="h-human">
+    <header class="pane-head">
+      <h2 id="h-human" data-i18n="tpHuman">Support console</h2>
+      <span class="live" id="st-human"><i></i><span></span></span>
+    </header>
+    <div class="console-scroll" id="consoleScroll">
+      <div class="console-idle" id="consoleIdle">
+        <div class="ci-mark" aria-hidden="true"></div>
+        <p data-i18n="tpNoCases">No cases need review</p>
+        <span data-i18n="tpNoCasesSub">Cases appear here only when the policy or the safety net needs a person.</span>
+      </div>
+      <div class="console-case" id="consoleCase" hidden>
+        <div id="summary"></div>
+        <section class="qa" aria-labelledby="h-qa">
+          <h3 id="h-qa" data-i18n="tpAsk">Ask about this case</h3>
+          <div class="qa-thread" id="qaThread"></div>
+          <form class="qa-form" id="askForm">
+            <textarea id="askInput" rows="2" maxlength="600" data-i18n-ph="tpAskPh" placeholder="e.g. did the driver call the rider before cancelling?"></textarea>
+            <button type="submit" class="btn" id="askBtn" data-i18n="tpCheck">Check wording</button>
+          </form>
+          <div class="qa-confirm" id="askConfirm" hidden>
+            <div class="qc-row"><span class="qc-k" data-i18n="tpYouWrote">You wrote</span><span class="qc-v" id="qcOrig"></span></div>
+            <div class="qc-row"><span class="qc-k" data-i18n="tpSentAs">Will be sent as</span>
+              <textarea id="qcEdit" rows="2" maxlength="600"></textarea></div>
+            <p class="qc-note" id="qcNote"></p>
+            <div class="qc-actions">
+              <button type="button" class="btn" id="qcCancel" data-i18n="tpEdit">Back to edit</button>
+              <button type="button" class="btn primary" id="qcSend" data-i18n="tpConfirmAsk">Confirm and ask</button>
+            </div>
+          </div>
+        </section>
+      </div>
+    </div>
+    <footer class="decision-bar" id="decisionBar" hidden>
+      <div class="db-buttons">
+        <button type="button" class="btn primary" data-act="approve" id="dbApprove" data-i18n="tpApprove">Approve AI recommendation</button>
+        <button type="button" class="btn" data-act="adjust" data-i18n="tpAdjust">Adjust amount</button>
+        <button type="button" class="btn" data-act="reject" data-i18n="tpReject">Reject claim</button>
+        <button type="button" class="btn" data-act="request_info" data-i18n="tpMore">Request more information</button>
+      </div>
+      <div class="db-form" id="dbForm" hidden>
+        <label class="db-amt" id="dbAmtWrap"><span data-i18n="tpAmount">Refund amount (S$)</span>
+          <input type="number" id="dbAmount" min="0" step="0.01" inputmode="decimal"></label>
+        <label class="db-note"><span id="dbNoteLbl"></span>
+          <textarea id="dbNote" rows="2" maxlength="600"></textarea></label>
+        <p class="db-err" id="dbErr" role="alert"></p>
+        <div class="db-actions">
+          <button type="button" class="btn" id="dbCancel" data-i18n="tpCancel">Cancel</button>
+          <button type="button" class="btn primary" id="dbSubmit" data-i18n="tpSubmitDecision">Submit decision</button>
+        </div>
+      </div>
+    </footer>
+  </section>
+</main>
+
+<script>window.RR_EMBED = true;</script>
+<script src="/static/app.js"></script>
+<script src="/static/three.js"></script>
+</body>
+</html>

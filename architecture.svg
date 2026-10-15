@@ -7,10 +7,10 @@
 <text x="130.0" y="178.0" font-family="'Noto Sans','DejaVu Sans',Arial,sans-serif" font-size="13" fill="#475569" text-anchor="middle">+ trip (any language)</text>
 <rect x="30" y="230" width="200" height="80" rx="12" fill="#ffffff" stroke="#0d9488" stroke-width="2"/>
 <text x="130.0" y="257.5" font-family="'Noto Sans','DejaVu Sans',Arial,sans-serif" font-size="18" font-weight="700" fill="#0f172a" text-anchor="middle">Web UI (EN / ZH)</text>
-<text x="130.0" y="279.5" font-family="'Noto Sans','DejaVu Sans',Arial,sans-serif" font-size="13" fill="#475569" text-anchor="middle">live timeline over SSE</text>
+<text x="130.0" y="279.5" font-family="'Noto Sans','DejaVu Sans',Arial,sans-serif" font-size="13" fill="#475569" text-anchor="middle">3 panes: rider, agents, support</text>
 <rect x="270" y="160" width="210" height="110" rx="12" fill="#ffffff" stroke="#0d9488" stroke-width="2"/>
 <text x="375.0" y="185.5" font-family="'Noto Sans','DejaVu Sans',Arial,sans-serif" font-size="18" font-weight="700" fill="#0f172a" text-anchor="middle">FastAPI + SSE</text>
-<text x="375.0" y="207.5" font-family="'Noto Sans','DejaVu Sans',Arial,sans-serif" font-size="13" fill="#475569" text-anchor="middle">/api/file/stream</text>
+<text x="375.0" y="207.5" font-family="'Noto Sans','DejaVu Sans',Arial,sans-serif" font-size="13" fill="#475569" text-anchor="middle">/api/cases + /api/file/stream</text>
 <text x="375.0" y="224.5" font-family="'Noto Sans','DejaVu Sans',Arial,sans-serif" font-size="13" fill="#475569" text-anchor="middle">lang = en | zh</text>
 <text x="375.0" y="241.5" font-family="'Noto Sans','DejaVu Sans',Arial,sans-serif" font-size="13" fill="#475569" text-anchor="middle">mode = llm | deterministic</text>
 <line x1="230" y1="160" x2="270" y2="190" stroke="#475569" stroke-width="2.2" marker-end="url(#a)"/>
@@ -56,9 +56,9 @@
 <text x="1480.0" y="178.0" font-family="'Noto Sans','DejaVu Sans',Arial,sans-serif" font-size="13" fill="#475569" text-anchor="middle">+ policy path, audit blocks</text>
 <line x1="1480" y1="250" x2="1480" y2="210" stroke="#475569" stroke-width="2.2" marker-end="url(#a)"/>
 <text x="1490" y="236" font-family="'Noto Sans','DejaVu Sans',Arial,sans-serif" font-size="12.5" fill="#059669" font-weight="700">OK</text>
-<rect x="1380" y="430" width="200" height="80" rx="12" fill="#fef2f2" stroke="#b91c1c" stroke-width="2"/>
+<rect x="1370" y="430" width="220" height="112" rx="12" fill="#fef2f2" stroke="#b91c1c" stroke-width="2"/>
 <text x="1480.0" y="457.5" font-family="'Noto Sans','DejaVu Sans',Arial,sans-serif" font-size="18" font-weight="700" fill="#0f172a" text-anchor="middle">Human review</text>
-<text x="1480.0" y="479.5" font-family="'Noto Sans','DejaVu Sans',Arial,sans-serif" font-size="13" fill="#475569" text-anchor="middle">refund withheld</text>
+<text x="1480.0" y="479.5" font-family="'Noto Sans','DejaVu Sans',Arial,sans-serif" font-size="13" fill="#475569" text-anchor="middle">support console: case-QA</text><text x="1480.0" y="497.5" font-family="'Noto Sans','DejaVu Sans',Arial,sans-serif" font-size="13" fill="#475569" text-anchor="middle">+ rephrase agents; asks rider</text><text x="1480.0" y="515.5" font-family="'Noto Sans','DejaVu Sans',Arial,sans-serif" font-size="13" fill="#475569" text-anchor="middle">a person decides; no payout</text><text x="1480.0" y="533.5" font-family="'Noto Sans','DejaVu Sans',Arial,sans-serif" font-size="13" fill="#475569" text-anchor="middle">until then</text>
 <line x1="1480" y1="380" x2="1480" y2="430" stroke="#475569" stroke-width="2.2" marker-end="url(#a)"/>
 <text x="1470" y="410" font-family="'Noto Sans','DejaVu Sans',Arial,sans-serif" font-size="12.5" fill="#b91c1c" font-weight="700" text-anchor="end">thin / below threshold</text>
 <rect x="800" y="100" width="250" height="120" rx="12" fill="#fef2f2" stroke="#b91c1c" stroke-width="2"/>
