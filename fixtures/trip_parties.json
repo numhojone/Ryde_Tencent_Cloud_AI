@@ -34,5 +34,365 @@
     "driver_id": "D-7002",
     "route": "Tanjong Pagar Centre → HarbourFront",
     "outcome": "Trip cancelled, S$5 no-show fee charged"
+  },
+  "TRIP-2026-2001": {
+    "rider_id": "R-3312",
+    "driver_id": "D-1187",
+    "route": "one-north → East Coast Park",
+    "outcome": "Trip completed, fare S$31.04 (quote S$26.16)"
+  },
+  "TRIP-2026-2002": {
+    "rider_id": "R-3312",
+    "driver_id": "D-2398",
+    "route": "Jurong East MRT → Raffles Place MRT",
+    "outcome": "Trip completed, fare S$28.72 (quote S$26.72)"
+  },
+  "TRIP-2026-2003": {
+    "rider_id": "R-3312",
+    "driver_id": "D-3456",
+    "route": "Clementi Mall → Ang Mo Kio Hub",
+    "outcome": "Trip cancelled, S$5 no-show fee charged"
+  },
+  "TRIP-2026-2004": {
+    "rider_id": "R-3312",
+    "driver_id": "D-4410",
+    "route": "Marina Bay Sands → Tiong Bahru Plaza",
+    "outcome": "Trip cancelled, S$5 no-show fee charged"
+  },
+  "TRIP-2026-2005": {
+    "rider_id": "R-3312",
+    "driver_id": "D-6021",
+    "route": "Ang Mo Kio Hub → Orchard MRT",
+    "outcome": "Trip completed, S$22 cleaning fee charged"
+  },
+  "TRIP-2026-2006": {
+    "rider_id": "R-3312",
+    "driver_id": "D-7002",
+    "route": "Bedok Mall → East Coast Park",
+    "outcome": "Trip completed, S$30 cleaning fee charged"
+  },
+  "TRIP-2026-2007": {
+    "rider_id": "R-3312",
+    "driver_id": "D-1187",
+    "route": "Clementi Mall → Kallang Wave Mall",
+    "outcome": "Trip completed, safety report filed"
+  },
+  "TRIP-2026-2008": {
+    "rider_id": "R-3312",
+    "driver_id": "D-2398",
+    "route": "Orchard Central → Holland Village",
+    "outcome": "Trip completed, safety report filed"
+  },
+  "TRIP-2026-2009": {
+    "rider_id": "R-3312",
+    "driver_id": "D-3456",
+    "route": "Changi Business Park → East Coast Park",
+    "outcome": "Trip completed, fare S$16.88 (quote S$14.24)"
+  },
+  "TRIP-2026-2010": {
+    "rider_id": "R-3312",
+    "driver_id": "D-4410",
+    "route": "VivoCity → one-north",
+    "outcome": "Trip cancelled, S$5 no-show fee charged"
+  },
+  "TRIP-2026-2011": {
+    "rider_id": "R-4521",
+    "driver_id": "D-6021",
+    "route": "Tiong Bahru Plaza → Ang Mo Kio Hub",
+    "outcome": "Trip completed, fare S$20.16 (quote S$18.16)"
+  },
+  "TRIP-2026-2012": {
+    "rider_id": "R-4521",
+    "driver_id": "D-7002",
+    "route": "Orchard MRT → Pasir Ris Mall",
+    "outcome": "Trip completed, fare S$28.64 (quote S$27.92)"
+  },
+  "TRIP-2026-2013": {
+    "rider_id": "R-4521",
+    "driver_id": "D-1187",
+    "route": "Paya Lebar Quarter → Changi Airport T3",
+    "outcome": "Trip cancelled, S$5 no-show fee charged"
+  },
+  "TRIP-2026-2014": {
+    "rider_id": "R-4521",
+    "driver_id": "D-2398",
+    "route": "HarbourFront Centre → Toa Payoh HDB Hub",
+    "outcome": "Trip cancelled, S$5 no-show fee charged"
+  },
+  "TRIP-2026-2015": {
+    "rider_id": "R-4521",
+    "driver_id": "D-3456",
+    "route": "Bugis Junction → Woodlands MRT",
+    "outcome": "Trip completed, S$25 cleaning fee charged"
+  },
+  "TRIP-2026-2016": {
+    "rider_id": "R-4521",
+    "driver_id": "D-4410",
+    "route": "Bedok Mall → Changi Airport T3",
+    "outcome": "Trip completed, S$20 cleaning fee charged"
+  },
+  "TRIP-2026-2017": {
+    "rider_id": "R-4521",
+    "driver_id": "D-6021",
+    "route": "Punggol Waterway Point → Kallang Wave Mall",
+    "outcome": "Trip completed, safety report filed"
+  },
+  "TRIP-2026-2018": {
+    "rider_id": "R-4521",
+    "driver_id": "D-7002",
+    "route": "Ang Mo Kio Hub → Clementi Mall",
+    "outcome": "Trip completed, safety report filed"
+  },
+  "TRIP-2026-2019": {
+    "rider_id": "R-4521",
+    "driver_id": "D-1187",
+    "route": "Sengkang Compass One → Changi Business Park",
+    "outcome": "Trip completed, S$120 damage fee charged"
+  },
+  "TRIP-2026-2020": {
+    "rider_id": "R-4521",
+    "driver_id": "D-2398",
+    "route": "Tanjong Pagar Centre → Paya Lebar Quarter",
+    "outcome": "Trip cancelled, S$5 no-show fee charged"
+  },
+  "TRIP-2026-2021": {
+    "rider_id": "R-5120",
+    "driver_id": "D-3456",
+    "route": "Buona Vista MRT → Toa Payoh HDB Hub",
+    "outcome": "Trip completed, fare S$16.40 (quote S$15.52)"
+  },
+  "TRIP-2026-2022": {
+    "rider_id": "R-5120",
+    "driver_id": "D-4410",
+    "route": "East Coast Park → Buona Vista MRT",
+    "outcome": "Trip completed, fare S$30.40 (quote S$26.88)"
+  },
+  "TRIP-2026-2023": {
+    "rider_id": "R-5120",
+    "driver_id": "D-6021",
+    "route": "Novena Square → Changi Business Park",
+    "outcome": "Trip cancelled, S$5 no-show fee charged"
+  },
+  "TRIP-2026-2024": {
+    "rider_id": "R-5120",
+    "driver_id": "D-7002",
+    "route": "Kallang Wave Mall → Bishan Junction 8",
+    "outcome": "Trip cancelled, S$5 no-show fee charged"
+  },
+  "TRIP-2026-2025": {
+    "rider_id": "R-5120",
+    "driver_id": "D-1187",
+    "route": "Jurong East MRT → Orchard Central",
+    "outcome": "Trip completed, S$30 cleaning fee charged"
+  },
+  "TRIP-2026-2026": {
+    "rider_id": "R-5120",
+    "driver_id": "D-2398",
+    "route": "Pasir Ris Mall → Chinatown Point",
+    "outcome": "Trip completed, S$240 damage fee charged"
+  },
+  "TRIP-2026-2027": {
+    "rider_id": "R-5120",
+    "driver_id": "D-3456",
+    "route": "Bishan Junction 8 → Clarke Quay",
+    "outcome": "Trip completed, safety report filed"
+  },
+  "TRIP-2026-2028": {
+    "rider_id": "R-5120",
+    "driver_id": "D-4410",
+    "route": "Bugis Junction → Sengkang Compass One",
+    "outcome": "Trip completed, safety report filed"
+  },
+  "TRIP-2026-2029": {
+    "rider_id": "R-5120",
+    "driver_id": "D-6021",
+    "route": "HarbourFront Centre → Orchard Central",
+    "outcome": "Trip completed, S$30 cleaning fee charged"
+  },
+  "TRIP-2026-2030": {
+    "rider_id": "R-5120",
+    "driver_id": "D-7002",
+    "route": "Lot One Choa Chu Kang → Sengkang Compass One",
+    "outcome": "Trip completed, safety report filed"
+  },
+  "TRIP-2026-2031": {
+    "rider_id": "R-7001",
+    "driver_id": "D-1187",
+    "route": "East Coast Park → Changi Business Park",
+    "outcome": "Trip completed, fare S$22.04 (quote S$17.84)"
+  },
+  "TRIP-2026-2032": {
+    "rider_id": "R-7001",
+    "driver_id": "D-2398",
+    "route": "Punggol Waterway Point → Changi Business Park",
+    "outcome": "Trip completed, fare S$27.16 (quote S$21.76)"
+  },
+  "TRIP-2026-2033": {
+    "rider_id": "R-7001",
+    "driver_id": "D-3456",
+    "route": "Bishan Junction 8 → Novena Square",
+    "outcome": "Trip cancelled, S$5 no-show fee charged"
+  },
+  "TRIP-2026-2034": {
+    "rider_id": "R-7001",
+    "driver_id": "D-4410",
+    "route": "Ang Mo Kio Hub → Yishun Northpoint",
+    "outcome": "Trip cancelled, S$5 no-show fee charged"
+  },
+  "TRIP-2026-2035": {
+    "rider_id": "R-7001",
+    "driver_id": "D-6021",
+    "route": "Bedok Mall → Paya Lebar Quarter",
+    "outcome": "Trip completed, S$45 cleaning fee charged"
+  },
+  "TRIP-2026-2036": {
+    "rider_id": "R-7001",
+    "driver_id": "D-7002",
+    "route": "Tampines Mall → NUS Kent Ridge",
+    "outcome": "Trip completed, S$30 cleaning fee charged"
+  },
+  "TRIP-2026-2037": {
+    "rider_id": "R-7001",
+    "driver_id": "D-1187",
+    "route": "Novena Square → Clementi Mall",
+    "outcome": "Trip completed, safety report filed"
+  },
+  "TRIP-2026-2038": {
+    "rider_id": "R-7001",
+    "driver_id": "D-2398",
+    "route": "Lot One Choa Chu Kang → Novena Square",
+    "outcome": "Trip completed, safety report filed"
+  },
+  "TRIP-2026-2039": {
+    "rider_id": "R-7001",
+    "driver_id": "D-3456",
+    "route": "one-north → Changi Business Park",
+    "outcome": "Trip completed, fare S$35.20 (quote S$33.52)"
+  },
+  "TRIP-2026-2040": {
+    "rider_id": "R-7001",
+    "driver_id": "D-4410",
+    "route": "Great World → Tampines Mall",
+    "outcome": "Trip cancelled, S$5 no-show fee charged"
+  },
+  "TRIP-2026-2041": {
+    "rider_id": "R-7823",
+    "driver_id": "D-6021",
+    "route": "Holland Village → Suntec City",
+    "outcome": "Trip completed, fare S$17.68 (quote S$14.72)"
+  },
+  "TRIP-2026-2042": {
+    "rider_id": "R-7823",
+    "driver_id": "D-7002",
+    "route": "Orchard Central → Pasir Ris Mall",
+    "outcome": "Trip completed, fare S$34.16 (quote S$28.40)"
+  },
+  "TRIP-2026-2043": {
+    "rider_id": "R-7823",
+    "driver_id": "D-1187",
+    "route": "Changi Airport T3 → East Coast Park",
+    "outcome": "Trip cancelled, S$5 no-show fee charged"
+  },
+  "TRIP-2026-2044": {
+    "rider_id": "R-7823",
+    "driver_id": "D-2398",
+    "route": "Tanjong Pagar Centre → Tampines Mall",
+    "outcome": "Trip cancelled, S$5 no-show fee charged"
+  },
+  "TRIP-2026-2045": {
+    "rider_id": "R-7823",
+    "driver_id": "D-3456",
+    "route": "Buona Vista MRT → Yishun Northpoint",
+    "outcome": "Trip completed, S$50 cleaning fee charged"
+  },
+  "TRIP-2026-2046": {
+    "rider_id": "R-7823",
+    "driver_id": "D-4410",
+    "route": "Jurong East MRT → Orchard Central",
+    "outcome": "Trip completed, S$140 damage fee charged"
+  },
+  "TRIP-2026-2047": {
+    "rider_id": "R-7823",
+    "driver_id": "D-6021",
+    "route": "Changi Business Park → Sengkang Compass One",
+    "outcome": "Trip completed, safety report filed"
+  },
+  "TRIP-2026-2048": {
+    "rider_id": "R-7823",
+    "driver_id": "D-7002",
+    "route": "Gardens by the Bay → Pasir Ris Mall",
+    "outcome": "Trip completed, safety report filed"
+  },
+  "TRIP-2026-2049": {
+    "rider_id": "R-7823",
+    "driver_id": "D-1187",
+    "route": "Tampines Mall → one-north",
+    "outcome": "Trip completed, S$35 cleaning fee charged"
+  },
+  "TRIP-2026-2050": {
+    "rider_id": "R-7823",
+    "driver_id": "D-2398",
+    "route": "Great World → Paya Lebar Quarter",
+    "outcome": "Trip completed, safety report filed"
+  },
+  "TRIP-2026-2051": {
+    "rider_id": "R-9001",
+    "driver_id": "D-3456",
+    "route": "Ang Mo Kio Hub → HarbourFront Centre",
+    "outcome": "Trip completed, fare S$28.08 (quote S$24.88)"
+  },
+  "TRIP-2026-2052": {
+    "rider_id": "R-9001",
+    "driver_id": "D-4410",
+    "route": "Clementi Mall → Serangoon NEX",
+    "outcome": "Trip completed, fare S$32.04 (quote S$24.40)"
+  },
+  "TRIP-2026-2053": {
+    "rider_id": "R-9001",
+    "driver_id": "D-6021",
+    "route": "Tanjong Pagar Centre → Buona Vista MRT",
+    "outcome": "Trip cancelled, S$5 no-show fee charged"
+  },
+  "TRIP-2026-2054": {
+    "rider_id": "R-9001",
+    "driver_id": "D-7002",
+    "route": "Tiong Bahru Plaza → Toa Payoh HDB Hub",
+    "outcome": "Trip cancelled, S$5 no-show fee charged"
+  },
+  "TRIP-2026-2055": {
+    "rider_id": "R-9001",
+    "driver_id": "D-1187",
+    "route": "Bishan Junction 8 → Holland Village",
+    "outcome": "Trip completed, S$22 cleaning fee charged"
+  },
+  "TRIP-2026-2056": {
+    "rider_id": "R-9001",
+    "driver_id": "D-2398",
+    "route": "Orchard Central → one-north",
+    "outcome": "Trip completed, S$8 cleaning fee charged"
+  },
+  "TRIP-2026-2057": {
+    "rider_id": "R-9001",
+    "driver_id": "D-3456",
+    "route": "Yishun Northpoint → Lot One Choa Chu Kang",
+    "outcome": "Trip completed, safety report filed"
+  },
+  "TRIP-2026-2058": {
+    "rider_id": "R-9001",
+    "driver_id": "D-4410",
+    "route": "Orchard Central → Tampines Mall",
+    "outcome": "Trip completed, safety report filed"
+  },
+  "TRIP-2026-2059": {
+    "rider_id": "R-9001",
+    "driver_id": "D-6021",
+    "route": "Kovan Hub → Marina Bay Sands",
+    "outcome": "Trip completed, fare S$25.20 (quote S$20.56)"
+  },
+  "TRIP-2026-2060": {
+    "rider_id": "R-9001",
+    "driver_id": "D-7002",
+    "route": "Bedok Mall → Tiong Bahru Plaza",
+    "outcome": "Trip completed, safety report filed"
   }
 }

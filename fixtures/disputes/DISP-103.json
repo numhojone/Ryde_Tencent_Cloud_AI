@@ -1,0 +1,13 @@
+{
+  "dispute_id": "DISP-103",
+  "_source": "Synthetic (ticket ids and parties from the team's 60-ticket file)",
+  "trip_id": "TRIP-2026-2003",
+  "filed_by": "rider",
+  "rider_id": "R-3312",
+  "driver_id": "D-3456",
+  "dispute_type": "no_show_charge",
+  "description": "I was charged a S$5 no-show fee for my 06:05 booking at Clementi Mall on 23 September. The driver only sent chat messages and did not call me. Please refund the fee.",
+  "filed_at": "2026-09-23T07:34:30+08:00",
+  "requested_resolution": "reverse_cancellation_fee",
+  "requested_amount": 5.0
+}

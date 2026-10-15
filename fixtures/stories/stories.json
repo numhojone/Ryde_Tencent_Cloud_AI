@@ -1,0 +1,3112 @@
+{
+  "note": "Story prompts for testing the free-text flow. 'expect_picker' is true when the rider has more than one trip in that category, so the story alone cannot identify one trip.",
+  "stories": [
+    {
+      "story_id": "STORY-001-precise",
+      "style": "precise",
+      "text": "On 18 September I took a Ryde from one-north to East Coast Park and paid S$31.04 when the estimate was S$26.16. The driver went a much longer way. Please refund the extra.",
+      "expect_picker": false,
+      "rider_id": "R-3312",
+      "rider_name": "Wong Mei Ling",
+      "language": "en",
+      "expected_dispute_id": "DISP-101",
+      "expected_trip_id": "TRIP-2026-2001",
+      "expected_category": "route_deviation",
+      "same_category_trips_for_this_rider": [
+        "TRIP-2026-2001",
+        "TRIP-2026-2002",
+        "TRIP-2026-2009"
+      ]
+    },
+    {
+      "story_id": "STORY-001-vague",
+      "style": "vague",
+      "text": "My driver went round and round and the fare was higher than expected.",
+      "expect_picker": true,
+      "rider_id": "R-3312",
+      "rider_name": "Wong Mei Ling",
+      "language": "en",
+      "expected_dispute_id": "DISP-101",
+      "expected_trip_id": "TRIP-2026-2001",
+      "expected_category": "route_deviation",
+      "same_category_trips_for_this_rider": [
+        "TRIP-2026-2001",
+        "TRIP-2026-2002",
+        "TRIP-2026-2009"
+      ]
+    },
+    {
+      "story_id": "STORY-001-casual",
+      "style": "casual",
+      "text": "Eh the driver cannot go the normal way one lah, bring me round and round then charge me more. Please check.",
+      "expect_picker": true,
+      "rider_id": "R-3312",
+      "rider_name": "Wong Mei Ling",
+      "language": "en",
+      "expected_dispute_id": "DISP-101",
+      "expected_trip_id": "TRIP-2026-2001",
+      "expected_category": "route_deviation",
+      "same_category_trips_for_this_rider": [
+        "TRIP-2026-2001",
+        "TRIP-2026-2002",
+        "TRIP-2026-2009"
+      ]
+    },
+    {
+      "story_id": "STORY-002-precise",
+      "style": "precise",
+      "text": "On 20 September I took a Ryde from Jurong East MRT to Raffles Place MRT and paid S$28.72 when the estimate was S$26.72. The driver went a much longer way. Please refund the extra.",
+      "expect_picker": false,
+      "rider_id": "R-3312",
+      "rider_name": "Wong Mei Ling",
+      "language": "en",
+      "expected_dispute_id": "DISP-102",
+      "expected_trip_id": "TRIP-2026-2002",
+      "expected_category": "route_deviation",
+      "same_category_trips_for_this_rider": [
+        "TRIP-2026-2001",
+        "TRIP-2026-2002",
+        "TRIP-2026-2009"
+      ]
+    },
+    {
+      "story_id": "STORY-002-vague",
+      "style": "vague",
+      "text": "My driver went round and round and the fare was higher than expected.",
+      "expect_picker": true,
+      "rider_id": "R-3312",
+      "rider_name": "Wong Mei Ling",
+      "language": "en",
+      "expected_dispute_id": "DISP-102",
+      "expected_trip_id": "TRIP-2026-2002",
+      "expected_category": "route_deviation",
+      "same_category_trips_for_this_rider": [
+        "TRIP-2026-2001",
+        "TRIP-2026-2002",
+        "TRIP-2026-2009"
+      ]
+    },
+    {
+      "story_id": "STORY-002-casual",
+      "style": "casual",
+      "text": "Eh the driver cannot go the normal way one lah, bring me round and round then charge me more. Please check.",
+      "expect_picker": true,
+      "rider_id": "R-3312",
+      "rider_name": "Wong Mei Ling",
+      "language": "en",
+      "expected_dispute_id": "DISP-102",
+      "expected_trip_id": "TRIP-2026-2002",
+      "expected_category": "route_deviation",
+      "same_category_trips_for_this_rider": [
+        "TRIP-2026-2001",
+        "TRIP-2026-2002",
+        "TRIP-2026-2009"
+      ]
+    },
+    {
+      "story_id": "STORY-003-precise",
+      "style": "precise",
+      "text": "I had a pickup at Clementi Mall on 23 September at 06:05 but the driver cancelled and I was charged a S$5 no-show fee. Please refund it.",
+      "expect_picker": false,
+      "rider_id": "R-3312",
+      "rider_name": "Wong Mei Ling",
+      "language": "en",
+      "expected_dispute_id": "DISP-103",
+      "expected_trip_id": "TRIP-2026-2003",
+      "expected_category": "no_show_charge",
+      "same_category_trips_for_this_rider": [
+        "TRIP-2026-2003",
+        "TRIP-2026-2004",
+        "TRIP-2026-2010"
+      ]
+    },
+    {
+      "story_id": "STORY-003-vague",
+      "style": "vague",
+      "text": "Charged a no-show fee but I was waiting for the driver.",
+      "expect_picker": true,
+      "rider_id": "R-3312",
+      "rider_name": "Wong Mei Ling",
+      "language": "en",
+      "expected_dispute_id": "DISP-103",
+      "expected_trip_id": "TRIP-2026-2003",
+      "expected_category": "no_show_charge",
+      "same_category_trips_for_this_rider": [
+        "TRIP-2026-2003",
+        "TRIP-2026-2004",
+        "TRIP-2026-2010"
+      ]
+    },
+    {
+      "story_id": "STORY-003-casual",
+      "style": "casual",
+      "text": "Aiyo the driver cancel on me and still charge me $5 no show fee, I was waiting there leh.",
+      "expect_picker": true,
+      "rider_id": "R-3312",
+      "rider_name": "Wong Mei Ling",
+      "language": "en",
+      "expected_dispute_id": "DISP-103",
+      "expected_trip_id": "TRIP-2026-2003",
+      "expected_category": "no_show_charge",
+      "same_category_trips_for_this_rider": [
+        "TRIP-2026-2003",
+        "TRIP-2026-2004",
+        "TRIP-2026-2010"
+      ]
+    },
+    {
+      "story_id": "STORY-004-precise",
+      "style": "precise",
+      "text": "I had a pickup at Marina Bay Sands on 26 September at 11:25 but the driver cancelled and I was charged a S$5 no-show fee. Please refund it.",
+      "expect_picker": false,
+      "rider_id": "R-3312",
+      "rider_name": "Wong Mei Ling",
+      "language": "en",
+      "expected_dispute_id": "DISP-104",
+      "expected_trip_id": "TRIP-2026-2004",
+      "expected_category": "no_show_charge",
+      "same_category_trips_for_this_rider": [
+        "TRIP-2026-2003",
+        "TRIP-2026-2004",
+        "TRIP-2026-2010"
+      ]
+    },
+    {
+      "story_id": "STORY-004-vague",
+      "style": "vague",
+      "text": "The driver cancelled on me and I still paid a fee.",
+      "expect_picker": true,
+      "rider_id": "R-3312",
+      "rider_name": "Wong Mei Ling",
+      "language": "en",
+      "expected_dispute_id": "DISP-104",
+      "expected_trip_id": "TRIP-2026-2004",
+      "expected_category": "no_show_charge",
+      "same_category_trips_for_this_rider": [
+        "TRIP-2026-2003",
+        "TRIP-2026-2004",
+        "TRIP-2026-2010"
+      ]
+    },
+    {
+      "story_id": "STORY-004-casual",
+      "style": "casual",
+      "text": "Aiyo the driver cancel on me and still charge me $5 no show fee, I was waiting there leh.",
+      "expect_picker": true,
+      "rider_id": "R-3312",
+      "rider_name": "Wong Mei Ling",
+      "language": "en",
+      "expected_dispute_id": "DISP-104",
+      "expected_trip_id": "TRIP-2026-2004",
+      "expected_category": "no_show_charge",
+      "same_category_trips_for_this_rider": [
+        "TRIP-2026-2003",
+        "TRIP-2026-2004",
+        "TRIP-2026-2010"
+      ]
+    },
+    {
+      "story_id": "STORY-005-precise",
+      "style": "precise",
+      "text": "After my ride from Ang Mo Kio Hub to Orchard MRT on 28 September I was charged a S$22 cleaning fee. I did not cause any damage. Please reverse it.",
+      "expect_picker": false,
+      "rider_id": "R-3312",
+      "rider_name": "Wong Mei Ling",
+      "language": "en",
+      "expected_dispute_id": "DISP-105",
+      "expected_trip_id": "TRIP-2026-2005",
+      "expected_category": "property_damage",
+      "same_category_trips_for_this_rider": [
+        "TRIP-2026-2005",
+        "TRIP-2026-2006"
+      ]
+    },
+    {
+      "story_id": "STORY-005-vague",
+      "style": "vague",
+      "text": "There's a damage fee on my account for a ride where I did nothing wrong.",
+      "expect_picker": true,
+      "rider_id": "R-3312",
+      "rider_name": "Wong Mei Ling",
+      "language": "en",
+      "expected_dispute_id": "DISP-105",
+      "expected_trip_id": "TRIP-2026-2005",
+      "expected_category": "property_damage",
+      "same_category_trips_for_this_rider": [
+        "TRIP-2026-2005",
+        "TRIP-2026-2006"
+      ]
+    },
+    {
+      "story_id": "STORY-005-casual",
+      "style": "casual",
+      "text": "Why got cleaning fee ah? I never dirty the car, please remove lah.",
+      "expect_picker": true,
+      "rider_id": "R-3312",
+      "rider_name": "Wong Mei Ling",
+      "language": "en",
+      "expected_dispute_id": "DISP-105",
+      "expected_trip_id": "TRIP-2026-2005",
+      "expected_category": "property_damage",
+      "same_category_trips_for_this_rider": [
+        "TRIP-2026-2005",
+        "TRIP-2026-2006"
+      ]
+    },
+    {
+      "story_id": "STORY-006-precise",
+      "style": "precise",
+      "text": "After my ride from Bedok Mall to East Coast Park on 1 October I was charged a S$30 cleaning fee. I did not cause any damage. Please reverse it.",
+      "expect_picker": false,
+      "rider_id": "R-3312",
+      "rider_name": "Wong Mei Ling",
+      "language": "en",
+      "expected_dispute_id": "DISP-106",
+      "expected_trip_id": "TRIP-2026-2006",
+      "expected_category": "property_damage",
+      "same_category_trips_for_this_rider": [
+        "TRIP-2026-2005",
+        "TRIP-2026-2006"
+      ]
+    },
+    {
+      "story_id": "STORY-006-vague",
+      "style": "vague",
+      "text": "There's a damage fee on my account for a ride where I did nothing wrong.",
+      "expect_picker": true,
+      "rider_id": "R-3312",
+      "rider_name": "Wong Mei Ling",
+      "language": "en",
+      "expected_dispute_id": "DISP-106",
+      "expected_trip_id": "TRIP-2026-2006",
+      "expected_category": "property_damage",
+      "same_category_trips_for_this_rider": [
+        "TRIP-2026-2005",
+        "TRIP-2026-2006"
+      ]
+    },
+    {
+      "story_id": "STORY-006-casual",
+      "style": "casual",
+      "text": "Why got cleaning fee ah? I never dirty the car, please remove lah.",
+      "expect_picker": true,
+      "rider_id": "R-3312",
+      "rider_name": "Wong Mei Ling",
+      "language": "en",
+      "expected_dispute_id": "DISP-106",
+      "expected_trip_id": "TRIP-2026-2006",
+      "expected_category": "property_damage",
+      "same_category_trips_for_this_rider": [
+        "TRIP-2026-2005",
+        "TRIP-2026-2006"
+      ]
+    },
+    {
+      "story_id": "STORY-007-precise",
+      "style": "precise",
+      "text": "On 4 October on my ride from Clementi Mall to Kallang Wave Mall, the driver shouted at me and threatened to drop me off on the road. I want this reviewed.",
+      "expect_picker": false,
+      "rider_id": "R-3312",
+      "rider_name": "Wong Mei Ling",
+      "language": "en",
+      "expected_dispute_id": "DISP-107",
+      "expected_trip_id": "TRIP-2026-2007",
+      "expected_category": "safety_incident",
+      "same_category_trips_for_this_rider": [
+        "TRIP-2026-2007",
+        "TRIP-2026-2008"
+      ]
+    },
+    {
+      "story_id": "STORY-007-vague",
+      "style": "vague",
+      "text": "I want to report something that happened with a driver, I was scared.",
+      "expect_picker": true,
+      "rider_id": "R-3312",
+      "rider_name": "Wong Mei Ling",
+      "language": "en",
+      "expected_dispute_id": "DISP-107",
+      "expected_trip_id": "TRIP-2026-2007",
+      "expected_category": "safety_incident",
+      "same_category_trips_for_this_rider": [
+        "TRIP-2026-2007",
+        "TRIP-2026-2008"
+      ]
+    },
+    {
+      "story_id": "STORY-007-casual",
+      "style": "casual",
+      "text": "That driver very scary lah, I don't feel safe, please check.",
+      "expect_picker": true,
+      "rider_id": "R-3312",
+      "rider_name": "Wong Mei Ling",
+      "language": "en",
+      "expected_dispute_id": "DISP-107",
+      "expected_trip_id": "TRIP-2026-2007",
+      "expected_category": "safety_incident",
+      "same_category_trips_for_this_rider": [
+        "TRIP-2026-2007",
+        "TRIP-2026-2008"
+      ]
+    },
+    {
+      "story_id": "STORY-008-precise",
+      "style": "precise",
+      "text": "On 6 October on my ride from Orchard Central to Holland Village, the driver kept asking for my number and made me uncomfortable. I want this reviewed.",
+      "expect_picker": false,
+      "rider_id": "R-3312",
+      "rider_name": "Wong Mei Ling",
+      "language": "en",
+      "expected_dispute_id": "DISP-108",
+      "expected_trip_id": "TRIP-2026-2008",
+      "expected_category": "safety_incident",
+      "same_category_trips_for_this_rider": [
+        "TRIP-2026-2007",
+        "TRIP-2026-2008"
+      ]
+    },
+    {
+      "story_id": "STORY-008-vague",
+      "style": "vague",
+      "text": "My last ride was not safe, I want this looked at.",
+      "expect_picker": true,
+      "rider_id": "R-3312",
+      "rider_name": "Wong Mei Ling",
+      "language": "en",
+      "expected_dispute_id": "DISP-108",
+      "expected_trip_id": "TRIP-2026-2008",
+      "expected_category": "safety_incident",
+      "same_category_trips_for_this_rider": [
+        "TRIP-2026-2007",
+        "TRIP-2026-2008"
+      ]
+    },
+    {
+      "story_id": "STORY-008-casual",
+      "style": "casual",
+      "text": "That driver very scary lah, I don't feel safe, please check.",
+      "expect_picker": true,
+      "rider_id": "R-3312",
+      "rider_name": "Wong Mei Ling",
+      "language": "en",
+      "expected_dispute_id": "DISP-108",
+      "expected_trip_id": "TRIP-2026-2008",
+      "expected_category": "safety_incident",
+      "same_category_trips_for_this_rider": [
+        "TRIP-2026-2007",
+        "TRIP-2026-2008"
+      ]
+    },
+    {
+      "story_id": "STORY-009-precise",
+      "style": "precise",
+      "text": "On 9 October I took a Ryde from Changi Business Park to East Coast Park and paid S$16.88 when the estimate was S$14.24. The driver went a much longer way. Please refund the extra.",
+      "expect_picker": false,
+      "rider_id": "R-3312",
+      "rider_name": "Wong Mei Ling",
+      "language": "en",
+      "expected_dispute_id": "DISP-109",
+      "expected_trip_id": "TRIP-2026-2009",
+      "expected_category": "route_deviation",
+      "same_category_trips_for_this_rider": [
+        "TRIP-2026-2001",
+        "TRIP-2026-2002",
+        "TRIP-2026-2009"
+      ]
+    },
+    {
+      "story_id": "STORY-009-vague",
+      "style": "vague",
+      "text": "The driver took a really long route and I got charged more.",
+      "expect_picker": true,
+      "rider_id": "R-3312",
+      "rider_name": "Wong Mei Ling",
+      "language": "en",
+      "expected_dispute_id": "DISP-109",
+      "expected_trip_id": "TRIP-2026-2009",
+      "expected_category": "route_deviation",
+      "same_category_trips_for_this_rider": [
+        "TRIP-2026-2001",
+        "TRIP-2026-2002",
+        "TRIP-2026-2009"
+      ]
+    },
+    {
+      "story_id": "STORY-009-casual",
+      "style": "casual",
+      "text": "Eh the driver cannot go the normal way one lah, bring me round and round then charge me more. Please check.",
+      "expect_picker": true,
+      "rider_id": "R-3312",
+      "rider_name": "Wong Mei Ling",
+      "language": "en",
+      "expected_dispute_id": "DISP-109",
+      "expected_trip_id": "TRIP-2026-2009",
+      "expected_category": "route_deviation",
+      "same_category_trips_for_this_rider": [
+        "TRIP-2026-2001",
+        "TRIP-2026-2002",
+        "TRIP-2026-2009"
+      ]
+    },
+    {
+      "story_id": "STORY-010-precise",
+      "style": "precise",
+      "text": "I had a pickup at VivoCity on 12 October at 16:15 but the driver cancelled and I was charged a S$5 no-show fee. Please refund it.",
+      "expect_picker": false,
+      "rider_id": "R-3312",
+      "rider_name": "Wong Mei Ling",
+      "language": "en",
+      "expected_dispute_id": "DISP-110",
+      "expected_trip_id": "TRIP-2026-2010",
+      "expected_category": "no_show_charge",
+      "same_category_trips_for_this_rider": [
+        "TRIP-2026-2003",
+        "TRIP-2026-2004",
+        "TRIP-2026-2010"
+      ]
+    },
+    {
+      "story_id": "STORY-010-vague",
+      "style": "vague",
+      "text": "Charged a no-show fee but I was waiting for the driver.",
+      "expect_picker": true,
+      "rider_id": "R-3312",
+      "rider_name": "Wong Mei Ling",
+      "language": "en",
+      "expected_dispute_id": "DISP-110",
+      "expected_trip_id": "TRIP-2026-2010",
+      "expected_category": "no_show_charge",
+      "same_category_trips_for_this_rider": [
+        "TRIP-2026-2003",
+        "TRIP-2026-2004",
+        "TRIP-2026-2010"
+      ]
+    },
+    {
+      "story_id": "STORY-010-casual",
+      "style": "casual",
+      "text": "Aiyo the driver cancel on me and still charge me $5 no show fee, I was waiting there leh.",
+      "expect_picker": true,
+      "rider_id": "R-3312",
+      "rider_name": "Wong Mei Ling",
+      "language": "en",
+      "expected_dispute_id": "DISP-110",
+      "expected_trip_id": "TRIP-2026-2010",
+      "expected_category": "no_show_charge",
+      "same_category_trips_for_this_rider": [
+        "TRIP-2026-2003",
+        "TRIP-2026-2004",
+        "TRIP-2026-2010"
+      ]
+    },
+    {
+      "story_id": "STORY-011-precise",
+      "style": "precise",
+      "text": "On 18 September I took a Ryde from Tiong Bahru Plaza to Ang Mo Kio Hub and paid S$20.16 when the estimate was S$18.16. The driver went a much longer way. Please refund the extra.",
+      "expect_picker": false,
+      "rider_id": "R-4521",
+      "rider_name": "Sarah Tan",
+      "language": "en",
+      "expected_dispute_id": "DISP-111",
+      "expected_trip_id": "TRIP-2026-2011",
+      "expected_category": "route_deviation",
+      "same_category_trips_for_this_rider": [
+        "TRIP-2026-2011",
+        "TRIP-2026-2012"
+      ]
+    },
+    {
+      "story_id": "STORY-011-vague",
+      "style": "vague",
+      "text": "My driver went round and round and the fare was higher than expected.",
+      "expect_picker": true,
+      "rider_id": "R-4521",
+      "rider_name": "Sarah Tan",
+      "language": "en",
+      "expected_dispute_id": "DISP-111",
+      "expected_trip_id": "TRIP-2026-2011",
+      "expected_category": "route_deviation",
+      "same_category_trips_for_this_rider": [
+        "TRIP-2026-2011",
+        "TRIP-2026-2012"
+      ]
+    },
+    {
+      "story_id": "STORY-011-casual",
+      "style": "casual",
+      "text": "Eh the driver cannot go the normal way one lah, bring me round and round then charge me more. Please check.",
+      "expect_picker": true,
+      "rider_id": "R-4521",
+      "rider_name": "Sarah Tan",
+      "language": "en",
+      "expected_dispute_id": "DISP-111",
+      "expected_trip_id": "TRIP-2026-2011",
+      "expected_category": "route_deviation",
+      "same_category_trips_for_this_rider": [
+        "TRIP-2026-2011",
+        "TRIP-2026-2012"
+      ]
+    },
+    {
+      "story_id": "STORY-012-precise",
+      "style": "precise",
+      "text": "On 21 September I took a Ryde from Orchard MRT to Pasir Ris Mall and paid S$28.64 when the estimate was S$27.92. The driver went a much longer way. Please refund the extra.",
+      "expect_picker": false,
+      "rider_id": "R-4521",
+      "rider_name": "Sarah Tan",
+      "language": "en",
+      "expected_dispute_id": "DISP-112",
+      "expected_trip_id": "TRIP-2026-2012",
+      "expected_category": "route_deviation",
+      "same_category_trips_for_this_rider": [
+        "TRIP-2026-2011",
+        "TRIP-2026-2012"
+      ]
+    },
+    {
+      "story_id": "STORY-012-vague",
+      "style": "vague",
+      "text": "My driver went round and round and the fare was higher than expected.",
+      "expect_picker": true,
+      "rider_id": "R-4521",
+      "rider_name": "Sarah Tan",
+      "language": "en",
+      "expected_dispute_id": "DISP-112",
+      "expected_trip_id": "TRIP-2026-2012",
+      "expected_category": "route_deviation",
+      "same_category_trips_for_this_rider": [
+        "TRIP-2026-2011",
+        "TRIP-2026-2012"
+      ]
+    },
+    {
+      "story_id": "STORY-012-casual",
+      "style": "casual",
+      "text": "Eh the driver cannot go the normal way one lah, bring me round and round then charge me more. Please check.",
+      "expect_picker": true,
+      "rider_id": "R-4521",
+      "rider_name": "Sarah Tan",
+      "language": "en",
+      "expected_dispute_id": "DISP-112",
+      "expected_trip_id": "TRIP-2026-2012",
+      "expected_category": "route_deviation",
+      "same_category_trips_for_this_rider": [
+        "TRIP-2026-2011",
+        "TRIP-2026-2012"
+      ]
+    },
+    {
+      "story_id": "STORY-013-precise",
+      "style": "precise",
+      "text": "I had a pickup at Paya Lebar Quarter on 23 September at 11:05 but the driver cancelled and I was charged a S$5 no-show fee. Please refund it.",
+      "expect_picker": false,
+      "rider_id": "R-4521",
+      "rider_name": "Sarah Tan",
+      "language": "en",
+      "expected_dispute_id": "DISP-113",
+      "expected_trip_id": "TRIP-2026-2013",
+      "expected_category": "no_show_charge",
+      "same_category_trips_for_this_rider": [
+        "TRIP-2026-2013",
+        "TRIP-2026-2014",
+        "TRIP-2026-2020"
+      ]
+    },
+    {
+      "story_id": "STORY-013-vague",
+      "style": "vague",
+      "text": "Charged a no-show fee but I was waiting for the driver.",
+      "expect_picker": true,
+      "rider_id": "R-4521",
+      "rider_name": "Sarah Tan",
+      "language": "en",
+      "expected_dispute_id": "DISP-113",
+      "expected_trip_id": "TRIP-2026-2013",
+      "expected_category": "no_show_charge",
+      "same_category_trips_for_this_rider": [
+        "TRIP-2026-2013",
+        "TRIP-2026-2014",
+        "TRIP-2026-2020"
+      ]
+    },
+    {
+      "story_id": "STORY-013-casual",
+      "style": "casual",
+      "text": "Aiyo the driver cancel on me and still charge me $5 no show fee, I was waiting there leh.",
+      "expect_picker": true,
+      "rider_id": "R-4521",
+      "rider_name": "Sarah Tan",
+      "language": "en",
+      "expected_dispute_id": "DISP-113",
+      "expected_trip_id": "TRIP-2026-2013",
+      "expected_category": "no_show_charge",
+      "same_category_trips_for_this_rider": [
+        "TRIP-2026-2013",
+        "TRIP-2026-2014",
+        "TRIP-2026-2020"
+      ]
+    },
+    {
+      "story_id": "STORY-014-precise",
+      "style": "precise",
+      "text": "I had a pickup at HarbourFront Centre on 26 September at 16:50 but the driver cancelled and I was charged a S$5 no-show fee. Please refund it.",
+      "expect_picker": false,
+      "rider_id": "R-4521",
+      "rider_name": "Sarah Tan",
+      "language": "en",
+      "expected_dispute_id": "DISP-114",
+      "expected_trip_id": "TRIP-2026-2014",
+      "expected_category": "no_show_charge",
+      "same_category_trips_for_this_rider": [
+        "TRIP-2026-2013",
+        "TRIP-2026-2014",
+        "TRIP-2026-2020"
+      ]
+    },
+    {
+      "story_id": "STORY-014-vague",
+      "style": "vague",
+      "text": "The driver cancelled on me and I still paid a fee.",
+      "expect_picker": true,
+      "rider_id": "R-4521",
+      "rider_name": "Sarah Tan",
+      "language": "en",
+      "expected_dispute_id": "DISP-114",
+      "expected_trip_id": "TRIP-2026-2014",
+      "expected_category": "no_show_charge",
+      "same_category_trips_for_this_rider": [
+        "TRIP-2026-2013",
+        "TRIP-2026-2014",
+        "TRIP-2026-2020"
+      ]
+    },
+    {
+      "story_id": "STORY-014-casual",
+      "style": "casual",
+      "text": "Aiyo the driver cancel on me and still charge me $5 no show fee, I was waiting there leh.",
+      "expect_picker": true,
+      "rider_id": "R-4521",
+      "rider_name": "Sarah Tan",
+      "language": "en",
+      "expected_dispute_id": "DISP-114",
+      "expected_trip_id": "TRIP-2026-2014",
+      "expected_category": "no_show_charge",
+      "same_category_trips_for_this_rider": [
+        "TRIP-2026-2013",
+        "TRIP-2026-2014",
+        "TRIP-2026-2020"
+      ]
+    },
+    {
+      "story_id": "STORY-015-precise",
+      "style": "precise",
+      "text": "After my ride from Bugis Junction to Woodlands MRT on 29 September I was charged a S$25 cleaning fee. I did not cause any damage. Please reverse it.",
+      "expect_picker": false,
+      "rider_id": "R-4521",
+      "rider_name": "Sarah Tan",
+      "language": "en",
+      "expected_dispute_id": "DISP-115",
+      "expected_trip_id": "TRIP-2026-2015",
+      "expected_category": "property_damage",
+      "same_category_trips_for_this_rider": [
+        "TRIP-2026-2015",
+        "TRIP-2026-2016",
+        "TRIP-2026-2019"
+      ]
+    },
+    {
+      "story_id": "STORY-015-vague",
+      "style": "vague",
+      "text": "There's a damage fee on my account for a ride where I did nothing wrong.",
+      "expect_picker": true,
+      "rider_id": "R-4521",
+      "rider_name": "Sarah Tan",
+      "language": "en",
+      "expected_dispute_id": "DISP-115",
+      "expected_trip_id": "TRIP-2026-2015",
+      "expected_category": "property_damage",
+      "same_category_trips_for_this_rider": [
+        "TRIP-2026-2015",
+        "TRIP-2026-2016",
+        "TRIP-2026-2019"
+      ]
+    },
+    {
+      "story_id": "STORY-015-casual",
+      "style": "casual",
+      "text": "Why got cleaning fee ah? I never dirty the car, please remove lah.",
+      "expect_picker": true,
+      "rider_id": "R-4521",
+      "rider_name": "Sarah Tan",
+      "language": "en",
+      "expected_dispute_id": "DISP-115",
+      "expected_trip_id": "TRIP-2026-2015",
+      "expected_category": "property_damage",
+      "same_category_trips_for_this_rider": [
+        "TRIP-2026-2015",
+        "TRIP-2026-2016",
+        "TRIP-2026-2019"
+      ]
+    },
+    {
+      "story_id": "STORY-016-precise",
+      "style": "precise",
+      "text": "After my ride from Bedok Mall to Changi Airport T3 on 2 October I was charged a S$20 cleaning fee. I did not cause any damage. Please reverse it.",
+      "expect_picker": false,
+      "rider_id": "R-4521",
+      "rider_name": "Sarah Tan",
+      "language": "en",
+      "expected_dispute_id": "DISP-116",
+      "expected_trip_id": "TRIP-2026-2016",
+      "expected_category": "property_damage",
+      "same_category_trips_for_this_rider": [
+        "TRIP-2026-2015",
+        "TRIP-2026-2016",
+        "TRIP-2026-2019"
+      ]
+    },
+    {
+      "story_id": "STORY-016-vague",
+      "style": "vague",
+      "text": "There's a damage fee on my account for a ride where I did nothing wrong.",
+      "expect_picker": true,
+      "rider_id": "R-4521",
+      "rider_name": "Sarah Tan",
+      "language": "en",
+      "expected_dispute_id": "DISP-116",
+      "expected_trip_id": "TRIP-2026-2016",
+      "expected_category": "property_damage",
+      "same_category_trips_for_this_rider": [
+        "TRIP-2026-2015",
+        "TRIP-2026-2016",
+        "TRIP-2026-2019"
+      ]
+    },
+    {
+      "story_id": "STORY-016-casual",
+      "style": "casual",
+      "text": "Why got cleaning fee ah? I never dirty the car, please remove lah.",
+      "expect_picker": true,
+      "rider_id": "R-4521",
+      "rider_name": "Sarah Tan",
+      "language": "en",
+      "expected_dispute_id": "DISP-116",
+      "expected_trip_id": "TRIP-2026-2016",
+      "expected_category": "property_damage",
+      "same_category_trips_for_this_rider": [
+        "TRIP-2026-2015",
+        "TRIP-2026-2016",
+        "TRIP-2026-2019"
+      ]
+    },
+    {
+      "story_id": "STORY-017-precise",
+      "style": "precise",
+      "text": "On 4 October on my ride from Punggol Waterway Point to Kallang Wave Mall, the driver was speeding and braking hard and I felt unsafe. I want this reviewed.",
+      "expect_picker": false,
+      "rider_id": "R-4521",
+      "rider_name": "Sarah Tan",
+      "language": "en",
+      "expected_dispute_id": "DISP-117",
+      "expected_trip_id": "TRIP-2026-2017",
+      "expected_category": "safety_incident",
+      "same_category_trips_for_this_rider": [
+        "TRIP-2026-2017",
+        "TRIP-2026-2018"
+      ]
+    },
+    {
+      "story_id": "STORY-017-vague",
+      "style": "vague",
+      "text": "My last ride was not safe, I want this looked at.",
+      "expect_picker": true,
+      "rider_id": "R-4521",
+      "rider_name": "Sarah Tan",
+      "language": "en",
+      "expected_dispute_id": "DISP-117",
+      "expected_trip_id": "TRIP-2026-2017",
+      "expected_category": "safety_incident",
+      "same_category_trips_for_this_rider": [
+        "TRIP-2026-2017",
+        "TRIP-2026-2018"
+      ]
+    },
+    {
+      "story_id": "STORY-017-casual",
+      "style": "casual",
+      "text": "That driver very scary lah, I don't feel safe, please check.",
+      "expect_picker": true,
+      "rider_id": "R-4521",
+      "rider_name": "Sarah Tan",
+      "language": "en",
+      "expected_dispute_id": "DISP-117",
+      "expected_trip_id": "TRIP-2026-2017",
+      "expected_category": "safety_incident",
+      "same_category_trips_for_this_rider": [
+        "TRIP-2026-2017",
+        "TRIP-2026-2018"
+      ]
+    },
+    {
+      "story_id": "STORY-018-precise",
+      "style": "precise",
+      "text": "On 7 October on my ride from Ang Mo Kio Hub to Clementi Mall, the car was in a collision and the driver carried on. I want this reviewed.",
+      "expect_picker": false,
+      "rider_id": "R-4521",
+      "rider_name": "Sarah Tan",
+      "language": "en",
+      "expected_dispute_id": "DISP-118",
+      "expected_trip_id": "TRIP-2026-2018",
+      "expected_category": "safety_incident",
+      "same_category_trips_for_this_rider": [
+        "TRIP-2026-2017",
+        "TRIP-2026-2018"
+      ]
+    },
+    {
+      "story_id": "STORY-018-vague",
+      "style": "vague",
+      "text": "The driver made me feel unsafe on one of my recent trips.",
+      "expect_picker": true,
+      "rider_id": "R-4521",
+      "rider_name": "Sarah Tan",
+      "language": "en",
+      "expected_dispute_id": "DISP-118",
+      "expected_trip_id": "TRIP-2026-2018",
+      "expected_category": "safety_incident",
+      "same_category_trips_for_this_rider": [
+        "TRIP-2026-2017",
+        "TRIP-2026-2018"
+      ]
+    },
+    {
+      "story_id": "STORY-018-casual",
+      "style": "casual",
+      "text": "That driver very scary lah, I don't feel safe, please check.",
+      "expect_picker": true,
+      "rider_id": "R-4521",
+      "rider_name": "Sarah Tan",
+      "language": "en",
+      "expected_dispute_id": "DISP-118",
+      "expected_trip_id": "TRIP-2026-2018",
+      "expected_category": "safety_incident",
+      "same_category_trips_for_this_rider": [
+        "TRIP-2026-2017",
+        "TRIP-2026-2018"
+      ]
+    },
+    {
+      "story_id": "STORY-019-precise",
+      "style": "precise",
+      "text": "After my ride from Sengkang Compass One to Changi Business Park on 10 October I was charged a S$120 damage fee. I did not cause any damage. Please reverse it.",
+      "expect_picker": false,
+      "rider_id": "R-4521",
+      "rider_name": "Sarah Tan",
+      "language": "en",
+      "expected_dispute_id": "DISP-119",
+      "expected_trip_id": "TRIP-2026-2019",
+      "expected_category": "property_damage",
+      "same_category_trips_for_this_rider": [
+        "TRIP-2026-2015",
+        "TRIP-2026-2016",
+        "TRIP-2026-2019"
+      ]
+    },
+    {
+      "story_id": "STORY-019-vague",
+      "style": "vague",
+      "text": "There's a damage fee on my account for a ride where I did nothing wrong.",
+      "expect_picker": true,
+      "rider_id": "R-4521",
+      "rider_name": "Sarah Tan",
+      "language": "en",
+      "expected_dispute_id": "DISP-119",
+      "expected_trip_id": "TRIP-2026-2019",
+      "expected_category": "property_damage",
+      "same_category_trips_for_this_rider": [
+        "TRIP-2026-2015",
+        "TRIP-2026-2016",
+        "TRIP-2026-2019"
+      ]
+    },
+    {
+      "story_id": "STORY-019-casual",
+      "style": "casual",
+      "text": "Why got cleaning fee ah? I never dirty the car, please remove lah.",
+      "expect_picker": true,
+      "rider_id": "R-4521",
+      "rider_name": "Sarah Tan",
+      "language": "en",
+      "expected_dispute_id": "DISP-119",
+      "expected_trip_id": "TRIP-2026-2019",
+      "expected_category": "property_damage",
+      "same_category_trips_for_this_rider": [
+        "TRIP-2026-2015",
+        "TRIP-2026-2016",
+        "TRIP-2026-2019"
+      ]
+    },
+    {
+      "story_id": "STORY-020-precise",
+      "style": "precise",
+      "text": "I had a pickup at Tanjong Pagar Centre on 12 October at 19:45 but the driver cancelled and I was charged a S$5 no-show fee. Please refund it.",
+      "expect_picker": false,
+      "rider_id": "R-4521",
+      "rider_name": "Sarah Tan",
+      "language": "en",
+      "expected_dispute_id": "DISP-120",
+      "expected_trip_id": "TRIP-2026-2020",
+      "expected_category": "no_show_charge",
+      "same_category_trips_for_this_rider": [
+        "TRIP-2026-2013",
+        "TRIP-2026-2014",
+        "TRIP-2026-2020"
+      ]
+    },
+    {
+      "story_id": "STORY-020-vague",
+      "style": "vague",
+      "text": "The driver cancelled on me and I still paid a fee.",
+      "expect_picker": true,
+      "rider_id": "R-4521",
+      "rider_name": "Sarah Tan",
+      "language": "en",
+      "expected_dispute_id": "DISP-120",
+      "expected_trip_id": "TRIP-2026-2020",
+      "expected_category": "no_show_charge",
+      "same_category_trips_for_this_rider": [
+        "TRIP-2026-2013",
+        "TRIP-2026-2014",
+        "TRIP-2026-2020"
+      ]
+    },
+    {
+      "story_id": "STORY-020-casual",
+      "style": "casual",
+      "text": "Aiyo the driver cancel on me and still charge me $5 no show fee, I was waiting there leh.",
+      "expect_picker": true,
+      "rider_id": "R-4521",
+      "rider_name": "Sarah Tan",
+      "language": "en",
+      "expected_dispute_id": "DISP-120",
+      "expected_trip_id": "TRIP-2026-2020",
+      "expected_category": "no_show_charge",
+      "same_category_trips_for_this_rider": [
+        "TRIP-2026-2013",
+        "TRIP-2026-2014",
+        "TRIP-2026-2020"
+      ]
+    },
+    {
+      "story_id": "STORY-021-precise",
+      "style": "precise",
+      "text": "On 19 September I took a Ryde from Buona Vista MRT to Toa Payoh HDB Hub and paid S$16.40 when the estimate was S$15.52. The driver went a much longer way. Please refund the extra.",
+      "expect_picker": false,
+      "rider_id": "R-5120",
+      "rider_name": "Ahmad Faiz",
+      "language": "en",
+      "expected_dispute_id": "DISP-121",
+      "expected_trip_id": "TRIP-2026-2021",
+      "expected_category": "route_deviation",
+      "same_category_trips_for_this_rider": [
+        "TRIP-2026-2021",
+        "TRIP-2026-2022"
+      ]
+    },
+    {
+      "story_id": "STORY-021-vague",
+      "style": "vague",
+      "text": "My driver went round and round and the fare was higher than expected.",
+      "expect_picker": true,
+      "rider_id": "R-5120",
+      "rider_name": "Ahmad Faiz",
+      "language": "en",
+      "expected_dispute_id": "DISP-121",
+      "expected_trip_id": "TRIP-2026-2021",
+      "expected_category": "route_deviation",
+      "same_category_trips_for_this_rider": [
+        "TRIP-2026-2021",
+        "TRIP-2026-2022"
+      ]
+    },
+    {
+      "story_id": "STORY-021-casual",
+      "style": "casual",
+      "text": "Eh the driver cannot go the normal way one lah, bring me round and round then charge me more. Please check.",
+      "expect_picker": true,
+      "rider_id": "R-5120",
+      "rider_name": "Ahmad Faiz",
+      "language": "en",
+      "expected_dispute_id": "DISP-121",
+      "expected_trip_id": "TRIP-2026-2021",
+      "expected_category": "route_deviation",
+      "same_category_trips_for_this_rider": [
+        "TRIP-2026-2021",
+        "TRIP-2026-2022"
+      ]
+    },
+    {
+      "story_id": "STORY-022-precise",
+      "style": "precise",
+      "text": "On 21 September I took a Ryde from East Coast Park to Buona Vista MRT and paid S$30.40 when the estimate was S$26.88. The driver went a much longer way. Please refund the extra.",
+      "expect_picker": false,
+      "rider_id": "R-5120",
+      "rider_name": "Ahmad Faiz",
+      "language": "en",
+      "expected_dispute_id": "DISP-122",
+      "expected_trip_id": "TRIP-2026-2022",
+      "expected_category": "route_deviation",
+      "same_category_trips_for_this_rider": [
+        "TRIP-2026-2021",
+        "TRIP-2026-2022"
+      ]
+    },
+    {
+      "story_id": "STORY-022-vague",
+      "style": "vague",
+      "text": "I think I was overcharged because the driver took a longer way.",
+      "expect_picker": true,
+      "rider_id": "R-5120",
+      "rider_name": "Ahmad Faiz",
+      "language": "en",
+      "expected_dispute_id": "DISP-122",
+      "expected_trip_id": "TRIP-2026-2022",
+      "expected_category": "route_deviation",
+      "same_category_trips_for_this_rider": [
+        "TRIP-2026-2021",
+        "TRIP-2026-2022"
+      ]
+    },
+    {
+      "story_id": "STORY-022-casual",
+      "style": "casual",
+      "text": "Eh the driver cannot go the normal way one lah, bring me round and round then charge me more. Please check.",
+      "expect_picker": true,
+      "rider_id": "R-5120",
+      "rider_name": "Ahmad Faiz",
+      "language": "en",
+      "expected_dispute_id": "DISP-122",
+      "expected_trip_id": "TRIP-2026-2022",
+      "expected_category": "route_deviation",
+      "same_category_trips_for_this_rider": [
+        "TRIP-2026-2021",
+        "TRIP-2026-2022"
+      ]
+    },
+    {
+      "story_id": "STORY-023-precise",
+      "style": "precise",
+      "text": "I had a pickup at Novena Square on 24 September at 11:20 but the driver cancelled and I was charged a S$5 no-show fee. Please refund it.",
+      "expect_picker": false,
+      "rider_id": "R-5120",
+      "rider_name": "Ahmad Faiz",
+      "language": "en",
+      "expected_dispute_id": "DISP-123",
+      "expected_trip_id": "TRIP-2026-2023",
+      "expected_category": "no_show_charge",
+      "same_category_trips_for_this_rider": [
+        "TRIP-2026-2023",
+        "TRIP-2026-2024"
+      ]
+    },
+    {
+      "story_id": "STORY-023-vague",
+      "style": "vague",
+      "text": "The driver cancelled on me and I still paid a fee.",
+      "expect_picker": true,
+      "rider_id": "R-5120",
+      "rider_name": "Ahmad Faiz",
+      "language": "en",
+      "expected_dispute_id": "DISP-123",
+      "expected_trip_id": "TRIP-2026-2023",
+      "expected_category": "no_show_charge",
+      "same_category_trips_for_this_rider": [
+        "TRIP-2026-2023",
+        "TRIP-2026-2024"
+      ]
+    },
+    {
+      "story_id": "STORY-023-casual",
+      "style": "casual",
+      "text": "Aiyo the driver cancel on me and still charge me $5 no show fee, I was waiting there leh.",
+      "expect_picker": true,
+      "rider_id": "R-5120",
+      "rider_name": "Ahmad Faiz",
+      "language": "en",
+      "expected_dispute_id": "DISP-123",
+      "expected_trip_id": "TRIP-2026-2023",
+      "expected_category": "no_show_charge",
+      "same_category_trips_for_this_rider": [
+        "TRIP-2026-2023",
+        "TRIP-2026-2024"
+      ]
+    },
+    {
+      "story_id": "STORY-024-precise",
+      "style": "precise",
+      "text": "I had a pickup at Kallang Wave Mall on 27 September at 19:55 but the driver cancelled and I was charged a S$5 no-show fee. Please refund it.",
+      "expect_picker": false,
+      "rider_id": "R-5120",
+      "rider_name": "Ahmad Faiz",
+      "language": "en",
+      "expected_dispute_id": "DISP-124",
+      "expected_trip_id": "TRIP-2026-2024",
+      "expected_category": "no_show_charge",
+      "same_category_trips_for_this_rider": [
+        "TRIP-2026-2023",
+        "TRIP-2026-2024"
+      ]
+    },
+    {
+      "story_id": "STORY-024-vague",
+      "style": "vague",
+      "text": "Charged a no-show fee but I was waiting for the driver.",
+      "expect_picker": true,
+      "rider_id": "R-5120",
+      "rider_name": "Ahmad Faiz",
+      "language": "en",
+      "expected_dispute_id": "DISP-124",
+      "expected_trip_id": "TRIP-2026-2024",
+      "expected_category": "no_show_charge",
+      "same_category_trips_for_this_rider": [
+        "TRIP-2026-2023",
+        "TRIP-2026-2024"
+      ]
+    },
+    {
+      "story_id": "STORY-024-casual",
+      "style": "casual",
+      "text": "Aiyo the driver cancel on me and still charge me $5 no show fee, I was waiting there leh.",
+      "expect_picker": true,
+      "rider_id": "R-5120",
+      "rider_name": "Ahmad Faiz",
+      "language": "en",
+      "expected_dispute_id": "DISP-124",
+      "expected_trip_id": "TRIP-2026-2024",
+      "expected_category": "no_show_charge",
+      "same_category_trips_for_this_rider": [
+        "TRIP-2026-2023",
+        "TRIP-2026-2024"
+      ]
+    },
+    {
+      "story_id": "STORY-025-precise",
+      "style": "precise",
+      "text": "After my ride from Jurong East MRT to Orchard Central on 29 September I was charged a S$30 cleaning fee. I did not cause any damage. Please reverse it.",
+      "expect_picker": false,
+      "rider_id": "R-5120",
+      "rider_name": "Ahmad Faiz",
+      "language": "en",
+      "expected_dispute_id": "DISP-125",
+      "expected_trip_id": "TRIP-2026-2025",
+      "expected_category": "property_damage",
+      "same_category_trips_for_this_rider": [
+        "TRIP-2026-2025",
+        "TRIP-2026-2026",
+        "TRIP-2026-2029"
+      ]
+    },
+    {
+      "story_id": "STORY-025-vague",
+      "style": "vague",
+      "text": "I got charged a cleaning fee that I don't think is fair.",
+      "expect_picker": true,
+      "rider_id": "R-5120",
+      "rider_name": "Ahmad Faiz",
+      "language": "en",
+      "expected_dispute_id": "DISP-125",
+      "expected_trip_id": "TRIP-2026-2025",
+      "expected_category": "property_damage",
+      "same_category_trips_for_this_rider": [
+        "TRIP-2026-2025",
+        "TRIP-2026-2026",
+        "TRIP-2026-2029"
+      ]
+    },
+    {
+      "story_id": "STORY-025-casual",
+      "style": "casual",
+      "text": "Why got cleaning fee ah? I never dirty the car, please remove lah.",
+      "expect_picker": true,
+      "rider_id": "R-5120",
+      "rider_name": "Ahmad Faiz",
+      "language": "en",
+      "expected_dispute_id": "DISP-125",
+      "expected_trip_id": "TRIP-2026-2025",
+      "expected_category": "property_damage",
+      "same_category_trips_for_this_rider": [
+        "TRIP-2026-2025",
+        "TRIP-2026-2026",
+        "TRIP-2026-2029"
+      ]
+    },
+    {
+      "story_id": "STORY-026-precise",
+      "style": "precise",
+      "text": "After my ride from Pasir Ris Mall to Chinatown Point on 2 October I was charged a S$240 damage fee. I did not cause any damage. Please reverse it.",
+      "expect_picker": false,
+      "rider_id": "R-5120",
+      "rider_name": "Ahmad Faiz",
+      "language": "en",
+      "expected_dispute_id": "DISP-126",
+      "expected_trip_id": "TRIP-2026-2026",
+      "expected_category": "property_damage",
+      "same_category_trips_for_this_rider": [
+        "TRIP-2026-2025",
+        "TRIP-2026-2026",
+        "TRIP-2026-2029"
+      ]
+    },
+    {
+      "story_id": "STORY-026-vague",
+      "style": "vague",
+      "text": "I got charged a cleaning fee that I don't think is fair.",
+      "expect_picker": true,
+      "rider_id": "R-5120",
+      "rider_name": "Ahmad Faiz",
+      "language": "en",
+      "expected_dispute_id": "DISP-126",
+      "expected_trip_id": "TRIP-2026-2026",
+      "expected_category": "property_damage",
+      "same_category_trips_for_this_rider": [
+        "TRIP-2026-2025",
+        "TRIP-2026-2026",
+        "TRIP-2026-2029"
+      ]
+    },
+    {
+      "story_id": "STORY-026-casual",
+      "style": "casual",
+      "text": "Why got cleaning fee ah? I never dirty the car, please remove lah.",
+      "expect_picker": true,
+      "rider_id": "R-5120",
+      "rider_name": "Ahmad Faiz",
+      "language": "en",
+      "expected_dispute_id": "DISP-126",
+      "expected_trip_id": "TRIP-2026-2026",
+      "expected_category": "property_damage",
+      "same_category_trips_for_this_rider": [
+        "TRIP-2026-2025",
+        "TRIP-2026-2026",
+        "TRIP-2026-2029"
+      ]
+    },
+    {
+      "story_id": "STORY-027-precise",
+      "style": "precise",
+      "text": "On 5 October on my ride from Bishan Junction 8 to Clarke Quay, the driver kept asking for my number and made me uncomfortable. I want this reviewed.",
+      "expect_picker": false,
+      "rider_id": "R-5120",
+      "rider_name": "Ahmad Faiz",
+      "language": "en",
+      "expected_dispute_id": "DISP-127",
+      "expected_trip_id": "TRIP-2026-2027",
+      "expected_category": "safety_incident",
+      "same_category_trips_for_this_rider": [
+        "TRIP-2026-2027",
+        "TRIP-2026-2028",
+        "TRIP-2026-2030"
+      ]
+    },
+    {
+      "story_id": "STORY-027-vague",
+      "style": "vague",
+      "text": "I want to report something that happened with a driver, I was scared.",
+      "expect_picker": true,
+      "rider_id": "R-5120",
+      "rider_name": "Ahmad Faiz",
+      "language": "en",
+      "expected_dispute_id": "DISP-127",
+      "expected_trip_id": "TRIP-2026-2027",
+      "expected_category": "safety_incident",
+      "same_category_trips_for_this_rider": [
+        "TRIP-2026-2027",
+        "TRIP-2026-2028",
+        "TRIP-2026-2030"
+      ]
+    },
+    {
+      "story_id": "STORY-027-casual",
+      "style": "casual",
+      "text": "That driver very scary lah, I don't feel safe, please check.",
+      "expect_picker": true,
+      "rider_id": "R-5120",
+      "rider_name": "Ahmad Faiz",
+      "language": "en",
+      "expected_dispute_id": "DISP-127",
+      "expected_trip_id": "TRIP-2026-2027",
+      "expected_category": "safety_incident",
+      "same_category_trips_for_this_rider": [
+        "TRIP-2026-2027",
+        "TRIP-2026-2028",
+        "TRIP-2026-2030"
+      ]
+    },
+    {
+      "story_id": "STORY-028-precise",
+      "style": "precise",
+      "text": "On 7 October on my ride from Bugis Junction to Sengkang Compass One, the driver was speeding and braking hard and I felt unsafe. I want this reviewed.",
+      "expect_picker": false,
+      "rider_id": "R-5120",
+      "rider_name": "Ahmad Faiz",
+      "language": "en",
+      "expected_dispute_id": "DISP-128",
+      "expected_trip_id": "TRIP-2026-2028",
+      "expected_category": "safety_incident",
+      "same_category_trips_for_this_rider": [
+        "TRIP-2026-2027",
+        "TRIP-2026-2028",
+        "TRIP-2026-2030"
+      ]
+    },
+    {
+      "story_id": "STORY-028-vague",
+      "style": "vague",
+      "text": "I want to report something that happened with a driver, I was scared.",
+      "expect_picker": true,
+      "rider_id": "R-5120",
+      "rider_name": "Ahmad Faiz",
+      "language": "en",
+      "expected_dispute_id": "DISP-128",
+      "expected_trip_id": "TRIP-2026-2028",
+      "expected_category": "safety_incident",
+      "same_category_trips_for_this_rider": [
+        "TRIP-2026-2027",
+        "TRIP-2026-2028",
+        "TRIP-2026-2030"
+      ]
+    },
+    {
+      "story_id": "STORY-028-casual",
+      "style": "casual",
+      "text": "That driver very scary lah, I don't feel safe, please check.",
+      "expect_picker": true,
+      "rider_id": "R-5120",
+      "rider_name": "Ahmad Faiz",
+      "language": "en",
+      "expected_dispute_id": "DISP-128",
+      "expected_trip_id": "TRIP-2026-2028",
+      "expected_category": "safety_incident",
+      "same_category_trips_for_this_rider": [
+        "TRIP-2026-2027",
+        "TRIP-2026-2028",
+        "TRIP-2026-2030"
+      ]
+    },
+    {
+      "story_id": "STORY-029-precise",
+      "style": "precise",
+      "text": "After my ride from HarbourFront Centre to Orchard Central on 10 October I was charged a S$30 cleaning fee. I did not cause any damage. Please reverse it.",
+      "expect_picker": false,
+      "rider_id": "R-5120",
+      "rider_name": "Ahmad Faiz",
+      "language": "en",
+      "expected_dispute_id": "DISP-129",
+      "expected_trip_id": "TRIP-2026-2029",
+      "expected_category": "property_damage",
+      "same_category_trips_for_this_rider": [
+        "TRIP-2026-2025",
+        "TRIP-2026-2026",
+        "TRIP-2026-2029"
+      ]
+    },
+    {
+      "story_id": "STORY-029-vague",
+      "style": "vague",
+      "text": "There's a damage fee on my account for a ride where I did nothing wrong.",
+      "expect_picker": true,
+      "rider_id": "R-5120",
+      "rider_name": "Ahmad Faiz",
+      "language": "en",
+      "expected_dispute_id": "DISP-129",
+      "expected_trip_id": "TRIP-2026-2029",
+      "expected_category": "property_damage",
+      "same_category_trips_for_this_rider": [
+        "TRIP-2026-2025",
+        "TRIP-2026-2026",
+        "TRIP-2026-2029"
+      ]
+    },
+    {
+      "story_id": "STORY-029-casual",
+      "style": "casual",
+      "text": "Why got cleaning fee ah? I never dirty the car, please remove lah.",
+      "expect_picker": true,
+      "rider_id": "R-5120",
+      "rider_name": "Ahmad Faiz",
+      "language": "en",
+      "expected_dispute_id": "DISP-129",
+      "expected_trip_id": "TRIP-2026-2029",
+      "expected_category": "property_damage",
+      "same_category_trips_for_this_rider": [
+        "TRIP-2026-2025",
+        "TRIP-2026-2026",
+        "TRIP-2026-2029"
+      ]
+    },
+    {
+      "story_id": "STORY-030-precise",
+      "style": "precise",
+      "text": "On 13 October on my ride from Lot One Choa Chu Kang to Sengkang Compass One, the driver shouted at me and threatened to drop me off on the road. I want this reviewed.",
+      "expect_picker": false,
+      "rider_id": "R-5120",
+      "rider_name": "Ahmad Faiz",
+      "language": "en",
+      "expected_dispute_id": "DISP-130",
+      "expected_trip_id": "TRIP-2026-2030",
+      "expected_category": "safety_incident",
+      "same_category_trips_for_this_rider": [
+        "TRIP-2026-2027",
+        "TRIP-2026-2028",
+        "TRIP-2026-2030"
+      ]
+    },
+    {
+      "story_id": "STORY-030-vague",
+      "style": "vague",
+      "text": "My last ride was not safe, I want this looked at.",
+      "expect_picker": true,
+      "rider_id": "R-5120",
+      "rider_name": "Ahmad Faiz",
+      "language": "en",
+      "expected_dispute_id": "DISP-130",
+      "expected_trip_id": "TRIP-2026-2030",
+      "expected_category": "safety_incident",
+      "same_category_trips_for_this_rider": [
+        "TRIP-2026-2027",
+        "TRIP-2026-2028",
+        "TRIP-2026-2030"
+      ]
+    },
+    {
+      "story_id": "STORY-030-casual",
+      "style": "casual",
+      "text": "That driver very scary lah, I don't feel safe, please check.",
+      "expect_picker": true,
+      "rider_id": "R-5120",
+      "rider_name": "Ahmad Faiz",
+      "language": "en",
+      "expected_dispute_id": "DISP-130",
+      "expected_trip_id": "TRIP-2026-2030",
+      "expected_category": "safety_incident",
+      "same_category_trips_for_this_rider": [
+        "TRIP-2026-2027",
+        "TRIP-2026-2028",
+        "TRIP-2026-2030"
+      ]
+    },
+    {
+      "story_id": "STORY-031-precise",
+      "style": "precise",
+      "text": "On 19 September I took a Ryde from East Coast Park to Changi Business Park and paid S$22.04 when the estimate was S$17.84. The driver went a much longer way. Please refund the extra.",
+      "expect_picker": false,
+      "rider_id": "R-7001",
+      "rider_name": "Chloe Ng",
+      "language": "en",
+      "expected_dispute_id": "DISP-131",
+      "expected_trip_id": "TRIP-2026-2031",
+      "expected_category": "route_deviation",
+      "same_category_trips_for_this_rider": [
+        "TRIP-2026-2031",
+        "TRIP-2026-2032",
+        "TRIP-2026-2039"
+      ]
+    },
+    {
+      "story_id": "STORY-031-vague",
+      "style": "vague",
+      "text": "The driver took a really long route and I got charged more.",
+      "expect_picker": true,
+      "rider_id": "R-7001",
+      "rider_name": "Chloe Ng",
+      "language": "en",
+      "expected_dispute_id": "DISP-131",
+      "expected_trip_id": "TRIP-2026-2031",
+      "expected_category": "route_deviation",
+      "same_category_trips_for_this_rider": [
+        "TRIP-2026-2031",
+        "TRIP-2026-2032",
+        "TRIP-2026-2039"
+      ]
+    },
+    {
+      "story_id": "STORY-031-casual",
+      "style": "casual",
+      "text": "Eh the driver cannot go the normal way one lah, bring me round and round then charge me more. Please check.",
+      "expect_picker": true,
+      "rider_id": "R-7001",
+      "rider_name": "Chloe Ng",
+      "language": "en",
+      "expected_dispute_id": "DISP-131",
+      "expected_trip_id": "TRIP-2026-2031",
+      "expected_category": "route_deviation",
+      "same_category_trips_for_this_rider": [
+        "TRIP-2026-2031",
+        "TRIP-2026-2032",
+        "TRIP-2026-2039"
+      ]
+    },
+    {
+      "story_id": "STORY-032-precise",
+      "style": "precise",
+      "text": "On 22 September I took a Ryde from Punggol Waterway Point to Changi Business Park and paid S$27.16 when the estimate was S$21.76. The driver went a much longer way. Please refund the extra.",
+      "expect_picker": false,
+      "rider_id": "R-7001",
+      "rider_name": "Chloe Ng",
+      "language": "en",
+      "expected_dispute_id": "DISP-132",
+      "expected_trip_id": "TRIP-2026-2032",
+      "expected_category": "route_deviation",
+      "same_category_trips_for_this_rider": [
+        "TRIP-2026-2031",
+        "TRIP-2026-2032",
+        "TRIP-2026-2039"
+      ]
+    },
+    {
+      "story_id": "STORY-032-vague",
+      "style": "vague",
+      "text": "The driver took a really long route and I got charged more.",
+      "expect_picker": true,
+      "rider_id": "R-7001",
+      "rider_name": "Chloe Ng",
+      "language": "en",
+      "expected_dispute_id": "DISP-132",
+      "expected_trip_id": "TRIP-2026-2032",
+      "expected_category": "route_deviation",
+      "same_category_trips_for_this_rider": [
+        "TRIP-2026-2031",
+        "TRIP-2026-2032",
+        "TRIP-2026-2039"
+      ]
+    },
+    {
+      "story_id": "STORY-032-casual",
+      "style": "casual",
+      "text": "Eh the driver cannot go the normal way one lah, bring me round and round then charge me more. Please check.",
+      "expect_picker": true,
+      "rider_id": "R-7001",
+      "rider_name": "Chloe Ng",
+      "language": "en",
+      "expected_dispute_id": "DISP-132",
+      "expected_trip_id": "TRIP-2026-2032",
+      "expected_category": "route_deviation",
+      "same_category_trips_for_this_rider": [
+        "TRIP-2026-2031",
+        "TRIP-2026-2032",
+        "TRIP-2026-2039"
+      ]
+    },
+    {
+      "story_id": "STORY-033-precise",
+      "style": "precise",
+      "text": "I had a pickup at Bishan Junction 8 on 24 September at 07:55 but the driver cancelled and I was charged a S$5 no-show fee. Please refund it.",
+      "expect_picker": false,
+      "rider_id": "R-7001",
+      "rider_name": "Chloe Ng",
+      "language": "en",
+      "expected_dispute_id": "DISP-133",
+      "expected_trip_id": "TRIP-2026-2033",
+      "expected_category": "no_show_charge",
+      "same_category_trips_for_this_rider": [
+        "TRIP-2026-2033",
+        "TRIP-2026-2034",
+        "TRIP-2026-2040"
+      ]
+    },
+    {
+      "story_id": "STORY-033-vague",
+      "style": "vague",
+      "text": "The driver cancelled on me and I still paid a fee.",
+      "expect_picker": true,
+      "rider_id": "R-7001",
+      "rider_name": "Chloe Ng",
+      "language": "en",
+      "expected_dispute_id": "DISP-133",
+      "expected_trip_id": "TRIP-2026-2033",
+      "expected_category": "no_show_charge",
+      "same_category_trips_for_this_rider": [
+        "TRIP-2026-2033",
+        "TRIP-2026-2034",
+        "TRIP-2026-2040"
+      ]
+    },
+    {
+      "story_id": "STORY-033-casual",
+      "style": "casual",
+      "text": "Aiyo the driver cancel on me and still charge me $5 no show fee, I was waiting there leh.",
+      "expect_picker": true,
+      "rider_id": "R-7001",
+      "rider_name": "Chloe Ng",
+      "language": "en",
+      "expected_dispute_id": "DISP-133",
+      "expected_trip_id": "TRIP-2026-2033",
+      "expected_category": "no_show_charge",
+      "same_category_trips_for_this_rider": [
+        "TRIP-2026-2033",
+        "TRIP-2026-2034",
+        "TRIP-2026-2040"
+      ]
+    },
+    {
+      "story_id": "STORY-034-precise",
+      "style": "precise",
+      "text": "I had a pickup at Ang Mo Kio Hub on 27 September at 13:55 but the driver cancelled and I was charged a S$5 no-show fee. Please refund it.",
+      "expect_picker": false,
+      "rider_id": "R-7001",
+      "rider_name": "Chloe Ng",
+      "language": "en",
+      "expected_dispute_id": "DISP-134",
+      "expected_trip_id": "TRIP-2026-2034",
+      "expected_category": "no_show_charge",
+      "same_category_trips_for_this_rider": [
+        "TRIP-2026-2033",
+        "TRIP-2026-2034",
+        "TRIP-2026-2040"
+      ]
+    },
+    {
+      "story_id": "STORY-034-vague",
+      "style": "vague",
+      "text": "I got charged a cancellation fee but the driver wasn't even there.",
+      "expect_picker": true,
+      "rider_id": "R-7001",
+      "rider_name": "Chloe Ng",
+      "language": "en",
+      "expected_dispute_id": "DISP-134",
+      "expected_trip_id": "TRIP-2026-2034",
+      "expected_category": "no_show_charge",
+      "same_category_trips_for_this_rider": [
+        "TRIP-2026-2033",
+        "TRIP-2026-2034",
+        "TRIP-2026-2040"
+      ]
+    },
+    {
+      "story_id": "STORY-034-casual",
+      "style": "casual",
+      "text": "Aiyo the driver cancel on me and still charge me $5 no show fee, I was waiting there leh.",
+      "expect_picker": true,
+      "rider_id": "R-7001",
+      "rider_name": "Chloe Ng",
+      "language": "en",
+      "expected_dispute_id": "DISP-134",
+      "expected_trip_id": "TRIP-2026-2034",
+      "expected_category": "no_show_charge",
+      "same_category_trips_for_this_rider": [
+        "TRIP-2026-2033",
+        "TRIP-2026-2034",
+        "TRIP-2026-2040"
+      ]
+    },
+    {
+      "story_id": "STORY-035-precise",
+      "style": "precise",
+      "text": "After my ride from Bedok Mall to Paya Lebar Quarter on 30 September I was charged a S$45 cleaning fee. I did not cause any damage. Please reverse it.",
+      "expect_picker": false,
+      "rider_id": "R-7001",
+      "rider_name": "Chloe Ng",
+      "language": "en",
+      "expected_dispute_id": "DISP-135",
+      "expected_trip_id": "TRIP-2026-2035",
+      "expected_category": "property_damage",
+      "same_category_trips_for_this_rider": [
+        "TRIP-2026-2035",
+        "TRIP-2026-2036"
+      ]
+    },
+    {
+      "story_id": "STORY-035-vague",
+      "style": "vague",
+      "text": "There's a damage fee on my account for a ride where I did nothing wrong.",
+      "expect_picker": true,
+      "rider_id": "R-7001",
+      "rider_name": "Chloe Ng",
+      "language": "en",
+      "expected_dispute_id": "DISP-135",
+      "expected_trip_id": "TRIP-2026-2035",
+      "expected_category": "property_damage",
+      "same_category_trips_for_this_rider": [
+        "TRIP-2026-2035",
+        "TRIP-2026-2036"
+      ]
+    },
+    {
+      "story_id": "STORY-035-casual",
+      "style": "casual",
+      "text": "Why got cleaning fee ah? I never dirty the car, please remove lah.",
+      "expect_picker": true,
+      "rider_id": "R-7001",
+      "rider_name": "Chloe Ng",
+      "language": "en",
+      "expected_dispute_id": "DISP-135",
+      "expected_trip_id": "TRIP-2026-2035",
+      "expected_category": "property_damage",
+      "same_category_trips_for_this_rider": [
+        "TRIP-2026-2035",
+        "TRIP-2026-2036"
+      ]
+    },
+    {
+      "story_id": "STORY-036-precise",
+      "style": "precise",
+      "text": "After my ride from Tampines Mall to NUS Kent Ridge on 3 October I was charged a S$30 cleaning fee. I did not cause any damage. Please reverse it.",
+      "expect_picker": false,
+      "rider_id": "R-7001",
+      "rider_name": "Chloe Ng",
+      "language": "en",
+      "expected_dispute_id": "DISP-136",
+      "expected_trip_id": "TRIP-2026-2036",
+      "expected_category": "property_damage",
+      "same_category_trips_for_this_rider": [
+        "TRIP-2026-2035",
+        "TRIP-2026-2036"
+      ]
+    },
+    {
+      "story_id": "STORY-036-vague",
+      "style": "vague",
+      "text": "I got charged a cleaning fee that I don't think is fair.",
+      "expect_picker": true,
+      "rider_id": "R-7001",
+      "rider_name": "Chloe Ng",
+      "language": "en",
+      "expected_dispute_id": "DISP-136",
+      "expected_trip_id": "TRIP-2026-2036",
+      "expected_category": "property_damage",
+      "same_category_trips_for_this_rider": [
+        "TRIP-2026-2035",
+        "TRIP-2026-2036"
+      ]
+    },
+    {
+      "story_id": "STORY-036-casual",
+      "style": "casual",
+      "text": "Why got cleaning fee ah? I never dirty the car, please remove lah.",
+      "expect_picker": true,
+      "rider_id": "R-7001",
+      "rider_name": "Chloe Ng",
+      "language": "en",
+      "expected_dispute_id": "DISP-136",
+      "expected_trip_id": "TRIP-2026-2036",
+      "expected_category": "property_damage",
+      "same_category_trips_for_this_rider": [
+        "TRIP-2026-2035",
+        "TRIP-2026-2036"
+      ]
+    },
+    {
+      "story_id": "STORY-037-precise",
+      "style": "precise",
+      "text": "On 5 October on my ride from Novena Square to Clementi Mall, the driver was on his phone while driving. I want this reviewed.",
+      "expect_picker": false,
+      "rider_id": "R-7001",
+      "rider_name": "Chloe Ng",
+      "language": "en",
+      "expected_dispute_id": "DISP-137",
+      "expected_trip_id": "TRIP-2026-2037",
+      "expected_category": "safety_incident",
+      "same_category_trips_for_this_rider": [
+        "TRIP-2026-2037",
+        "TRIP-2026-2038"
+      ]
+    },
+    {
+      "story_id": "STORY-037-vague",
+      "style": "vague",
+      "text": "My last ride was not safe, I want this looked at.",
+      "expect_picker": true,
+      "rider_id": "R-7001",
+      "rider_name": "Chloe Ng",
+      "language": "en",
+      "expected_dispute_id": "DISP-137",
+      "expected_trip_id": "TRIP-2026-2037",
+      "expected_category": "safety_incident",
+      "same_category_trips_for_this_rider": [
+        "TRIP-2026-2037",
+        "TRIP-2026-2038"
+      ]
+    },
+    {
+      "story_id": "STORY-037-casual",
+      "style": "casual",
+      "text": "That driver very scary lah, I don't feel safe, please check.",
+      "expect_picker": true,
+      "rider_id": "R-7001",
+      "rider_name": "Chloe Ng",
+      "language": "en",
+      "expected_dispute_id": "DISP-137",
+      "expected_trip_id": "TRIP-2026-2037",
+      "expected_category": "safety_incident",
+      "same_category_trips_for_this_rider": [
+        "TRIP-2026-2037",
+        "TRIP-2026-2038"
+      ]
+    },
+    {
+      "story_id": "STORY-038-precise",
+      "style": "precise",
+      "text": "On 8 October on my ride from Lot One Choa Chu Kang to Novena Square, the car was in a collision and the driver carried on. I want this reviewed.",
+      "expect_picker": false,
+      "rider_id": "R-7001",
+      "rider_name": "Chloe Ng",
+      "language": "en",
+      "expected_dispute_id": "DISP-138",
+      "expected_trip_id": "TRIP-2026-2038",
+      "expected_category": "safety_incident",
+      "same_category_trips_for_this_rider": [
+        "TRIP-2026-2037",
+        "TRIP-2026-2038"
+      ]
+    },
+    {
+      "story_id": "STORY-038-vague",
+      "style": "vague",
+      "text": "I want to report something that happened with a driver, I was scared.",
+      "expect_picker": true,
+      "rider_id": "R-7001",
+      "rider_name": "Chloe Ng",
+      "language": "en",
+      "expected_dispute_id": "DISP-138",
+      "expected_trip_id": "TRIP-2026-2038",
+      "expected_category": "safety_incident",
+      "same_category_trips_for_this_rider": [
+        "TRIP-2026-2037",
+        "TRIP-2026-2038"
+      ]
+    },
+    {
+      "story_id": "STORY-038-casual",
+      "style": "casual",
+      "text": "That driver very scary lah, I don't feel safe, please check.",
+      "expect_picker": true,
+      "rider_id": "R-7001",
+      "rider_name": "Chloe Ng",
+      "language": "en",
+      "expected_dispute_id": "DISP-138",
+      "expected_trip_id": "TRIP-2026-2038",
+      "expected_category": "safety_incident",
+      "same_category_trips_for_this_rider": [
+        "TRIP-2026-2037",
+        "TRIP-2026-2038"
+      ]
+    },
+    {
+      "story_id": "STORY-039-precise",
+      "style": "precise",
+      "text": "On 11 October I took a Ryde from one-north to Changi Business Park and paid S$35.20 when the estimate was S$33.52. The driver went a much longer way. Please refund the extra.",
+      "expect_picker": false,
+      "rider_id": "R-7001",
+      "rider_name": "Chloe Ng",
+      "language": "en",
+      "expected_dispute_id": "DISP-139",
+      "expected_trip_id": "TRIP-2026-2039",
+      "expected_category": "route_deviation",
+      "same_category_trips_for_this_rider": [
+        "TRIP-2026-2031",
+        "TRIP-2026-2032",
+        "TRIP-2026-2039"
+      ]
+    },
+    {
+      "story_id": "STORY-039-vague",
+      "style": "vague",
+      "text": "My driver went round and round and the fare was higher than expected.",
+      "expect_picker": true,
+      "rider_id": "R-7001",
+      "rider_name": "Chloe Ng",
+      "language": "en",
+      "expected_dispute_id": "DISP-139",
+      "expected_trip_id": "TRIP-2026-2039",
+      "expected_category": "route_deviation",
+      "same_category_trips_for_this_rider": [
+        "TRIP-2026-2031",
+        "TRIP-2026-2032",
+        "TRIP-2026-2039"
+      ]
+    },
+    {
+      "story_id": "STORY-039-casual",
+      "style": "casual",
+      "text": "Eh the driver cannot go the normal way one lah, bring me round and round then charge me more. Please check.",
+      "expect_picker": true,
+      "rider_id": "R-7001",
+      "rider_name": "Chloe Ng",
+      "language": "en",
+      "expected_dispute_id": "DISP-139",
+      "expected_trip_id": "TRIP-2026-2039",
+      "expected_category": "route_deviation",
+      "same_category_trips_for_this_rider": [
+        "TRIP-2026-2031",
+        "TRIP-2026-2032",
+        "TRIP-2026-2039"
+      ]
+    },
+    {
+      "story_id": "STORY-040-precise",
+      "style": "precise",
+      "text": "I had a pickup at Great World on 13 October at 20:50 but the driver cancelled and I was charged a S$5 no-show fee. Please refund it.",
+      "expect_picker": false,
+      "rider_id": "R-7001",
+      "rider_name": "Chloe Ng",
+      "language": "en",
+      "expected_dispute_id": "DISP-140",
+      "expected_trip_id": "TRIP-2026-2040",
+      "expected_category": "no_show_charge",
+      "same_category_trips_for_this_rider": [
+        "TRIP-2026-2033",
+        "TRIP-2026-2034",
+        "TRIP-2026-2040"
+      ]
+    },
+    {
+      "story_id": "STORY-040-vague",
+      "style": "vague",
+      "text": "I got charged a cancellation fee but the driver wasn't even there.",
+      "expect_picker": true,
+      "rider_id": "R-7001",
+      "rider_name": "Chloe Ng",
+      "language": "en",
+      "expected_dispute_id": "DISP-140",
+      "expected_trip_id": "TRIP-2026-2040",
+      "expected_category": "no_show_charge",
+      "same_category_trips_for_this_rider": [
+        "TRIP-2026-2033",
+        "TRIP-2026-2034",
+        "TRIP-2026-2040"
+      ]
+    },
+    {
+      "story_id": "STORY-040-casual",
+      "style": "casual",
+      "text": "Aiyo the driver cancel on me and still charge me $5 no show fee, I was waiting there leh.",
+      "expect_picker": true,
+      "rider_id": "R-7001",
+      "rider_name": "Chloe Ng",
+      "language": "en",
+      "expected_dispute_id": "DISP-140",
+      "expected_trip_id": "TRIP-2026-2040",
+      "expected_category": "no_show_charge",
+      "same_category_trips_for_this_rider": [
+        "TRIP-2026-2033",
+        "TRIP-2026-2034",
+        "TRIP-2026-2040"
+      ]
+    },
+    {
+      "story_id": "STORY-041-precise",
+      "style": "precise",
+      "text": "On 20 September I took a Ryde from Holland Village to Suntec City and paid S$17.68 when the estimate was S$14.72. The driver went a much longer way. Please refund the extra.",
+      "expect_picker": false,
+      "rider_id": "R-7823",
+      "rider_name": "Daniel Lim",
+      "language": "en",
+      "expected_dispute_id": "DISP-141",
+      "expected_trip_id": "TRIP-2026-2041",
+      "expected_category": "route_deviation",
+      "same_category_trips_for_this_rider": [
+        "TRIP-2026-2041",
+        "TRIP-2026-2042"
+      ]
+    },
+    {
+      "story_id": "STORY-041-vague",
+      "style": "vague",
+      "text": "My driver went round and round and the fare was higher than expected.",
+      "expect_picker": true,
+      "rider_id": "R-7823",
+      "rider_name": "Daniel Lim",
+      "language": "en",
+      "expected_dispute_id": "DISP-141",
+      "expected_trip_id": "TRIP-2026-2041",
+      "expected_category": "route_deviation",
+      "same_category_trips_for_this_rider": [
+        "TRIP-2026-2041",
+        "TRIP-2026-2042"
+      ]
+    },
+    {
+      "story_id": "STORY-041-casual",
+      "style": "casual",
+      "text": "Eh the driver cannot go the normal way one lah, bring me round and round then charge me more. Please check.",
+      "expect_picker": true,
+      "rider_id": "R-7823",
+      "rider_name": "Daniel Lim",
+      "language": "en",
+      "expected_dispute_id": "DISP-141",
+      "expected_trip_id": "TRIP-2026-2041",
+      "expected_category": "route_deviation",
+      "same_category_trips_for_this_rider": [
+        "TRIP-2026-2041",
+        "TRIP-2026-2042"
+      ]
+    },
+    {
+      "story_id": "STORY-042-precise",
+      "style": "precise",
+      "text": "On 22 September I took a Ryde from Orchard Central to Pasir Ris Mall and paid S$34.16 when the estimate was S$28.40. The driver went a much longer way. Please refund the extra.",
+      "expect_picker": false,
+      "rider_id": "R-7823",
+      "rider_name": "Daniel Lim",
+      "language": "en",
+      "expected_dispute_id": "DISP-142",
+      "expected_trip_id": "TRIP-2026-2042",
+      "expected_category": "route_deviation",
+      "same_category_trips_for_this_rider": [
+        "TRIP-2026-2041",
+        "TRIP-2026-2042"
+      ]
+    },
+    {
+      "story_id": "STORY-042-vague",
+      "style": "vague",
+      "text": "I think I was overcharged because the driver took a longer way.",
+      "expect_picker": true,
+      "rider_id": "R-7823",
+      "rider_name": "Daniel Lim",
+      "language": "en",
+      "expected_dispute_id": "DISP-142",
+      "expected_trip_id": "TRIP-2026-2042",
+      "expected_category": "route_deviation",
+      "same_category_trips_for_this_rider": [
+        "TRIP-2026-2041",
+        "TRIP-2026-2042"
+      ]
+    },
+    {
+      "story_id": "STORY-042-casual",
+      "style": "casual",
+      "text": "Eh the driver cannot go the normal way one lah, bring me round and round then charge me more. Please check.",
+      "expect_picker": true,
+      "rider_id": "R-7823",
+      "rider_name": "Daniel Lim",
+      "language": "en",
+      "expected_dispute_id": "DISP-142",
+      "expected_trip_id": "TRIP-2026-2042",
+      "expected_category": "route_deviation",
+      "same_category_trips_for_this_rider": [
+        "TRIP-2026-2041",
+        "TRIP-2026-2042"
+      ]
+    },
+    {
+      "story_id": "STORY-043-precise",
+      "style": "precise",
+      "text": "I had a pickup at Changi Airport T3 on 25 September at 17:50 but the driver cancelled and I was charged a S$5 no-show fee. Please refund it.",
+      "expect_picker": false,
+      "rider_id": "R-7823",
+      "rider_name": "Daniel Lim",
+      "language": "en",
+      "expected_dispute_id": "DISP-143",
+      "expected_trip_id": "TRIP-2026-2043",
+      "expected_category": "no_show_charge",
+      "same_category_trips_for_this_rider": [
+        "TRIP-2026-2043",
+        "TRIP-2026-2044"
+      ]
+    },
+    {
+      "story_id": "STORY-043-vague",
+      "style": "vague",
+      "text": "The driver cancelled on me and I still paid a fee.",
+      "expect_picker": true,
+      "rider_id": "R-7823",
+      "rider_name": "Daniel Lim",
+      "language": "en",
+      "expected_dispute_id": "DISP-143",
+      "expected_trip_id": "TRIP-2026-2043",
+      "expected_category": "no_show_charge",
+      "same_category_trips_for_this_rider": [
+        "TRIP-2026-2043",
+        "TRIP-2026-2044"
+      ]
+    },
+    {
+      "story_id": "STORY-043-casual",
+      "style": "casual",
+      "text": "Aiyo the driver cancel on me and still charge me $5 no show fee, I was waiting there leh.",
+      "expect_picker": true,
+      "rider_id": "R-7823",
+      "rider_name": "Daniel Lim",
+      "language": "en",
+      "expected_dispute_id": "DISP-143",
+      "expected_trip_id": "TRIP-2026-2043",
+      "expected_category": "no_show_charge",
+      "same_category_trips_for_this_rider": [
+        "TRIP-2026-2043",
+        "TRIP-2026-2044"
+      ]
+    },
+    {
+      "story_id": "STORY-044-precise",
+      "style": "precise",
+      "text": "I had a pickup at Tanjong Pagar Centre on 28 September at 21:05 but the driver cancelled and I was charged a S$5 no-show fee. Please refund it.",
+      "expect_picker": false,
+      "rider_id": "R-7823",
+      "rider_name": "Daniel Lim",
+      "language": "en",
+      "expected_dispute_id": "DISP-144",
+      "expected_trip_id": "TRIP-2026-2044",
+      "expected_category": "no_show_charge",
+      "same_category_trips_for_this_rider": [
+        "TRIP-2026-2043",
+        "TRIP-2026-2044"
+      ]
+    },
+    {
+      "story_id": "STORY-044-vague",
+      "style": "vague",
+      "text": "I got charged a cancellation fee but the driver wasn't even there.",
+      "expect_picker": true,
+      "rider_id": "R-7823",
+      "rider_name": "Daniel Lim",
+      "language": "en",
+      "expected_dispute_id": "DISP-144",
+      "expected_trip_id": "TRIP-2026-2044",
+      "expected_category": "no_show_charge",
+      "same_category_trips_for_this_rider": [
+        "TRIP-2026-2043",
+        "TRIP-2026-2044"
+      ]
+    },
+    {
+      "story_id": "STORY-044-casual",
+      "style": "casual",
+      "text": "Aiyo the driver cancel on me and still charge me $5 no show fee, I was waiting there leh.",
+      "expect_picker": true,
+      "rider_id": "R-7823",
+      "rider_name": "Daniel Lim",
+      "language": "en",
+      "expected_dispute_id": "DISP-144",
+      "expected_trip_id": "TRIP-2026-2044",
+      "expected_category": "no_show_charge",
+      "same_category_trips_for_this_rider": [
+        "TRIP-2026-2043",
+        "TRIP-2026-2044"
+      ]
+    },
+    {
+      "story_id": "STORY-045-precise",
+      "style": "precise",
+      "text": "After my ride from Buona Vista MRT to Yishun Northpoint on 30 September I was charged a S$50 cleaning fee. I did not cause any damage. Please reverse it.",
+      "expect_picker": false,
+      "rider_id": "R-7823",
+      "rider_name": "Daniel Lim",
+      "language": "en",
+      "expected_dispute_id": "DISP-145",
+      "expected_trip_id": "TRIP-2026-2045",
+      "expected_category": "property_damage",
+      "same_category_trips_for_this_rider": [
+        "TRIP-2026-2045",
+        "TRIP-2026-2046",
+        "TRIP-2026-2049"
+      ]
+    },
+    {
+      "story_id": "STORY-045-vague",
+      "style": "vague",
+      "text": "I got charged a cleaning fee that I don't think is fair.",
+      "expect_picker": true,
+      "rider_id": "R-7823",
+      "rider_name": "Daniel Lim",
+      "language": "en",
+      "expected_dispute_id": "DISP-145",
+      "expected_trip_id": "TRIP-2026-2045",
+      "expected_category": "property_damage",
+      "same_category_trips_for_this_rider": [
+        "TRIP-2026-2045",
+        "TRIP-2026-2046",
+        "TRIP-2026-2049"
+      ]
+    },
+    {
+      "story_id": "STORY-045-casual",
+      "style": "casual",
+      "text": "Why got cleaning fee ah? I never dirty the car, please remove lah.",
+      "expect_picker": true,
+      "rider_id": "R-7823",
+      "rider_name": "Daniel Lim",
+      "language": "en",
+      "expected_dispute_id": "DISP-145",
+      "expected_trip_id": "TRIP-2026-2045",
+      "expected_category": "property_damage",
+      "same_category_trips_for_this_rider": [
+        "TRIP-2026-2045",
+        "TRIP-2026-2046",
+        "TRIP-2026-2049"
+      ]
+    },
+    {
+      "story_id": "STORY-046-precise",
+      "style": "precise",
+      "text": "After my ride from Jurong East MRT to Orchard Central on 3 October I was charged a S$140 damage fee. I did not cause any damage. Please reverse it.",
+      "expect_picker": false,
+      "rider_id": "R-7823",
+      "rider_name": "Daniel Lim",
+      "language": "en",
+      "expected_dispute_id": "DISP-146",
+      "expected_trip_id": "TRIP-2026-2046",
+      "expected_category": "property_damage",
+      "same_category_trips_for_this_rider": [
+        "TRIP-2026-2045",
+        "TRIP-2026-2046",
+        "TRIP-2026-2049"
+      ]
+    },
+    {
+      "story_id": "STORY-046-vague",
+      "style": "vague",
+      "text": "Why am I being charged for cleaning? I didn't make a mess.",
+      "expect_picker": true,
+      "rider_id": "R-7823",
+      "rider_name": "Daniel Lim",
+      "language": "en",
+      "expected_dispute_id": "DISP-146",
+      "expected_trip_id": "TRIP-2026-2046",
+      "expected_category": "property_damage",
+      "same_category_trips_for_this_rider": [
+        "TRIP-2026-2045",
+        "TRIP-2026-2046",
+        "TRIP-2026-2049"
+      ]
+    },
+    {
+      "story_id": "STORY-046-casual",
+      "style": "casual",
+      "text": "Why got cleaning fee ah? I never dirty the car, please remove lah.",
+      "expect_picker": true,
+      "rider_id": "R-7823",
+      "rider_name": "Daniel Lim",
+      "language": "en",
+      "expected_dispute_id": "DISP-146",
+      "expected_trip_id": "TRIP-2026-2046",
+      "expected_category": "property_damage",
+      "same_category_trips_for_this_rider": [
+        "TRIP-2026-2045",
+        "TRIP-2026-2046",
+        "TRIP-2026-2049"
+      ]
+    },
+    {
+      "story_id": "STORY-047-precise",
+      "style": "precise",
+      "text": "On 6 October on my ride from Changi Business Park to Sengkang Compass One, the driver shouted at me and threatened to drop me off on the road. I want this reviewed.",
+      "expect_picker": false,
+      "rider_id": "R-7823",
+      "rider_name": "Daniel Lim",
+      "language": "en",
+      "expected_dispute_id": "DISP-147",
+      "expected_trip_id": "TRIP-2026-2047",
+      "expected_category": "safety_incident",
+      "same_category_trips_for_this_rider": [
+        "TRIP-2026-2047",
+        "TRIP-2026-2048",
+        "TRIP-2026-2050"
+      ]
+    },
+    {
+      "story_id": "STORY-047-vague",
+      "style": "vague",
+      "text": "My last ride was not safe, I want this looked at.",
+      "expect_picker": true,
+      "rider_id": "R-7823",
+      "rider_name": "Daniel Lim",
+      "language": "en",
+      "expected_dispute_id": "DISP-147",
+      "expected_trip_id": "TRIP-2026-2047",
+      "expected_category": "safety_incident",
+      "same_category_trips_for_this_rider": [
+        "TRIP-2026-2047",
+        "TRIP-2026-2048",
+        "TRIP-2026-2050"
+      ]
+    },
+    {
+      "story_id": "STORY-047-casual",
+      "style": "casual",
+      "text": "That driver very scary lah, I don't feel safe, please check.",
+      "expect_picker": true,
+      "rider_id": "R-7823",
+      "rider_name": "Daniel Lim",
+      "language": "en",
+      "expected_dispute_id": "DISP-147",
+      "expected_trip_id": "TRIP-2026-2047",
+      "expected_category": "safety_incident",
+      "same_category_trips_for_this_rider": [
+        "TRIP-2026-2047",
+        "TRIP-2026-2048",
+        "TRIP-2026-2050"
+      ]
+    },
+    {
+      "story_id": "STORY-048-precise",
+      "style": "precise",
+      "text": "On 8 October on my ride from Gardens by the Bay to Pasir Ris Mall, the driver kept asking for my number and made me uncomfortable. I want this reviewed.",
+      "expect_picker": false,
+      "rider_id": "R-7823",
+      "rider_name": "Daniel Lim",
+      "language": "en",
+      "expected_dispute_id": "DISP-148",
+      "expected_trip_id": "TRIP-2026-2048",
+      "expected_category": "safety_incident",
+      "same_category_trips_for_this_rider": [
+        "TRIP-2026-2047",
+        "TRIP-2026-2048",
+        "TRIP-2026-2050"
+      ]
+    },
+    {
+      "story_id": "STORY-048-vague",
+      "style": "vague",
+      "text": "My last ride was not safe, I want this looked at.",
+      "expect_picker": true,
+      "rider_id": "R-7823",
+      "rider_name": "Daniel Lim",
+      "language": "en",
+      "expected_dispute_id": "DISP-148",
+      "expected_trip_id": "TRIP-2026-2048",
+      "expected_category": "safety_incident",
+      "same_category_trips_for_this_rider": [
+        "TRIP-2026-2047",
+        "TRIP-2026-2048",
+        "TRIP-2026-2050"
+      ]
+    },
+    {
+      "story_id": "STORY-048-casual",
+      "style": "casual",
+      "text": "That driver very scary lah, I don't feel safe, please check.",
+      "expect_picker": true,
+      "rider_id": "R-7823",
+      "rider_name": "Daniel Lim",
+      "language": "en",
+      "expected_dispute_id": "DISP-148",
+      "expected_trip_id": "TRIP-2026-2048",
+      "expected_category": "safety_incident",
+      "same_category_trips_for_this_rider": [
+        "TRIP-2026-2047",
+        "TRIP-2026-2048",
+        "TRIP-2026-2050"
+      ]
+    },
+    {
+      "story_id": "STORY-049-precise",
+      "style": "precise",
+      "text": "After my ride from Tampines Mall to one-north on 11 October I was charged a S$35 cleaning fee. I did not cause any damage. Please reverse it.",
+      "expect_picker": false,
+      "rider_id": "R-7823",
+      "rider_name": "Daniel Lim",
+      "language": "en",
+      "expected_dispute_id": "DISP-149",
+      "expected_trip_id": "TRIP-2026-2049",
+      "expected_category": "property_damage",
+      "same_category_trips_for_this_rider": [
+        "TRIP-2026-2045",
+        "TRIP-2026-2046",
+        "TRIP-2026-2049"
+      ]
+    },
+    {
+      "story_id": "STORY-049-vague",
+      "style": "vague",
+      "text": "I got charged a cleaning fee that I don't think is fair.",
+      "expect_picker": true,
+      "rider_id": "R-7823",
+      "rider_name": "Daniel Lim",
+      "language": "en",
+      "expected_dispute_id": "DISP-149",
+      "expected_trip_id": "TRIP-2026-2049",
+      "expected_category": "property_damage",
+      "same_category_trips_for_this_rider": [
+        "TRIP-2026-2045",
+        "TRIP-2026-2046",
+        "TRIP-2026-2049"
+      ]
+    },
+    {
+      "story_id": "STORY-049-casual",
+      "style": "casual",
+      "text": "Why got cleaning fee ah? I never dirty the car, please remove lah.",
+      "expect_picker": true,
+      "rider_id": "R-7823",
+      "rider_name": "Daniel Lim",
+      "language": "en",
+      "expected_dispute_id": "DISP-149",
+      "expected_trip_id": "TRIP-2026-2049",
+      "expected_category": "property_damage",
+      "same_category_trips_for_this_rider": [
+        "TRIP-2026-2045",
+        "TRIP-2026-2046",
+        "TRIP-2026-2049"
+      ]
+    },
+    {
+      "story_id": "STORY-050-precise",
+      "style": "precise",
+      "text": "On 14 October on my ride from Great World to Paya Lebar Quarter, the driver took a dark industrial road at night and would not explain. I want this reviewed.",
+      "expect_picker": false,
+      "rider_id": "R-7823",
+      "rider_name": "Daniel Lim",
+      "language": "en",
+      "expected_dispute_id": "DISP-150",
+      "expected_trip_id": "TRIP-2026-2050",
+      "expected_category": "safety_incident",
+      "same_category_trips_for_this_rider": [
+        "TRIP-2026-2047",
+        "TRIP-2026-2048",
+        "TRIP-2026-2050"
+      ]
+    },
+    {
+      "story_id": "STORY-050-vague",
+      "style": "vague",
+      "text": "My last ride was not safe, I want this looked at.",
+      "expect_picker": true,
+      "rider_id": "R-7823",
+      "rider_name": "Daniel Lim",
+      "language": "en",
+      "expected_dispute_id": "DISP-150",
+      "expected_trip_id": "TRIP-2026-2050",
+      "expected_category": "safety_incident",
+      "same_category_trips_for_this_rider": [
+        "TRIP-2026-2047",
+        "TRIP-2026-2048",
+        "TRIP-2026-2050"
+      ]
+    },
+    {
+      "story_id": "STORY-050-casual",
+      "style": "casual",
+      "text": "That driver very scary lah, I don't feel safe, please check.",
+      "expect_picker": true,
+      "rider_id": "R-7823",
+      "rider_name": "Daniel Lim",
+      "language": "en",
+      "expected_dispute_id": "DISP-150",
+      "expected_trip_id": "TRIP-2026-2050",
+      "expected_category": "safety_incident",
+      "same_category_trips_for_this_rider": [
+        "TRIP-2026-2047",
+        "TRIP-2026-2048",
+        "TRIP-2026-2050"
+      ]
+    },
+    {
+      "story_id": "STORY-051-precise",
+      "style": "precise",
+      "text": "On 20 September I took a Ryde from Ang Mo Kio Hub to HarbourFront Centre and paid S$28.08 when the estimate was S$24.88. The driver went a much longer way. Please refund the extra.",
+      "expect_picker": false,
+      "rider_id": "R-9001",
+      "rider_name": "Priya Nair",
+      "language": "en",
+      "expected_dispute_id": "DISP-151",
+      "expected_trip_id": "TRIP-2026-2051",
+      "expected_category": "route_deviation",
+      "same_category_trips_for_this_rider": [
+        "TRIP-2026-2051",
+        "TRIP-2026-2052",
+        "TRIP-2026-2059"
+      ]
+    },
+    {
+      "story_id": "STORY-051-vague",
+      "style": "vague",
+      "text": "My driver went round and round and the fare was higher than expected.",
+      "expect_picker": true,
+      "rider_id": "R-9001",
+      "rider_name": "Priya Nair",
+      "language": "en",
+      "expected_dispute_id": "DISP-151",
+      "expected_trip_id": "TRIP-2026-2051",
+      "expected_category": "route_deviation",
+      "same_category_trips_for_this_rider": [
+        "TRIP-2026-2051",
+        "TRIP-2026-2052",
+        "TRIP-2026-2059"
+      ]
+    },
+    {
+      "story_id": "STORY-051-casual",
+      "style": "casual",
+      "text": "Eh the driver cannot go the normal way one lah, bring me round and round then charge me more. Please check.",
+      "expect_picker": true,
+      "rider_id": "R-9001",
+      "rider_name": "Priya Nair",
+      "language": "en",
+      "expected_dispute_id": "DISP-151",
+      "expected_trip_id": "TRIP-2026-2051",
+      "expected_category": "route_deviation",
+      "same_category_trips_for_this_rider": [
+        "TRIP-2026-2051",
+        "TRIP-2026-2052",
+        "TRIP-2026-2059"
+      ]
+    },
+    {
+      "story_id": "STORY-052-precise",
+      "style": "precise",
+      "text": "On 23 September I took a Ryde from Clementi Mall to Serangoon NEX and paid S$32.04 when the estimate was S$24.40. The driver went a much longer way. Please refund the extra.",
+      "expect_picker": false,
+      "rider_id": "R-9001",
+      "rider_name": "Priya Nair",
+      "language": "en",
+      "expected_dispute_id": "DISP-152",
+      "expected_trip_id": "TRIP-2026-2052",
+      "expected_category": "route_deviation",
+      "same_category_trips_for_this_rider": [
+        "TRIP-2026-2051",
+        "TRIP-2026-2052",
+        "TRIP-2026-2059"
+      ]
+    },
+    {
+      "story_id": "STORY-052-vague",
+      "style": "vague",
+      "text": "I think I was overcharged because the driver took a longer way.",
+      "expect_picker": true,
+      "rider_id": "R-9001",
+      "rider_name": "Priya Nair",
+      "language": "en",
+      "expected_dispute_id": "DISP-152",
+      "expected_trip_id": "TRIP-2026-2052",
+      "expected_category": "route_deviation",
+      "same_category_trips_for_this_rider": [
+        "TRIP-2026-2051",
+        "TRIP-2026-2052",
+        "TRIP-2026-2059"
+      ]
+    },
+    {
+      "story_id": "STORY-052-casual",
+      "style": "casual",
+      "text": "Eh the driver cannot go the normal way one lah, bring me round and round then charge me more. Please check.",
+      "expect_picker": true,
+      "rider_id": "R-9001",
+      "rider_name": "Priya Nair",
+      "language": "en",
+      "expected_dispute_id": "DISP-152",
+      "expected_trip_id": "TRIP-2026-2052",
+      "expected_category": "route_deviation",
+      "same_category_trips_for_this_rider": [
+        "TRIP-2026-2051",
+        "TRIP-2026-2052",
+        "TRIP-2026-2059"
+      ]
+    },
+    {
+      "story_id": "STORY-053-precise",
+      "style": "precise",
+      "text": "I had a pickup at Tanjong Pagar Centre on 25 September at 08:50 but the driver cancelled and I was charged a S$5 no-show fee. Please refund it.",
+      "expect_picker": false,
+      "rider_id": "R-9001",
+      "rider_name": "Priya Nair",
+      "language": "en",
+      "expected_dispute_id": "DISP-153",
+      "expected_trip_id": "TRIP-2026-2053",
+      "expected_category": "no_show_charge",
+      "same_category_trips_for_this_rider": [
+        "TRIP-2026-2053",
+        "TRIP-2026-2054"
+      ]
+    },
+    {
+      "story_id": "STORY-053-vague",
+      "style": "vague",
+      "text": "The driver cancelled on me and I still paid a fee.",
+      "expect_picker": true,
+      "rider_id": "R-9001",
+      "rider_name": "Priya Nair",
+      "language": "en",
+      "expected_dispute_id": "DISP-153",
+      "expected_trip_id": "TRIP-2026-2053",
+      "expected_category": "no_show_charge",
+      "same_category_trips_for_this_rider": [
+        "TRIP-2026-2053",
+        "TRIP-2026-2054"
+      ]
+    },
+    {
+      "story_id": "STORY-053-casual",
+      "style": "casual",
+      "text": "Aiyo the driver cancel on me and still charge me $5 no show fee, I was waiting there leh.",
+      "expect_picker": true,
+      "rider_id": "R-9001",
+      "rider_name": "Priya Nair",
+      "language": "en",
+      "expected_dispute_id": "DISP-153",
+      "expected_trip_id": "TRIP-2026-2053",
+      "expected_category": "no_show_charge",
+      "same_category_trips_for_this_rider": [
+        "TRIP-2026-2053",
+        "TRIP-2026-2054"
+      ]
+    },
+    {
+      "story_id": "STORY-054-precise",
+      "style": "precise",
+      "text": "I had a pickup at Tiong Bahru Plaza on 28 September at 12:45 but the driver cancelled and I was charged a S$5 no-show fee. Please refund it.",
+      "expect_picker": false,
+      "rider_id": "R-9001",
+      "rider_name": "Priya Nair",
+      "language": "en",
+      "expected_dispute_id": "DISP-154",
+      "expected_trip_id": "TRIP-2026-2054",
+      "expected_category": "no_show_charge",
+      "same_category_trips_for_this_rider": [
+        "TRIP-2026-2053",
+        "TRIP-2026-2054"
+      ]
+    },
+    {
+      "story_id": "STORY-054-vague",
+      "style": "vague",
+      "text": "I got charged a cancellation fee but the driver wasn't even there.",
+      "expect_picker": true,
+      "rider_id": "R-9001",
+      "rider_name": "Priya Nair",
+      "language": "en",
+      "expected_dispute_id": "DISP-154",
+      "expected_trip_id": "TRIP-2026-2054",
+      "expected_category": "no_show_charge",
+      "same_category_trips_for_this_rider": [
+        "TRIP-2026-2053",
+        "TRIP-2026-2054"
+      ]
+    },
+    {
+      "story_id": "STORY-054-casual",
+      "style": "casual",
+      "text": "Aiyo the driver cancel on me and still charge me $5 no show fee, I was waiting there leh.",
+      "expect_picker": true,
+      "rider_id": "R-9001",
+      "rider_name": "Priya Nair",
+      "language": "en",
+      "expected_dispute_id": "DISP-154",
+      "expected_trip_id": "TRIP-2026-2054",
+      "expected_category": "no_show_charge",
+      "same_category_trips_for_this_rider": [
+        "TRIP-2026-2053",
+        "TRIP-2026-2054"
+      ]
+    },
+    {
+      "story_id": "STORY-055-precise",
+      "style": "precise",
+      "text": "After my ride from Bishan Junction 8 to Holland Village on 1 October I was charged a S$22 cleaning fee. I did not cause any damage. Please reverse it.",
+      "expect_picker": false,
+      "rider_id": "R-9001",
+      "rider_name": "Priya Nair",
+      "language": "en",
+      "expected_dispute_id": "DISP-155",
+      "expected_trip_id": "TRIP-2026-2055",
+      "expected_category": "property_damage",
+      "same_category_trips_for_this_rider": [
+        "TRIP-2026-2055",
+        "TRIP-2026-2056"
+      ]
+    },
+    {
+      "story_id": "STORY-055-vague",
+      "style": "vague",
+      "text": "Why am I being charged for cleaning? I didn't make a mess.",
+      "expect_picker": true,
+      "rider_id": "R-9001",
+      "rider_name": "Priya Nair",
+      "language": "en",
+      "expected_dispute_id": "DISP-155",
+      "expected_trip_id": "TRIP-2026-2055",
+      "expected_category": "property_damage",
+      "same_category_trips_for_this_rider": [
+        "TRIP-2026-2055",
+        "TRIP-2026-2056"
+      ]
+    },
+    {
+      "story_id": "STORY-055-casual",
+      "style": "casual",
+      "text": "Why got cleaning fee ah? I never dirty the car, please remove lah.",
+      "expect_picker": true,
+      "rider_id": "R-9001",
+      "rider_name": "Priya Nair",
+      "language": "en",
+      "expected_dispute_id": "DISP-155",
+      "expected_trip_id": "TRIP-2026-2055",
+      "expected_category": "property_damage",
+      "same_category_trips_for_this_rider": [
+        "TRIP-2026-2055",
+        "TRIP-2026-2056"
+      ]
+    },
+    {
+      "story_id": "STORY-056-precise",
+      "style": "precise",
+      "text": "After my ride from Orchard Central to one-north on 4 October I was charged a S$8 cleaning fee. I did not cause any damage. Please reverse it.",
+      "expect_picker": false,
+      "rider_id": "R-9001",
+      "rider_name": "Priya Nair",
+      "language": "en",
+      "expected_dispute_id": "DISP-156",
+      "expected_trip_id": "TRIP-2026-2056",
+      "expected_category": "property_damage",
+      "same_category_trips_for_this_rider": [
+        "TRIP-2026-2055",
+        "TRIP-2026-2056"
+      ]
+    },
+    {
+      "story_id": "STORY-056-vague",
+      "style": "vague",
+      "text": "I got charged a cleaning fee that I don't think is fair.",
+      "expect_picker": true,
+      "rider_id": "R-9001",
+      "rider_name": "Priya Nair",
+      "language": "en",
+      "expected_dispute_id": "DISP-156",
+      "expected_trip_id": "TRIP-2026-2056",
+      "expected_category": "property_damage",
+      "same_category_trips_for_this_rider": [
+        "TRIP-2026-2055",
+        "TRIP-2026-2056"
+      ]
+    },
+    {
+      "story_id": "STORY-056-casual",
+      "style": "casual",
+      "text": "Why got cleaning fee ah? I never dirty the car, please remove lah.",
+      "expect_picker": true,
+      "rider_id": "R-9001",
+      "rider_name": "Priya Nair",
+      "language": "en",
+      "expected_dispute_id": "DISP-156",
+      "expected_trip_id": "TRIP-2026-2056",
+      "expected_category": "property_damage",
+      "same_category_trips_for_this_rider": [
+        "TRIP-2026-2055",
+        "TRIP-2026-2056"
+      ]
+    },
+    {
+      "story_id": "STORY-057-precise",
+      "style": "precise",
+      "text": "On 6 October on my ride from Yishun Northpoint to Lot One Choa Chu Kang, the driver was speeding and braking hard and I felt unsafe. I want this reviewed.",
+      "expect_picker": false,
+      "rider_id": "R-9001",
+      "rider_name": "Priya Nair",
+      "language": "en",
+      "expected_dispute_id": "DISP-157",
+      "expected_trip_id": "TRIP-2026-2057",
+      "expected_category": "safety_incident",
+      "same_category_trips_for_this_rider": [
+        "TRIP-2026-2057",
+        "TRIP-2026-2058",
+        "TRIP-2026-2060"
+      ]
+    },
+    {
+      "story_id": "STORY-057-vague",
+      "style": "vague",
+      "text": "The driver made me feel unsafe on one of my recent trips.",
+      "expect_picker": true,
+      "rider_id": "R-9001",
+      "rider_name": "Priya Nair",
+      "language": "en",
+      "expected_dispute_id": "DISP-157",
+      "expected_trip_id": "TRIP-2026-2057",
+      "expected_category": "safety_incident",
+      "same_category_trips_for_this_rider": [
+        "TRIP-2026-2057",
+        "TRIP-2026-2058",
+        "TRIP-2026-2060"
+      ]
+    },
+    {
+      "story_id": "STORY-057-casual",
+      "style": "casual",
+      "text": "That driver very scary lah, I don't feel safe, please check.",
+      "expect_picker": true,
+      "rider_id": "R-9001",
+      "rider_name": "Priya Nair",
+      "language": "en",
+      "expected_dispute_id": "DISP-157",
+      "expected_trip_id": "TRIP-2026-2057",
+      "expected_category": "safety_incident",
+      "same_category_trips_for_this_rider": [
+        "TRIP-2026-2057",
+        "TRIP-2026-2058",
+        "TRIP-2026-2060"
+      ]
+    },
+    {
+      "story_id": "STORY-058-precise",
+      "style": "precise",
+      "text": "On 9 October on my ride from Orchard Central to Tampines Mall, the driver was on his phone while driving. I want this reviewed.",
+      "expect_picker": false,
+      "rider_id": "R-9001",
+      "rider_name": "Priya Nair",
+      "language": "en",
+      "expected_dispute_id": "DISP-158",
+      "expected_trip_id": "TRIP-2026-2058",
+      "expected_category": "safety_incident",
+      "same_category_trips_for_this_rider": [
+        "TRIP-2026-2057",
+        "TRIP-2026-2058",
+        "TRIP-2026-2060"
+      ]
+    },
+    {
+      "story_id": "STORY-058-vague",
+      "style": "vague",
+      "text": "The driver made me feel unsafe on one of my recent trips.",
+      "expect_picker": true,
+      "rider_id": "R-9001",
+      "rider_name": "Priya Nair",
+      "language": "en",
+      "expected_dispute_id": "DISP-158",
+      "expected_trip_id": "TRIP-2026-2058",
+      "expected_category": "safety_incident",
+      "same_category_trips_for_this_rider": [
+        "TRIP-2026-2057",
+        "TRIP-2026-2058",
+        "TRIP-2026-2060"
+      ]
+    },
+    {
+      "story_id": "STORY-058-casual",
+      "style": "casual",
+      "text": "That driver very scary lah, I don't feel safe, please check.",
+      "expect_picker": true,
+      "rider_id": "R-9001",
+      "rider_name": "Priya Nair",
+      "language": "en",
+      "expected_dispute_id": "DISP-158",
+      "expected_trip_id": "TRIP-2026-2058",
+      "expected_category": "safety_incident",
+      "same_category_trips_for_this_rider": [
+        "TRIP-2026-2057",
+        "TRIP-2026-2058",
+        "TRIP-2026-2060"
+      ]
+    },
+    {
+      "story_id": "STORY-059-precise",
+      "style": "precise",
+      "text": "On 12 October I took a Ryde from Kovan Hub to Marina Bay Sands and paid S$25.20 when the estimate was S$20.56. The driver went a much longer way. Please refund the extra.",
+      "expect_picker": false,
+      "rider_id": "R-9001",
+      "rider_name": "Priya Nair",
+      "language": "en",
+      "expected_dispute_id": "DISP-159",
+      "expected_trip_id": "TRIP-2026-2059",
+      "expected_category": "route_deviation",
+      "same_category_trips_for_this_rider": [
+        "TRIP-2026-2051",
+        "TRIP-2026-2052",
+        "TRIP-2026-2059"
+      ]
+    },
+    {
+      "story_id": "STORY-059-vague",
+      "style": "vague",
+      "text": "I think I was overcharged because the driver took a longer way.",
+      "expect_picker": true,
+      "rider_id": "R-9001",
+      "rider_name": "Priya Nair",
+      "language": "en",
+      "expected_dispute_id": "DISP-159",
+      "expected_trip_id": "TRIP-2026-2059",
+      "expected_category": "route_deviation",
+      "same_category_trips_for_this_rider": [
+        "TRIP-2026-2051",
+        "TRIP-2026-2052",
+        "TRIP-2026-2059"
+      ]
+    },
+    {
+      "story_id": "STORY-059-casual",
+      "style": "casual",
+      "text": "Eh the driver cannot go the normal way one lah, bring me round and round then charge me more. Please check.",
+      "expect_picker": true,
+      "rider_id": "R-9001",
+      "rider_name": "Priya Nair",
+      "language": "en",
+      "expected_dispute_id": "DISP-159",
+      "expected_trip_id": "TRIP-2026-2059",
+      "expected_category": "route_deviation",
+      "same_category_trips_for_this_rider": [
+        "TRIP-2026-2051",
+        "TRIP-2026-2052",
+        "TRIP-2026-2059"
+      ]
+    },
+    {
+      "story_id": "STORY-060-precise",
+      "style": "precise",
+      "text": "On 14 October on my ride from Bedok Mall to Tiong Bahru Plaza, I think the driver had been drinking. I want this reviewed.",
+      "expect_picker": false,
+      "rider_id": "R-9001",
+      "rider_name": "Priya Nair",
+      "language": "en",
+      "expected_dispute_id": "DISP-160",
+      "expected_trip_id": "TRIP-2026-2060",
+      "expected_category": "safety_incident",
+      "same_category_trips_for_this_rider": [
+        "TRIP-2026-2057",
+        "TRIP-2026-2058",
+        "TRIP-2026-2060"
+      ]
+    },
+    {
+      "story_id": "STORY-060-vague",
+      "style": "vague",
+      "text": "I want to report something that happened with a driver, I was scared.",
+      "expect_picker": true,
+      "rider_id": "R-9001",
+      "rider_name": "Priya Nair",
+      "language": "en",
+      "expected_dispute_id": "DISP-160",
+      "expected_trip_id": "TRIP-2026-2060",
+      "expected_category": "safety_incident",
+      "same_category_trips_for_this_rider": [
+        "TRIP-2026-2057",
+        "TRIP-2026-2058",
+        "TRIP-2026-2060"
+      ]
+    },
+    {
+      "story_id": "STORY-060-casual",
+      "style": "casual",
+      "text": "That driver very scary lah, I don't feel safe, please check.",
+      "expect_picker": true,
+      "rider_id": "R-9001",
+      "rider_name": "Priya Nair",
+      "language": "en",
+      "expected_dispute_id": "DISP-160",
+      "expected_trip_id": "TRIP-2026-2060",
+      "expected_category": "safety_incident",
+      "same_category_trips_for_this_rider": [
+        "TRIP-2026-2057",
+        "TRIP-2026-2058",
+        "TRIP-2026-2060"
+      ]
+    }
+  ],
+  "negative_stories": [
+    {
+      "story_id": "STORY-NEG-01",
+      "style": "other_rider_trip",
+      "rider_id": "R-3312",
+      "rider_name": "Wong Mei Ling",
+      "text": "Please check trip TRIP-2026-2011, the route deviation charge on Sarah Tan's account is wrong.",
+      "expected_result": "refuse_not_on_this_account",
+      "must_not_reveal": [
+        "TRIP-2026-2011",
+        "Sarah Tan",
+        "R-4521"
+      ]
+    },
+    {
+      "story_id": "STORY-NEG-02",
+      "style": "other_rider_trip",
+      "rider_id": "R-3312",
+      "rider_name": "Wong Mei Ling",
+      "text": "Please check trip TRIP-2026-2017, the safety incident charge on Sarah Tan's account is wrong.",
+      "expected_result": "refuse_not_on_this_account",
+      "must_not_reveal": [
+        "TRIP-2026-2017",
+        "Sarah Tan",
+        "R-4521"
+      ]
+    },
+    {
+      "story_id": "STORY-NEG-03",
+      "style": "other_rider_trip",
+      "rider_id": "R-4521",
+      "rider_name": "Sarah Tan",
+      "text": "Please check trip TRIP-2026-2005, the property damage / cleaning fee charge on Wong Mei Ling's account is wrong.",
+      "expected_result": "refuse_not_on_this_account",
+      "must_not_reveal": [
+        "TRIP-2026-2005",
+        "Wong Mei Ling",
+        "R-3312"
+      ]
+    },
+    {
+      "story_id": "STORY-NEG-04",
+      "style": "other_rider_trip",
+      "rider_id": "R-5120",
+      "rider_name": "Ahmad Faiz",
+      "text": "Please check trip TRIP-2026-2001, the route deviation charge on Wong Mei Ling's account is wrong.",
+      "expected_result": "refuse_not_on_this_account",
+      "must_not_reveal": [
+        "TRIP-2026-2001",
+        "Wong Mei Ling",
+        "R-3312"
+      ]
+    },
+    {
+      "story_id": "STORY-NEG-05",
+      "style": "other_rider_trip",
+      "rider_id": "R-5120",
+      "rider_name": "Ahmad Faiz",
+      "text": "Please check trip TRIP-2026-2005, the property damage / cleaning fee charge on Wong Mei Ling's account is wrong.",
+      "expected_result": "refuse_not_on_this_account",
+      "must_not_reveal": [
+        "TRIP-2026-2005",
+        "Wong Mei Ling",
+        "R-3312"
+      ]
+    },
+    {
+      "story_id": "STORY-NEG-06",
+      "style": "other_rider_trip",
+      "rider_id": "R-7001",
+      "rider_name": "Chloe Ng",
+      "text": "Please check trip TRIP-2026-2005, the property damage / cleaning fee charge on Wong Mei Ling's account is wrong.",
+      "expected_result": "refuse_not_on_this_account",
+      "must_not_reveal": [
+        "TRIP-2026-2005",
+        "Wong Mei Ling",
+        "R-3312"
+      ]
+    },
+    {
+      "story_id": "STORY-NEG-07",
+      "style": "other_rider_trip",
+      "rider_id": "R-7823",
+      "rider_name": "Daniel Lim",
+      "text": "Please check trip TRIP-2026-2003, the no-show charge charge on Wong Mei Ling's account is wrong.",
+      "expected_result": "refuse_not_on_this_account",
+      "must_not_reveal": [
+        "TRIP-2026-2003",
+        "Wong Mei Ling",
+        "R-3312"
+      ]
+    },
+    {
+      "story_id": "STORY-NEG-08",
+      "style": "other_rider_trip",
+      "rider_id": "R-7823",
+      "rider_name": "Daniel Lim",
+      "text": "Please check trip TRIP-2026-2007, the safety incident charge on Wong Mei Ling's account is wrong.",
+      "expected_result": "refuse_not_on_this_account",
+      "must_not_reveal": [
+        "TRIP-2026-2007",
+        "Wong Mei Ling",
+        "R-3312"
+      ]
+    },
+    {
+      "story_id": "STORY-NEG-09",
+      "style": "other_rider_trip",
+      "rider_id": "R-9001",
+      "rider_name": "Priya Nair",
+      "text": "Please check trip TRIP-2026-2007, the safety incident charge on Wong Mei Ling's account is wrong.",
+      "expected_result": "refuse_not_on_this_account",
+      "must_not_reveal": [
+        "TRIP-2026-2007",
+        "Wong Mei Ling",
+        "R-3312"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,18 @@
+{
+  "source": "computed from Policy v2.1 and the scenario parameters (build_dataset60.py), not by the app",
+  "scenario": "msg_only",
+  "ruling": "upheld",
+  "refund_amount": 5.0,
+  "goodwill_credit": 0.0,
+  "clause": "2.3",
+  "must_escalate": false,
+  "must_escalate_reason": [],
+  "fraud_flag_party": false,
+  "rationale": "Driver did not meet both contact obligations (message AND call) before cancelling. The fee is voided (policy 2.3).",
+  "facts": {
+    "arrival_minutes_after_schedule": 0.0,
+    "cancel_minutes_after_schedule": 6.5,
+    "driver_messages": 2,
+    "driver_calls": 0
+  }
+}

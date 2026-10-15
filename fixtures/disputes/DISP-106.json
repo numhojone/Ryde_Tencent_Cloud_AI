@@ -1,0 +1,13 @@
+{
+  "dispute_id": "DISP-106",
+  "_source": "Synthetic (ticket ids and parties from the team's 60-ticket file)",
+  "trip_id": "TRIP-2026-2006",
+  "filed_by": "rider",
+  "rider_id": "R-3312",
+  "driver_id": "D-7002",
+  "dispute_type": "property_damage",
+  "description": "I was charged a S$30 cleaning fee for my 1 October trip (Bedok Mall to East Coast Park). I did not spill or dirty anything and the driver never mentioned it. Please reverse the charge.",
+  "filed_at": "2026-10-02T07:36:00+08:00",
+  "requested_resolution": "reverse_cleaning_fee",
+  "requested_amount": 30.0
+}

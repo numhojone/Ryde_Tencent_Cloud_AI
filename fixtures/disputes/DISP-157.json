@@ -1,0 +1,13 @@
+{
+  "dispute_id": "DISP-157",
+  "_source": "Synthetic (ticket ids and parties from the team's 60-ticket file)",
+  "trip_id": "TRIP-2026-2057",
+  "filed_by": "rider",
+  "rider_id": "R-9001",
+  "driver_id": "D-3456",
+  "dispute_type": "safety_incident",
+  "description": "On 6 October my driver from Yishun Northpoint to Lot One Choa Chu Kang was speeding on the expressway, weaving between lanes and braking hard. I asked him to slow down and he ignored me. I felt very unsafe.",
+  "filed_at": "2026-10-06T22:01:00+08:00",
+  "requested_resolution": "safety_review",
+  "requested_amount": null
+}

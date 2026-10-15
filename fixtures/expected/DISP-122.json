@@ -1,0 +1,20 @@
+{
+  "source": "computed from Policy v2.1 and the scenario parameters (build_dataset60.py), not by the app",
+  "scenario": "just_informed",
+  "ruling": "rejected",
+  "refund_amount": 0.0,
+  "goodwill_credit": 0.0,
+  "clause": "1.3",
+  "must_escalate": true,
+  "must_escalate_reason": [
+    "deviation_over_2km"
+  ],
+  "fraud_flag_party": false,
+  "rationale": "A traffic incident justified the reroute and the driver informed the rider in time (policy 1.2, 1.3). No refund. The deviation is over 2 km, so the AI recommendation needs human approval (policy 6.1).",
+  "facts": {
+    "deviation_km": 3.2,
+    "traffic_justified": true,
+    "rider_informed": true,
+    "excess_distance_fare": 2.56
+  }
+}

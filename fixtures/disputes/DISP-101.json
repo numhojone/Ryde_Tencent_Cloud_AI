@@ -1,0 +1,13 @@
+{
+  "dispute_id": "DISP-101",
+  "_source": "Synthetic (ticket ids and parties from the team's 60-ticket file)",
+  "trip_id": "TRIP-2026-2001",
+  "filed_by": "rider",
+  "rider_id": "R-3312",
+  "driver_id": "D-1187",
+  "dispute_type": "route_deviation",
+  "description": "On 18 September I took a Ryde from one-north to East Coast Park. The upfront estimate was about S$26.16 but I was charged S$31.04. The trip was about 3.1 km longer than the recommended route. I asked about the route and did not get a proper explanation. I am requesting a refund of the excess fare.",
+  "filed_at": "2026-09-18T10:07:00+08:00",
+  "requested_resolution": "refund_excess_fare",
+  "requested_amount": 4.88
+}

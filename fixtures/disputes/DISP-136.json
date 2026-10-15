@@ -1,0 +1,13 @@
+{
+  "dispute_id": "DISP-136",
+  "_source": "Synthetic (ticket ids and parties from the team's 60-ticket file)",
+  "trip_id": "TRIP-2026-2036",
+  "filed_by": "rider",
+  "rider_id": "R-7001",
+  "driver_id": "D-7002",
+  "dispute_type": "property_damage",
+  "description": "I was charged S$30 for cleaning after riding from Tampines Mall to NUS Kent Ridge on 3 October. The photo the driver sent doesn't look like my ride. Please reverse the fee.",
+  "filed_at": "2026-10-04T07:23:00+08:00",
+  "requested_resolution": "reverse_cleaning_fee",
+  "requested_amount": 30.0
+}

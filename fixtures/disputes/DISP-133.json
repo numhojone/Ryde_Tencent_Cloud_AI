@@ -1,0 +1,13 @@
+{
+  "dispute_id": "DISP-133",
+  "_source": "Synthetic (ticket ids and parties from the team's 60-ticket file)",
+  "trip_id": "TRIP-2026-2033",
+  "filed_by": "rider",
+  "rider_id": "R-7001",
+  "driver_id": "D-3456",
+  "dispute_type": "no_show_charge",
+  "description": "The driver called once and then cancelled my 07:55 pickup at Bishan Junction 8 on 24 September. I was still on my way down and was charged S$5. Please refund it.",
+  "filed_at": "2026-09-24T09:29:30+08:00",
+  "requested_resolution": "reverse_cancellation_fee",
+  "requested_amount": 5.0
+}

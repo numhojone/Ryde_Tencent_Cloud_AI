@@ -1,0 +1,20 @@
+{
+  "source": "computed from Policy v2.1 and the scenario parameters (build_dataset60.py), not by the app",
+  "scenario": "thin",
+  "ruling": "escalated",
+  "refund_amount": null,
+  "goodwill_credit": 0.0,
+  "clause": "safety_net",
+  "must_escalate": true,
+  "must_escalate_reason": [
+    "thin_evidence"
+  ],
+  "fraud_flag_party": false,
+  "rationale": "Evidence is too thin (GPS and chat) to rule automatically. Escalated to a human reviewer.",
+  "facts": {
+    "deviation_km": 3.0,
+    "traffic_justified": false,
+    "rider_informed": false,
+    "excess_distance_fare": 2.4
+  }
+}

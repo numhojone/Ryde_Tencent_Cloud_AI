@@ -1,12 +1,16 @@
 {
   "rider_id": "R-5120",
-  "account_age_days": 300,
-  "total_trips": 58,
+  "account_age_days": 330,
+  "total_trips": 74,
   "avg_rating": 4.9,
   "dispute_history": {
     "total_disputes": 0,
     "upheld": 0,
-    "rejected": 0
+    "rejected": 0,
+    "open_disputes": 11
   },
-  "fraud_flags": 0
+  "fraud_flags": 0,
+  "name": "Ahmad Faiz",
+  "account_created_at": "2025-11-19T00:00:00+08:00",
+  "profile_as_of": "2026-10-15"
 }

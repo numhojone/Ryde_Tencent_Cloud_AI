@@ -1,0 +1,13 @@
+{
+  "dispute_id": "DISP-120",
+  "_source": "Synthetic (ticket ids and parties from the team's 60-ticket file)",
+  "trip_id": "TRIP-2026-2020",
+  "filed_by": "rider",
+  "rider_id": "R-4521",
+  "driver_id": "D-2398",
+  "dispute_type": "no_show_charge",
+  "description": "My driver arrived at Tanjong Pagar Centre very late on 12 October (the booking was for 19:45). I waited and then had to leave, and now I'm charged a S$5 no-show fee. Please reverse it.",
+  "filed_at": "2026-10-12T20:26:30+08:00",
+  "requested_resolution": "reverse_cancellation_fee",
+  "requested_amount": 5.0
+}

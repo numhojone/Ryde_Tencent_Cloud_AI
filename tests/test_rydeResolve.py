@@ -12,7 +12,9 @@ from app.agents import analysis as A  # noqa: E402
 from app.agents.intake import classify_by_rules, detect_safety  # noqa: E402
 from app import safety_net  # noqa: E402
 
-EXPECTED = {p.stem: json.loads(p.read_text()) for p in sorted((ROOT / "fixtures" / "expected").glob("DISP-*.json"))}
+# The official samples and the first synthetic cases (DISP-001 to 006). The 60 dataset cases (DISP-101 to 160) have
+# their own, richer comparison in tests/test_dataset60.py.
+EXPECTED = {p.stem: json.loads(p.read_text()) for p in sorted((ROOT / "fixtures" / "expected").glob("DISP-00*.json"))}
 
 
 def run(did, lang="en"):

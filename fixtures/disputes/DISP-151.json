@@ -1,0 +1,13 @@
+{
+  "dispute_id": "DISP-151",
+  "_source": "Synthetic (ticket ids and parties from the team's 60-ticket file)",
+  "trip_id": "TRIP-2026-2051",
+  "filed_by": "rider",
+  "rider_id": "R-9001",
+  "driver_id": "D-3456",
+  "dispute_type": "route_deviation",
+  "description": "On 20 September I took a Ryde from Ang Mo Kio Hub to HarbourFront Centre. The upfront estimate was about S$24.88 but I was charged S$28.08. The trip was about 2.8 km longer than the recommended route. The driver did not tell me about any route change or the reason. I am requesting a refund of the excess fare.",
+  "filed_at": "2026-09-20T22:22:00+08:00",
+  "requested_resolution": "refund_excess_fare",
+  "requested_amount": 3.2
+}

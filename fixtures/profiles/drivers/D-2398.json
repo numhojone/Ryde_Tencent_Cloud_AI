@@ -1,13 +1,18 @@
 {
   "driver_id": "D-2398",
-  "account_age_days": 900,
-  "total_trips": 3201,
+  "account_age_days": 932,
+  "total_trips": 3310,
   "avg_rating": 4.9,
   "dispute_history": {
     "total_disputes": 1,
     "upheld_against": 0,
-    "rejected": 1
+    "rejected": 1,
+    "open_disputes": 11
   },
   "fraud_flags": 0,
-  "vehicle": "Honda HR-V (SGP 4521 M)"
+  "name": "Lim Wei Ming",
+  "account_created_at": "2024-03-27T00:00:00+08:00",
+  "vehicle": "Honda HR-V (SGP 4521 M)",
+  "vehicle_color": "White",
+  "profile_as_of": "2026-10-15"
 }

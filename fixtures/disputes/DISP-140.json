@@ -1,0 +1,13 @@
+{
+  "dispute_id": "DISP-140",
+  "_source": "Synthetic (ticket ids and parties from the team's 60-ticket file)",
+  "trip_id": "TRIP-2026-2040",
+  "filed_by": "rider",
+  "rider_id": "R-7001",
+  "driver_id": "D-4410",
+  "dispute_type": "no_show_charge",
+  "description": "I was at Great World on 13 October at 20:50 and the driver was nowhere near the pickup point, yet I was charged a S$5 no-show fee. Please check and refund.",
+  "filed_at": "2026-10-13T21:09:00+08:00",
+  "requested_resolution": "reverse_cancellation_fee",
+  "requested_amount": 5.0
+}

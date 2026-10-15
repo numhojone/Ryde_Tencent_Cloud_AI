@@ -1,0 +1,13 @@
+{
+  "dispute_id": "DISP-134",
+  "_source": "Synthetic (ticket ids and parties from the team's 60-ticket file)",
+  "trip_id": "TRIP-2026-2034",
+  "filed_by": "rider",
+  "rider_id": "R-7001",
+  "driver_id": "D-4410",
+  "dispute_type": "no_show_charge",
+  "description": "On 27 September my Ang Mo Kio Hub booking was cancelled as a no-show and I paid S$5. I was there. Please review.",
+  "filed_at": "2026-09-27T15:50:30+08:00",
+  "requested_resolution": "reverse_cancellation_fee",
+  "requested_amount": 5.0
+}

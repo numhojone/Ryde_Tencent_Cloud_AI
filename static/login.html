@@ -21,26 +21,15 @@
     <p data-i18n="lgSub">Get help with a trip</p>
   </div>
   <form class="lg-card" id="loginForm">
-    <div class="lg-role" role="radiogroup" data-i18n-title="lgRoleTitle" title="Sign in as">
-      <label class="lg-opt"><input type="radio" name="role" value="rider" checked><span data-i18n="lgRider">Rider</span></label>
-      <label class="lg-opt"><input type="radio" name="role" value="driver"><span data-i18n="lgDriver">Driver</span></label>
-      <label class="lg-opt"><input type="radio" name="role" value="support"><span data-i18n="lgSupport">Support agent</span></label>
-    </div>
     <label class="lg-field" id="riderField">
       <span data-i18n="lgAccount">Rider account</span>
       <select id="accountSelect" class="select" required></select>
     </label>
-    <label class="lg-field" id="driverField" hidden>
-      <span data-i18n="lgDriverAccount">Driver account</span>
-      <select id="driverSelect" class="select"></select>
-    </label>
-    <p class="lg-supportnote" id="driverNote" data-i18n="lgDriverNote" hidden>Drivers only see questions from Ryde Support about their own trips, and reply to them.</p>
-    <p class="lg-supportnote" id="supportNote" data-i18n="lgSupportNote" hidden>Handles cases the AI has passed to a person, from any rider.</p>
     <p class="lg-note" data-i18n="lgNote">Demo accounts. No password needed.</p>
     <p class="lg-err" id="loginErr" role="alert"></p>
     <button type="submit" class="btn primary lg-btn" id="signInBtn" data-i18n="lgSignIn">Sign in</button>
   </form>
-  <p class="lg-foot" data-i18n="lgFoot">Tip: to play the rider and the support agent at the same time, sign in as the support agent in a private window.</p>
+  <p class="lg-foot" data-i18n="lgFoot">After signing in you will see your own rides only. The agent room, the support console and the driver view on the next screen are demo panes for your own cases.</p>
 </main>
 <script>window.RR_EMBED = true;</script>
 <script src="/static/app.js"></script>

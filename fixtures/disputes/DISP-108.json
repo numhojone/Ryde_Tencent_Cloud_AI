@@ -1,0 +1,13 @@
+{
+  "dispute_id": "DISP-108",
+  "_source": "Synthetic (ticket ids and parties from the team's 60-ticket file)",
+  "trip_id": "TRIP-2026-2008",
+  "filed_by": "rider",
+  "rider_id": "R-3312",
+  "driver_id": "D-2398",
+  "dispute_type": "safety_incident",
+  "description": "During my 6 October ride from Orchard Central to Holland Village the driver kept asking for my number and where I live, even after I said no. It made me very uncomfortable and I want this reviewed.",
+  "filed_at": "2026-10-06T23:06:00+08:00",
+  "requested_resolution": "safety_review",
+  "requested_amount": null
+}

@@ -1,12 +1,16 @@
 {
   "rider_id": "R-3312",
-  "account_age_days": 380,
-  "total_trips": 96,
+  "account_age_days": 413,
+  "total_trips": 112,
   "avg_rating": 4.8,
   "dispute_history": {
     "total_disputes": 0,
     "upheld": 0,
-    "rejected": 0
+    "rejected": 0,
+    "open_disputes": 11
   },
-  "fraud_flags": 0
+  "fraud_flags": 0,
+  "name": "Wong Mei Ling",
+  "account_created_at": "2025-08-28T00:00:00+08:00",
+  "profile_as_of": "2026-10-15"
 }

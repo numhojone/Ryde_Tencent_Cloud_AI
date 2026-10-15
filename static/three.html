@@ -28,6 +28,8 @@
       <option value="en">English</option>
       <option value="zh">中文</option>
     </select>
+  </div>
+  <div class="tp-fill-row">
     <span class="tp-fill-lbl" data-i18n="tpFill">Fill story:</span>
     <div class="tp-fills" id="fills"></div>
   </div>
@@ -45,18 +47,16 @@
   <section class="pane pane-rider on" id="pane-rider" data-pane="rider" aria-labelledby="h-rider">
     <header class="pane-head">
       <h2 id="h-rider" class="sr-only" data-i18n="tpRider">Rider</h2>
-      <div class="role-toggle" id="roleToggle" role="group" data-i18n-title="tgTitle" title="View as" hidden>
+      <div class="role-toggle" id="roleToggle" role="group" data-i18n-title="tgTitle" title="View as">
         <button type="button" id="tgRider" data-view="rider" aria-pressed="true"><span data-i18n="tpRider">Rider</span><b class="tg-badge" hidden></b></button>
         <button type="button" id="tgDriver" data-view="driver" aria-pressed="false"><span data-i18n="tpDriver">Driver</span><b class="tg-badge" hidden></b></button>
       </div>
-      <span class="pane-title" id="riderTitle" data-i18n="tpRider">Rider</span>
       <span class="live" id="st-rider"><i></i><span></span></span>
     </header>
     <div class="whoami">
       <span id="whoami"></span>
       <button type="button" class="btn btn-xs" id="signOutBtn" data-i18n="tpSignOut">Sign out</button>
     </div>
-    <p class="support-view" id="supportView" hidden data-i18n="tpSupportView">Viewing as support agent. The rider's conversation for the open case is shown read-only.</p>
     <div class="phone">
       <div class="phone-bar">
         <span class="phone-app">Ryde</span>
@@ -71,11 +71,7 @@
       </div>
       <div class="phone-chat" id="driverChat" aria-live="polite" hidden>
         <div class="rm left drv-intro"><div class="rm-who">Ryde</div><div class="rm-bubble" data-i18n="drvIntro">You will only see questions from Ryde Support here.</div></div>
-        <div class="drv-pick" id="driverPick" hidden>
-          <label class="lg-field"><span data-i18n="drvPickLbl">View as driver (demo accounts)</span>
-            <select id="driverPickSelect" class="select"></select></label>
-          <button type="button" class="btn primary" id="driverPickBtn" data-i18n="drvPickBtn">Open driver inbox</button>
-        </div>
+        <div class="phone-empty" id="driverNoCase" data-i18n="drvNoCaseMsg">The driver view shows the driver of your active case once a case is open.</div>
         <div class="phone-empty" id="driverEmpty" data-i18n="drvEmpty" hidden>No questions from Ryde Support right now.</div>
       </div>
       <form class="phone-input" id="riderForm">
@@ -110,13 +106,13 @@
     </header>
     <div class="console-scroll" id="consoleScroll">
       <section class="queue" id="queue" hidden aria-labelledby="h-queue">
-        <h3 id="h-queue" data-i18n="tpQueue">Cases for review</h3>
+        <h3 id="h-queue" data-i18n="tpQueue">Your cases for review</h3>
         <div class="queue-list" id="queueList"></div>
       </section>
       <div class="console-idle" id="consoleIdle">
         <div class="ci-mark" aria-hidden="true"></div>
         <p data-i18n="tpNoCases">No cases need review</p>
-        <span id="consoleIdleSub" data-i18n="tpNoCasesSub">Cases appear here only when the policy or the safety net needs a person.</span>
+        <span id="consoleIdleSub" data-i18n="tpRiderConsole">Your cases that need a person appear here. In this demo the console works on your own cases only.</span>
       </div>
       <div class="console-case" id="consoleCase" hidden>
         <div id="summary"></div>

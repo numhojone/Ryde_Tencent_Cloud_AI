@@ -1,13 +1,18 @@
 {
   "driver_id": "D-3456",
-  "account_age_days": 450,
-  "total_trips": 1567,
+  "account_age_days": 481,
+  "total_trips": 1673,
   "avg_rating": 4.8,
   "dispute_history": {
     "total_disputes": 2,
     "upheld_against": 0,
-    "rejected": 2
+    "rejected": 2,
+    "open_disputes": 11
   },
   "fraud_flags": 0,
-  "vehicle": "Hyundai Elantra (SLM 8890 P)"
+  "name": "Tan Boon Huat",
+  "account_created_at": "2025-06-21T00:00:00+08:00",
+  "vehicle": "Hyundai Elantra (SLM 8890 P)",
+  "vehicle_color": "Grey",
+  "profile_as_of": "2026-10-15"
 }

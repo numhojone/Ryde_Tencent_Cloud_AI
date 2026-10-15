@@ -1,13 +1,18 @@
 {
   "driver_id": "D-7002",
-  "account_age_days": 500,
-  "total_trips": 1800,
+  "account_age_days": 528,
+  "total_trips": 1896,
   "avg_rating": 4.7,
   "dispute_history": {
     "total_disputes": 5,
     "upheld_against": 1,
-    "rejected": 4
+    "rejected": 4,
+    "open_disputes": 11
   },
   "fraud_flags": 0,
-  "vehicle": "Toyota Prius (SNX 4821 K)"
+  "name": "Ong Kai Wen",
+  "account_created_at": "2025-05-05T00:00:00+08:00",
+  "vehicle": "Toyota Prius (SNX 4821 K)",
+  "vehicle_color": "White",
+  "profile_as_of": "2026-10-15"
 }

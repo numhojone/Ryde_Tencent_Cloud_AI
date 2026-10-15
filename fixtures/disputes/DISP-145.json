@@ -1,0 +1,13 @@
+{
+  "dispute_id": "DISP-145",
+  "_source": "Synthetic (ticket ids and parties from the team's 60-ticket file)",
+  "trip_id": "TRIP-2026-2045",
+  "filed_by": "rider",
+  "rider_id": "R-7823",
+  "driver_id": "D-3456",
+  "dispute_type": "property_damage",
+  "description": "I was charged the maximum S$50 cleaning fee after my trip from Buona Vista MRT to Yishun Northpoint on 30 September. The car was not that dirty. Please reverse it.",
+  "filed_at": "2026-09-30T21:26:00+08:00",
+  "requested_resolution": "reverse_cleaning_fee",
+  "requested_amount": 50.0
+}

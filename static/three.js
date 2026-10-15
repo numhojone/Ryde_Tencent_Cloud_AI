@@ -18,7 +18,6 @@ Object.assign(R.I18N.en, {
   tpRiderEmpty:'Tell us what happened.', tpRiderPh:'Type a message', tpSend:'Send',
   tpRoomEmpty:'Waiting for a case. The agents start once the rider confirms which trip it is about.',
   tpNoCases:'No cases need review', tpNoCasesSub:'Cases appear here only when the policy or the safety net needs a person.',
-  tpRiderConsole:'The support console is for support agents. To handle this case, open a private window and sign in as Support agent.',
   tpAsk:'Ask about this case', tpAskPh:'e.g. did the driver tell the rider about the route change?',
   tpCheck:'Check wording', tpYouWrote:'You wrote', tpSentAs:'Will be sent as', tpEdit:'Back to edit', tpConfirmAsk:'Confirm and ask',
   tpUnchanged:'Already clear, sent unchanged.', tpChanged:'Spelling, grammar and tone tidied; the meaning is unchanged. You can still edit it.',
@@ -26,9 +25,8 @@ Object.assign(R.I18N.en, {
   tpAmount:'Refund amount (S$)', tpCancel:'Cancel', tpSubmitDecision:'Submit decision',
   tpNoteOpt:'Note to the rider (optional)', tpNoteReq:'Note to the rider (required)', tpNoteInfo:'What do you need from the rider? (required)',
   tpErrNote:'Please write a note.', tpErrAmt:'Please enter an amount of 0 or more.',
-  tpSignOut:'Sign out', tpSignedIn:(n, id) => `Signed in as ${n} (${id})`, tpSignedSupport:'Signed in as Support agent',
-  tpSupportView:"Viewing as support agent. The rider's conversation for the open case is shown read-only.",
-  tpQueue:'Cases for review', tpOpen:'Open', tpOpened:'Open now',
+  tpSignOut:'Sign out',
+  tpQueue:'Your cases for review', tpOpen:'Open', tpOpened:'Open now',
   sRyde:'Ryde', sSupport:'Ryde Support', sYou:'You',
   hello:n => `Hi ${n}. Tell us what happened.`, finding:'Finding your trip…',
   isThis:'Is this the one?', yes:'Yes, this one', noOther:'No, pick another', pickOne:'Choose this trip',
@@ -56,15 +54,19 @@ Object.assign(R.I18N.en, {
   dbDone:'Decision recorded. The rider has been told.', dbDecided:'Decision', riderSays:'Rider',
   errGeneric:'Something went wrong. Please try again.',
   tpDriver:'Driver', tgTitle:'View as', drvHelp:'Driver inbox',
-  drvIntro:'You will only see questions from Ryde Support here.', drvEmpty:'No questions from Ryde Support right now.',
-  drvPickLbl:'View as driver (demo accounts)', drvPickBtn:'Open driver inbox', drvPh:'Reply to Ryde Support',
-  drvNoPending:'There is no question waiting for a reply.', drvRider:n => `Rider: ${n}`,
-  drvSignedIn:(n, id) => `Signed in as driver ${n} (${id})`, drvAck:'Thanks. Your reply has been sent to Ryde Support.',
+  drvIntro:'You will only see questions from Ryde Support here.', drvEmpty:'No questions from Ryde Support right now.', drvPh:'Reply to Ryde Support',
+  drvNoPending:'There is no question waiting for a reply.', drvRider:n => `Rider: ${n}`, drvAck:'Thanks. Your reply has been sent to Ryde Support.',
   askTo:'If the record has no answer, ask', askToShort:'Ask', askAuto:'Auto', askRider:'Rider', askDriver:'Driver',
   willReceive:p => `The ${p} will receive`, toRider:'To rider', toDriver:'To driver', fromRecord:'From the record',
   qaSent:'Sent', qaAnsweredLbl:'Answered', driverReplied:'Driver replied', riderReplied:'Rider replied',
   driverPending:'A driver reply is still pending.', riderPending:'A rider reply is still pending.',
   smDriverReplies:'Driver replies',
+  catRoute:'Route', catNoShow:'Cancellation fee', catDamage:'Cleaning or damage fee', catSafety:'Safety',
+  tpSignedInAs:d => `Signed in as ${d}`, drvDriver:d => `Driver: ${d}`,
+  drvNoCaseMsg:'The driver view shows the driver of your active case once a case is open.',
+  mismatch:(t, s) => `The ticket for this ride is a ${t}, but your story sounds like a ${s}. Continue with this ride as a ${t}?`,
+  mmYes:t => `Yes, continue as ${t}`, existingCase:r => `This ride already has a case (${r}). Opening it.`,
+  tpRiderConsole:'Your cases that need a person appear here. In this demo the console works on your own cases only.',
 });
 Object.assign(R.I18N.zh, {
   tpTitle:'Ryde 客服 | 三栏演示', tpTag:'乘客、智能体与客服，同一案件实时联动',
@@ -73,7 +75,6 @@ Object.assign(R.I18N.zh, {
   tpRiderEmpty:'告诉我们发生了什么。', tpRiderPh:'输入消息', tpSend:'发送',
   tpRoomEmpty:'等待案件。乘客确认是哪一趟行程后，智能体才会开始工作。',
   tpNoCases:'暂无需要审核的案件', tpNoCasesSub:'只有政策或安全网要求人工处理的案件才会出现在这里。',
-  tpRiderConsole:'客服工作台仅供客服专员使用。如需处理此案件，请打开无痕窗口并以客服专员身份登录。',
   tpAsk:'就本案提问', tpAskPh:'例如：司机有没有告诉乘客改道？',
   tpCheck:'检查措辞', tpYouWrote:'您输入的', tpSentAs:'将发送为', tpEdit:'返回修改', tpConfirmAsk:'确认并提问',
   tpUnchanged:'表述已清楚，原样发送。', tpChanged:'已修正拼写、语法和语气，含义不变。仍可修改。',
@@ -81,9 +82,8 @@ Object.assign(R.I18N.zh, {
   tpAmount:'退款金额（S$）', tpCancel:'取消', tpSubmitDecision:'提交决定',
   tpNoteOpt:'给乘客的备注（可选）', tpNoteReq:'给乘客的备注（必填）', tpNoteInfo:'需要乘客提供什么？（必填）',
   tpErrNote:'请填写备注。', tpErrAmt:'请输入 0 或以上的金额。',
-  tpSignOut:'退出登录', tpSignedIn:(n, id) => `已登录：${n}（${id}）`, tpSignedSupport:'已登录：客服专员',
-  tpSupportView:'以客服专员身份查看。左侧只读显示当前案件中乘客的对话。',
-  tpQueue:'待审核案件', tpOpen:'打开', tpOpened:'正在查看',
+  tpSignOut:'退出登录',
+  tpQueue:'您的待审核案件', tpOpen:'打开', tpOpened:'正在查看',
   sRyde:'Ryde', sSupport:'Ryde 客服', sYou:'我',
   hello:n => `${n}，您好。请告诉我们发生了什么。`, finding:'正在查找您的行程…',
   isThis:'是这一趟吗？', yes:'是，就是这趟', noOther:'不是，选其他行程', pickOne:'选择这趟行程',
@@ -109,15 +109,19 @@ Object.assign(R.I18N.zh, {
   dbDone:'决定已记录，并已通知乘客。', dbDecided:'决定', riderSays:'乘客',
   errGeneric:'出错了，请重试。',
   tpDriver:'司机', tgTitle:'查看身份', drvHelp:'司机消息',
-  drvIntro:'这里只会显示 Ryde 客服向您提出的问题。', drvEmpty:'目前没有来自 Ryde 客服的问题。',
-  drvPickLbl:'以司机身份查看（演示账户）', drvPickBtn:'打开司机消息', drvPh:'回复 Ryde 客服',
-  drvNoPending:'目前没有待回复的问题。', drvRider:n => `乘客：${n}`,
-  drvSignedIn:(n, id) => `已登录司机：${n}（${id}）`, drvAck:'谢谢，您的回复已发送给 Ryde 客服。',
+  drvIntro:'这里只会显示 Ryde 客服向您提出的问题。', drvEmpty:'目前没有来自 Ryde 客服的问题。', drvPh:'回复 Ryde 客服',
+  drvNoPending:'目前没有待回复的问题。', drvRider:n => `乘客：${n}`, drvAck:'谢谢，您的回复已发送给 Ryde 客服。',
   askTo:'若记录中没有答案，询问', askToShort:'询问', askAuto:'自动', askRider:'乘客', askDriver:'司机',
   willReceive:p => `${p === 'driver' ? '司机' : '乘客'}将收到`, toRider:'发给乘客', toDriver:'发给司机', fromRecord:'来自记录',
   qaSent:'已发送', qaAnsweredLbl:'已回答', driverReplied:'司机回复', riderReplied:'乘客回复',
   driverPending:'仍在等待司机回复。', riderPending:'仍在等待乘客回复。',
   smDriverReplies:'司机回复',
+  catRoute:'路线', catNoShow:'取消费', catDamage:'清洁或损坏费', catSafety:'安全',
+  tpSignedInAs:d => `已登录：${d}`, drvDriver:d => `司机：${d}`,
+  drvNoCaseMsg:'打开案件后，这里会显示当前案件的司机。',
+  mismatch:(t, s) => `这趟行程的工单类型是「${t}」，但您的描述听起来像「${s}」。是否仍按「${t}」处理这趟行程？`,
+  mmYes:t => `是，按「${t}」继续`, existingCase:r => `这趟行程已有案件（${r}），正在打开。`,
+  tpRiderConsole:'需要人工处理的您的案件会出现在这里。本演示中工作台只处理您本人的案件。',
 });
 const T = R.T, CUR = 'S$';
 const $ = id => document.getElementById(id);
@@ -127,9 +131,10 @@ const money = v => (typeof v === 'number' && isFinite(v)) ? CUR + v.toFixed(2) :
 let me = null, health = null;
 let caseId = null, status = null, streams = [], summary = null, qa = {}, busy = false;
 let roomWorking = false, askBusy = false, decisionAction = null;
-let stage = 'describe', storyParts = [], finding = false, queueTimer = null;
-let view = 'rider', driverStream = null, driverQs = {}, toggleTimer = null, toggleState = null;
-const isSupport = () => me && me.role === 'support';
+let stage = 'describe', storyParts = [], finding = false, queueTimer = null, showInitial = false;
+let view = 'rider', driverCases = [], driverTimer = null;
+let askedQs = [], understoodType = null;             // stage 1: clarifying questions already asked, the understood type
+const driverWaiting = () => driverCases.reduce((n, c) => n + (c.waiting || 0), 0);
 const HUMAN_ST = ['with_agent', 'waiting_for_rider', 'waiting_for_driver', 'waiting_for_both'];
 const riderWaiting = st => st === 'waiting_for_rider' || st === 'waiting_for_both';
 
@@ -141,9 +146,8 @@ function setLive(pane, key, tone){
 }
 function refreshLive(){
   const inp = $('riderInput');
-  if (isSupport()) setLive('rider', 'readonly', 'idle');
-  else if (view === 'driver'){
-    const waiting = Object.values(driverQs).some(q => q.status === 'waiting');
+  if (view === 'driver'){
+    const waiting = driverWaiting() > 0;
     setLive('rider', waiting ? 'replyNeeded' : 'online', waiting ? 'attn' : 'idle');
   }
   else if (finding) setLive('rider', 'finding', 'busy');
@@ -156,8 +160,7 @@ function refreshLive(){
   else if (caseId && status !== 'intake') setLive('room', 'done', 'ok');
   else setLive('room', 'idle');
 
-  if (!isSupport()) setLive('human', 'idle');                 // riders and drivers never see the console
-  else if (askBusy) setLive('human', 'answering', 'busy');
+  if (askBusy) setLive('human', 'answering', 'busy');
   else if (status === 'with_agent') setLive('human', 'review', 'attn');
   else if (status === 'waiting_for_driver') setLive('human', 'waitingDriver', 'busy');
   else if (status === 'waiting_for_both') setLive('human', 'waitingBoth', 'busy');
@@ -193,15 +196,14 @@ async function api(path, body){
 /* ---------------------------------------------------------------- streams */
 function subscribe(id){
   closeStreams();
-  ['rider', 'room', 'human'].forEach(pane => {
-    if (pane === 'human' && !isSupport()) return;          // riders never receive the console's events
+  ['rider', 'room', 'human', 'driver'].forEach(pane => {
     const es = new EventSource(`/api/cases/${encodeURIComponent(id)}/events`);
     es.onmessage = e => {
       let ev; try { ev = JSON.parse(e.data); } catch (err){ return; }
       if (ev.case_id !== caseId) return;
       if (ev.pane === 'case'){ if (pane === 'rider') onStatus(ev); return; }   // status: handled once
       if (ev.pane !== pane) return;
-      ({rider: onRider, room: onRoom, human: onHuman})[pane](ev);
+      ({rider: onRider, room: onRoom, human: onHuman, driver: onDriver})[pane](ev);
       ping(pane);
     };
     streams.push(es);
@@ -218,7 +220,7 @@ function onStatus(ev){
   riderTyping(ev.status === 'intake' || ev.status === 'in_review');
   if (summary) renderSummary();
   syncDecisionBar(); syncRiderInput();
-  if (isSupport()) renderQueue();
+  loadQueue();
   refreshLive();
 }
 
@@ -248,7 +250,7 @@ function riderTyping(on, label){
 function onRider(ev){
   switch (ev.type){
     case 'rider_message':
-      if (ev.initial && !isSupport()) break;           // already in the rider's own chat from stage 1
+      if (ev.initial && !showInitial) break;           // already in the rider's own chat from stage 1
       riderRow('right', null, 'me').textContent = ev.text; break;
     case 'assistant_message': riderRow('left', T('sRyde')).textContent = ev.text; break;
     case 'support_typing': riderTyping(true); break;
@@ -315,29 +317,97 @@ function showConfirm(res){
   });
   row.appendChild(yes); row.appendChild(no); b.appendChild(row);
 }
+/* the story sounds like another kind of dispute than the ticket on the chosen ride: ask, never override */
+function showMismatch(c, mm){
+  const b = riderRow('left', T('sRyde'), 'picker');
+  b.appendChild(mk('p', null, T('mismatch')(mm.ticket_label, mm.story_label)));
+  const row = mk('div', 'tc-actions');
+  const yes = mk('button', 'btn primary', T('mmYes')(mm.ticket_label)); yes.type = 'button';
+  yes.addEventListener('click', () => { disableCards(b); chooseTrip(c, true); });
+  const no = mk('button', 'btn', T('noOther')); no.type = 'button';
+  no.addEventListener('click', () => { disableCards(b); storyParts.length && findTripList(); });
+  row.appendChild(yes); row.appendChild(no); b.appendChild(row);
+  riderScroll();
+}
+async function findTripList(){
+  try {
+    const res = await api('/api/rider/find-trip', {story: 'Show me all my rides.', lang: R.getLang()});
+    showPicker(res.message, res.candidates || []);
+  } catch (e){ riderRow('left', T('sRyde'), 'error').textContent = e.message; }
+  riderScroll();
+}
 function disableCards(scope){ (scope || riderChat).querySelectorAll('.picker button').forEach(x => { x.disabled = true; }); }
 
-async function findTrip(){
+/* every intake answer says where it came from: the model ("Live AI") or the keyword fallback, with the reason */
+function intakeBadge(bubble, intake){
+  if (!intake || !intake.badge) return;
+  const b = mk('span', 'intake-badge ' + (intake.source === 'llm' ? 'live' : intake.source === 'rider_choice' ? 'choice' : 'rules'), intake.badge);
+  if (intake.reason) b.title = intake.reason;
+  bubble.parentElement.insertBefore(b, bubble);
+}
+function showNotice(text){
+  const n = mk('div', 'rm-notice', text); n.setAttribute('role', 'status');
+  riderChat.insertBefore(n, $('riderTyping') || null);
+}
+function showCategoryButtons(res){
+  const b = riderRow('left', T('sRyde'), 'picker');
+  b.appendChild(mk('p', null, res.message));
+  const row = mk('div', 'tc-actions');
+  [['route_deviation', 'catRoute'], ['no_show_charge', 'catNoShow'], ['property_damage', 'catDamage'], ['safety_incident', 'catSafety']]
+    .forEach(([type, key]) => {
+      const btn = mk('button', 'btn', T(key)); btn.type = 'button';
+      btn.addEventListener('click', () => { disableCards(b); riderRow('right', null, 'me').textContent = T(key); findTrip(type); });
+      row.appendChild(btn);
+    });
+  b.appendChild(row);
+  intakeBadge(b, res.intake);
+}
+async function findTrip(category){
   finding = true; refreshLive(); riderTyping(true, T('finding'));
   try {
-    const res = await api('/api/rider/find-trip', {story: storyParts.join('\n'), lang: R.getLang()});
+    // the whole conversation every time: a later message adds to the earlier ones
+    const res = await api('/api/rider/find-trip', {messages: storyParts, asked: askedQs, category: category || null,
+                                                   mode: $('modeSelect').value, lang: R.getLang()});
     riderTyping(false);
-    if (res.state === 'clarify') riderRow('left', T('sRyde')).textContent = res.message;
+    if (res.intake && res.intake.notice) showNotice(res.intake.notice);
+    understoodType = res.intake && res.intake.dispute_type !== 'unclear' ? res.intake.dispute_type : null;
+    let bubble = null;
+    if (res.state === 'clarify' || res.state === 'foreign'){
+      bubble = riderRow('left', T('sRyde')); bubble.textContent = res.message;
+      if (res.state === 'clarify') askedQs.push(res.message);
+      if (res.state === 'foreign'){ storyParts = []; askedQs = []; }          // that story is dropped, not matched later
+    }
+    else if (res.state === 'choose_category'){ showCategoryButtons(res); return; }
     else if (res.state === 'none') showPicker(res.message, res.recent || []);
+    else if (res.state === 'list') showPicker(res.message, res.candidates || []);
     else if (res.state === 'confirm') showConfirm(res);
     else showPicker(res.message, res.candidates || []);
+    if (!bubble){ const all = riderChat.querySelectorAll('.rm.left .rm-bubble'); bubble = all[all.length - 1]; }
+    if (bubble) intakeBadge(bubble, res.intake);
   } catch (e){
     riderTyping(false); riderRow('left', T('sRyde'), 'error').textContent = e.message;
   } finally { finding = false; refreshLive(); riderScroll(); }
 }
 
-async function chooseTrip(c){
+async function chooseTrip(c, confirmType){
   if (busy || caseId) return;
   disableCards();
-  riderRow('right', null, 'me').textContent = T('chose')(tripLabel(c));
+  if (!confirmType) riderRow('right', null, 'me').textContent = T('chose')(tripLabel(c));
   busy = true; syncRiderInput();
   try {
-    const snap = await api('/api/cases', {story: storyParts.join('\n'), trip_id: c.trip_id, mode: $('modeSelect').value, lang: R.getLang()});
+    const r = await fetch('/api/cases', {method: 'POST', headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({story: storyParts.join('\n'), trip_id: c.trip_id, mode: $('modeSelect').value, lang: R.getLang(),
+                            confirm_type: !!confirmType, category: understoodType})});
+    if (r.status === 401){ location.href = '/'; return; }
+    const snap = await r.json();
+    if (r.status === 409 && snap.mismatch){ showMismatch(c, snap.mismatch); return; }
+    if (!r.ok) throw new Error(snap.detail || T('errGeneric'));
+    if (snap.existing){                                   // this ride already has a case: open that one
+      busy = false; openCase(snap.id);
+      riderRow('left', T('sRyde')).textContent = T('existingCase')(snap.reference);
+      return;
+    }
+    showInitial = false;
     caseId = snap.id; status = snap.status; roomWorking = true; stage = 'case';
     R.reset(); $('chat').querySelectorAll('.empty-state').forEach(n => n.remove());
     subscribe(caseId);
@@ -348,7 +418,7 @@ async function chooseTrip(c){
 
 async function sendRider(text){
   text = (text || '').trim();
-  if (!text || busy || finding || isSupport()) return;
+  if (!text || busy || finding) return;
   if (view === 'driver') return sendDriverReply(text);
   if (caseId && (status === 'resolved_by_ai' || status === 'resolved_by_human')) resetCase();
   busy = true; $('riderSend').disabled = true;
@@ -370,8 +440,8 @@ async function sendRider(text){
   }
 }
 function syncRiderInput(){
-  const noQuestion = view === 'driver' && !Object.values(driverQs).some(q => q.status === 'waiting');
-  $('riderSend').disabled = busy || finding || isSupport() || noQuestion;
+  const noQuestion = view === 'driver' && driverWaiting() === 0;
+  $('riderSend').disabled = busy || finding || noQuestion;
 }
 
 function growRider(){ const i = $('riderInput'); i.style.height = 'auto'; i.style.height = Math.min(120, Math.max(42, i.scrollHeight)) + 'px'; }
@@ -399,28 +469,27 @@ function roomIdle(){
 /* ---------------------------------------------------------------- RIGHT: support console */
 function onHuman(ev){
   if (ev.type === 'case_escalated' || ev.type === 'summary'){ summary = ev.summary; renderSummary(); showConsole(); }
-  else if (ev.type === 'qa'){ qa[ev.entry.id] = ev.entry; renderQA(); }
+  else if (ev.type === 'qa'){ qa[ev.entry.id] = ev.entry; renderQA(); renderBadges(); }
   else if (ev.type === 'rider_message'){ qa['r' + ev.seq] = {id: 'r' + ev.seq, kind: 'rider', text: ev.text, at: ev.at}; renderQA(); }
   else if (ev.type === 'decision'){ renderDecided(ev.decision); }
   syncDecisionBar(); refreshLive();
 }
 function showConsole(){ $('consoleIdle').hidden = true; $('consoleCase').hidden = false; }
 
-/* support: the queue of cases handed to a person, from any rider */
+/* the console's queue: this rider's own cases that were handed to a person */
 let queue = [];
 async function loadQueue(){
-  try { queue = (await api('/api/cases')).cases || []; } catch (e) { return; }
+  try { queue = ((await api('/api/cases')).cases || []).filter(c => c.escalated); } catch (e) { return; }
   renderQueue();
 }
 function renderQueue(){
-  if (!isSupport()) return;
   const box = $('queue'), list = $('queueList');
   box.hidden = !queue.length; list.innerHTML = '';
   queue.slice().reverse().forEach(c => {
     const st = c.id === caseId ? status : c.status;
     const b = mk('button', 'q-item' + (c.id === caseId ? ' on' : '')); b.type = 'button';
     b.appendChild(mk('span', 'q-ref', c.reference));
-    b.appendChild(mk('span', 'q-meta', [c.rider_id, R.typeLabel(c.dispute_type || ''), c.trip_id].filter(Boolean).join(' · ')));
+    b.appendChild(mk('span', 'q-meta', [R.typeLabel(c.dispute_type || ''), c.trip_id].filter(Boolean).join(' · ')));
     b.appendChild(mk('span', 'q-st q-' + st, (T('hs') || {})[st] || st));
     b.setAttribute('aria-current', c.id === caseId ? 'true' : 'false');
     b.addEventListener('click', () => openCase(c.id));
@@ -431,7 +500,7 @@ function renderQueue(){
 function openCase(id){
   if (id === caseId) return;
   clearCaseViews();
-  caseId = id; roomWorking = false;
+  caseId = id; roomWorking = false; showInitial = true;     // an earlier case: replay its whole conversation
   R.reset(); $('chat').querySelectorAll('.empty-state').forEach(n => n.remove());
   subscribe(id); renderQueue();
 }
@@ -603,7 +672,7 @@ function syncDecisionBar(){
   const pendR = Object.values(qa).filter(e => e.status === 'asked_rider').length;
   $('dbPending').textContent = [pend ? T('driverPending') : '', pendR ? T('riderPending') : ''].filter(Boolean).join(' ');
   $('dbPending').hidden = !(pend || pendR);
-  bar.hidden = !(isSupport() && summary && (open || status === 'resolved_by_human'));
+  bar.hidden = !(summary && (open || status === 'resolved_by_human'));
   bar.querySelectorAll('.db-buttons button').forEach(b => { b.disabled = !open; });
   bar.querySelector('.db-buttons').hidden = status === 'resolved_by_human';
   $('dbApprove').disabled = !open || !(summary && summary.recommendation);
@@ -660,25 +729,18 @@ function renderFills(){
   });
 }
 function renderIdentity(){
-  if (isSupport()) $('whoami').textContent = T('tpSignedSupport');
-  else if (me.role === 'driver') $('whoami').textContent = T('drvSignedIn')(me.name || me.driver_id, me.driver_id);
-  else $('whoami').textContent = T('tpSignedIn')(me.name || me.rider_id, me.rider_id);
+  // name and id exactly as in the dataset, e.g. "Wong Mei Ling (R-3312)"
+  $('whoami').textContent = T('tpSignedInAs')(me.display);
 }
 function greet(){
-  if (isSupport() || !me.rider_id) return;
-  riderRow('left', T('sRyde')).textContent = T('hello')(me.name || me.rider_id);
+  riderRow('left', T('sRyde')).textContent = T('hello')(me.display);
 }
 
-/* ---------------------------------------------------------------- LEFT: driver view (receive and reply only) */
+/* ---------------------------------------------------------------- LEFT: driver view (receive and reply only)
+   A demo pane of the signed-in rider's own cases: each case shows its own driver (resolved on the server from
+   the trip), support's questions, and the reply box. No driver login, no driver chooser. */
 const driverChat = $('driverChat');
 function driverScroll(){ driverChat.scrollTop = driverChat.scrollHeight; }
-function driverRow(side, sender, cls){
-  const row = mk('div', `rm ${side}` + (cls ? ' ' + cls : ''));
-  if (sender) row.appendChild(mk('div', 'rm-who', sender));
-  const b = mk('div', 'rm-bubble'); row.appendChild(b);
-  driverChat.insertBefore(row, $('driverTyping') || null);
-  return b;
-}
 function driverTyping(on){
   let t = $('driverTyping');
   if (on && !t){
@@ -689,64 +751,66 @@ function driverTyping(on){
   } else if (!on && t) t.remove();
   driverScroll();
 }
-function renderDriverQuestion(q){
-  driverQs[q.id] = q;
-  let host = driverChat.querySelector(`[data-qid="${CSS.escape(q.id)}"]`);
-  if (!host){ host = mk('div', 'drv-q'); host.dataset.qid = q.id; driverChat.insertBefore(host, $('driverTyping') || null); }
-  host.innerHTML = '';
-  const row = mk('div', 'rm left support'); row.appendChild(mk('div', 'rm-who', `${T('sSupport')} · ${q.reference}`));
-  const b = mk('div', 'rm-bubble');
-  const card = mk('div', 'tc drv-trip');
-  card.appendChild(mk('div', 'tc-route', `${q.trip.pickup || '?'} → ${q.trip.dropoff || '?'}`));
-  card.appendChild(mk('div', 'tc-meta', [R.fmtTime(q.trip.date), q.rider_first_name ? T('drvRider')(q.rider_first_name) : null].filter(Boolean).join(' · ')));
-  b.appendChild(card);
-  b.appendChild(mk('p', 'drv-text', q.text));
-  row.appendChild(b); host.appendChild(row);
-  if (q.reply){
-    const me_ = mk('div', 'rm right me'); const rb = mk('div', 'rm-bubble', q.reply.text); me_.appendChild(rb); host.appendChild(me_);
-    const ack = mk('div', 'rm left'); ack.appendChild(mk('div', 'rm-who', 'Ryde')); ack.appendChild(mk('div', 'rm-bubble', T('drvAck'))); host.appendChild(ack);
-  }
-  $('driverEmpty').hidden = Object.keys(driverQs).length > 0;
-  driverScroll(); syncRiderInput(); refreshLive();
+function renderDriverView(){
+  driverChat.querySelectorAll('.drv-case, .drv-err').forEach(n => n.remove());
+  // the active case first, then the rider's other cases
+  const cases = driverCases.slice().sort((a, b) => (b.case_id === caseId) - (a.case_id === caseId));
+  cases.forEach(c => {
+    if (c.case_id !== caseId && !c.questions.length) return;
+    const host = mk('section', 'drv-case'); host.dataset.case = c.case_id;
+    const head = mk('div', 'drv-head');
+    head.appendChild(mk('span', 'drv-name', T('drvDriver')(`${c.driver.name} (${c.driver.id})`)));
+    head.appendChild(mk('span', 'drv-ref', c.reference));
+    host.appendChild(head);
+    const card = mk('div', 'tc drv-trip');
+    card.appendChild(mk('div', 'tc-route', `${c.trip.pickup || '?'} → ${c.trip.dropoff || '?'}`));
+    card.appendChild(mk('div', 'tc-meta', R.fmtTime(c.trip.date)));
+    host.appendChild(card);
+    c.questions.forEach(q => {
+      const row = mk('div', 'rm left support'); row.appendChild(mk('div', 'rm-who', `${T('sSupport')} · ${q.reference}`));
+      const b = mk('div', 'rm-bubble');
+      if (q.rider_first_name) b.appendChild(mk('div', 'drv-rider', T('drvRider')(q.rider_first_name)));
+      b.appendChild(mk('p', 'drv-text', q.text));
+      row.appendChild(b); host.appendChild(row);
+      if (q.reply){
+        const me_ = mk('div', 'rm right me'); me_.appendChild(mk('div', 'rm-bubble', q.reply.text)); host.appendChild(me_);
+        const ack = mk('div', 'rm left'); ack.appendChild(mk('div', 'rm-who', 'Ryde')); ack.appendChild(mk('div', 'rm-bubble', T('drvAck')));
+        host.appendChild(ack);
+      }
+    });
+    driverChat.insertBefore(host, $('driverTyping') || null);
+  });
+  $('driverEmpty').hidden = driverCases.some(c => c.questions.length);
+  $('driverNoCase').hidden = driverCases.some(c => c.case_id === caseId);
+  driverScroll(); syncRiderInput(); refreshLive(); renderBadges();
 }
-async function loadDriverInbox(){
-  driverChat.querySelectorAll('.drv-q').forEach(n => n.remove());
-  driverQs = {};
-  $('driverPick').hidden = true;
-  try {
-    const d = await api('/api/driver/questions');
-    (d.questions || []).forEach(renderDriverQuestion);
-  } catch (e){ return; }
-  $('driverEmpty').hidden = Object.keys(driverQs).length > 0;
-  if (driverStream) driverStream.close();
-  driverStream = new EventSource('/api/driver/events');
-  driverStream.onmessage = e => {
-    let ev; try { ev = JSON.parse(e.data); } catch (err){ return; }
-    if (ev.type === 'support_typing') driverTyping(true);
-    else if (ev.type === 'driver_question'){ driverTyping(false); renderDriverQuestion(ev.question); }
-    else if (ev.type === 'driver_reply_ack') renderDriverQuestion(ev.question);
-    if (view !== 'driver') pollToggle();
-  };
-  syncRiderInput();
+async function loadDriverView(){
+  try { driverCases = (await api('/api/driver-view')).cases || []; } catch (e){ return; }
+  renderDriverView();
+}
+function onDriver(ev){
+  if (ev.type === 'support_typing') driverTyping(true);
+  else { driverTyping(false); loadDriverView(); }
 }
 async function sendDriverReply(text){
-  const waiting = Object.values(driverQs).filter(q => q.status === 'waiting');
-  if (!waiting.length){ driverRow('left', 'Ryde', 'error').textContent = T('drvNoPending'); return; }
+  // the newest waiting question, on the active case first
+  const order = driverCases.slice().sort((a, b) => (b.case_id === caseId) - (a.case_id === caseId));
+  let target = null;
+  for (const c of order){
+    const w = c.questions.filter(q => q.status === 'waiting');
+    if (w.length){ target = {case_id: c.case_id, question_id: w[w.length - 1].id}; break; }
+  }
+  if (!target){ const e = mk('div', 'rm left drv-err'); e.appendChild(mk('div', 'rm-bubble', T('drvNoPending'))); driverChat.appendChild(e); return; }
   busy = true; syncRiderInput();
   try {
-    const r = await api('/api/driver/reply', {text, question_id: waiting[waiting.length - 1].id});
-    renderDriverQuestion(r.question);
+    await api('/api/driver-view/reply', {...target, text});
     $('riderInput').value = ''; growRider();
-    pollToggle();
-  } catch (e){ driverRow('left', 'Ryde', 'error').textContent = e.message; }
+    await loadDriverView();
+  } catch (e){ const n = mk('div', 'rm left drv-err'); n.appendChild(mk('div', 'rm-bubble', e.message)); driverChat.appendChild(n); }
   finally { busy = false; syncRiderInput(); refreshLive(); $('riderInput').focus(); }
 }
 
-/* the Rider | Driver toggle (demo): the server switches the session role; the rider session is kept inside */
-async function switchRole(body){
-  await api('/api/session/role', body);
-  me = await api('/api/auth/me');
-}
+/* the Rider | Driver toggle: only switches which view of the rider's own cases is shown */
 function applyView(v){
   view = v;
   $('tgRider').setAttribute('aria-pressed', v === 'rider' ? 'true' : 'false');
@@ -757,52 +821,20 @@ function applyView(v){
   $('riderInput').placeholder = v === 'driver' ? T('drvPh') : T('tpRiderPh');
   const stories = ((me && me.stories) || []).length;
   $('fills').hidden = v === 'driver'; document.querySelector('.tp-fill-lbl').hidden = v === 'driver' || !stories;
-  renderIdentity(); syncRiderInput(); refreshLive();
+  syncRiderInput(); refreshLive();
   $('riderInput').focus();
 }
 async function setView(v){
-  if (v === view || busy) return;
-  try {
-    if (v === 'driver'){
-      if (me.role === 'rider'){
-        if (caseId) await switchRole({role: 'driver', case_id: caseId});
-        else { applyView('driver'); showDriverPick(); return; }       // no open case: pick a demo driver
-      }
-      applyView('driver'); await loadDriverInbox();
-    } else {
-      if (me.role === 'driver'){
-        if (!me.home) return;
-        await switchRole({role: 'rider'});
-      }
-      if (driverStream){ driverStream.close(); driverStream = null; }
-      applyView('rider');
-    }
-  } catch (e){ (v === 'driver' ? driverRow : riderRow)('left', 'Ryde', 'error').textContent = e.message; }
-  pollToggle();
+  if (v === view) return;
+  applyView(v);
+  if (v === 'driver') await loadDriverView();
 }
-function showDriverPick(){
-  const sel = $('driverPickSelect'); sel.innerHTML = '';
-  ((toggleState && toggleState.drivers) || []).forEach(d => {
-    const o = mk('option', null, `${d.name} (${d.driver_id})`); o.value = d.driver_id; sel.appendChild(o);
-  });
-  $('driverPick').hidden = false; $('driverEmpty').hidden = true;
-}
-$('driverPickBtn').addEventListener('click', async () => {
-  try { await switchRole({role: 'driver', driver_id: $('driverPickSelect').value}); applyView('driver'); await loadDriverInbox(); }
-  catch (e){ driverRow('left', 'Ryde', 'error').textContent = e.message; }
-  pollToggle();
-});
 $('tgRider').addEventListener('click', () => setView('rider'));
 $('tgDriver').addEventListener('click', () => setView('driver'));
-function badge(btn, n){ const b = btn.querySelector('.tg-badge'); b.hidden = !n; b.textContent = n || ''; btn.setAttribute('aria-label', btn.textContent.trim()); }
-async function pollToggle(){
-  if (isSupport()) return;
-  try { toggleState = await api('/api/session/toggle'); } catch (e){ return; }
-  $('roleToggle').hidden = !(toggleState.can_switch || me.role === 'driver');
-  $('riderTitle').hidden = !$('roleToggle').hidden;
-  $('tgRider').disabled = !toggleState.rider;
-  badge($('tgRider'), toggleState.rider ? toggleState.rider.pending : 0);
-  badge($('tgDriver'), toggleState.driver ? toggleState.driver.pending : 0);
+function badge(btn, n){ const b = btn.querySelector('.tg-badge'); b.hidden = !n; b.textContent = n || ''; }
+function renderBadges(){
+  badge($('tgRider'), Object.values(qa).filter(e => e.status === 'asked_rider').length);
+  badge($('tgDriver'), driverWaiting());
 }
 
 function clearCaseViews(){
@@ -814,14 +846,16 @@ function clearCaseViews(){
   $('consoleIdle').hidden = false; $('consoleCase').hidden = true;
   $('askConfirm').hidden = true; $('askForm').hidden = false; $('dbForm').hidden = true;
   const done = $('decisionBar').querySelector('.db-done'); if (done) done.remove();
+  renderBadges();
 }
 function resetCase(){
   clearCaseViews();
-  caseId = null; stage = 'describe'; storyParts = []; finding = false; busy = false;
+  caseId = null; stage = 'describe'; storyParts = []; finding = false; busy = false; showInitial = false;
+  askedQs = []; understoodType = null;
   roomIdle();
-  $('riderEmpty').hidden = !isSupport();
+  $('riderEmpty').hidden = true;
   greet();
-  if (isSupport()) renderQueue();
+  loadQueue(); loadDriverView();
   syncDecisionBar(); syncRiderInput(); refreshLive();
 }
 $('resetBtn').addEventListener('click', resetCase);
@@ -832,10 +866,8 @@ $('signOutBtn').addEventListener('click', async () => {
 });
 $('langSelect').addEventListener('change', e => {
   R.setLang(e.target.value); renderFills(); renderIdentity(); refreshLive();
-  if (!isSupport()) applyView(view);
-  Object.values(driverQs).forEach(renderDriverQuestion);
+  applyView(view); renderDriverView();
   if (status) $('tbStatus').textContent = (T('rs') || {})[status] || status;
-  if (!isSupport()) $('consoleIdleSub').textContent = T('tpRiderConsole');
   renderSummary(); renderQA(); renderQueue();
 });
 
@@ -843,23 +875,11 @@ async function boot(){
   $('langSelect').value = R.getLang();
   R.applyStatic();
   try { me = await api('/api/auth/me'); } catch (e) { return; }      // 401: api() already went to the login page
-  document.body.classList.toggle('as-support', isSupport());
   renderIdentity(); renderFills();
-  if (!isSupport()){ await pollToggle(); toggleTimer = setInterval(pollToggle, 2500); }
-  if (me.role === 'driver'){
-    $('consoleIdleSub').textContent = T('tpRiderConsole');
-    $('riderEmpty').hidden = true;
-    greet();
-    applyView('driver'); await loadDriverInbox();
-  } else if (isSupport()){
-    $('supportView').hidden = false; $('riderForm').hidden = true; $('riderEmpty').hidden = true;
-    showPane('human');
-    loadQueue(); queueTimer = setInterval(loadQueue, 3000);
-  } else {
-    $('consoleIdleSub').textContent = T('tpRiderConsole');
-    $('riderEmpty').hidden = true;
-    greet();
-  }
+  $('riderEmpty').hidden = true;
+  greet();
+  loadQueue(); queueTimer = setInterval(loadQueue, 4000);
+  loadDriverView(); driverTimer = setInterval(() => { if (view === 'driver' || caseId) loadDriverView(); }, 4000);
   refreshLive(); syncDecisionBar(); syncRiderInput();
   try {
     health = await api('/api/health');

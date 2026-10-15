@@ -1,0 +1,13 @@
+{
+  "dispute_id": "DISP-150",
+  "_source": "Synthetic (ticket ids and parties from the team's 60-ticket file)",
+  "trip_id": "TRIP-2026-2050",
+  "filed_by": "rider",
+  "rider_id": "R-7823",
+  "driver_id": "D-2398",
+  "dispute_type": "safety_incident",
+  "description": "It was late at night on 14 October on my ride from Great World to Paya Lebar Quarter. The driver turned into a dark industrial road I didn't know and would not explain. I was afraid and want this checked.",
+  "filed_at": "2026-10-15T01:13:00+08:00",
+  "requested_resolution": "safety_review",
+  "requested_amount": null
+}

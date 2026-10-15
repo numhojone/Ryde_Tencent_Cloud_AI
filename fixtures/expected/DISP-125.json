@@ -1,0 +1,21 @@
+{
+  "source": "computed from Policy v2.1 and the scenario parameters (build_dataset60.py), not by the app",
+  "scenario": "no_photos",
+  "ruling": "escalated",
+  "refund_amount": null,
+  "goodwill_credit": 0.0,
+  "clause": "safety_net",
+  "must_escalate": true,
+  "must_escalate_reason": [
+    "thin_evidence"
+  ],
+  "fraud_flag_party": false,
+  "rationale": "No photo evidence is on record, so the evidence base is too thin for an automatic ruling. Escalated (policy 4.4 would reject an unsupported claim).",
+  "facts": {
+    "claim_type": "cleaning",
+    "claimed_amount": 30.0,
+    "verifiable_photo": false,
+    "claim_in_24h": true,
+    "repair_quote": false
+  }
+}

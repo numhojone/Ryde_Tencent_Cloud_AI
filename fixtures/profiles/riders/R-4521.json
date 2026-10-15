@@ -1,14 +1,14 @@
 {
   "rider_id": "R-4521",
-  "account_age_days": 540,
-  "account_created_at": "2025-03-22T00:00:00+08:00",
-  "total_trips": 187,
+  "account_age_days": 573,
+  "total_trips": 203,
   "avg_rating": 4.8,
   "dispute_history": {
     "total_disputes": 2,
     "upheld": 1,
     "rejected": 1,
-    "last_dispute_date": "2026-07-10"
+    "last_dispute_date": "2026-07-10",
+    "open_disputes": 11
   },
   "fraud_flags": 0,
   "payment_method": "credit_card",
@@ -17,5 +17,8 @@
   "frequent_corridors": [
     "Orchard → Changi Airport",
     "CBD → Orchard"
-  ]
+  ],
+  "name": "Sarah Tan",
+  "account_created_at": "2025-03-21T00:00:00+08:00",
+  "profile_as_of": "2026-10-15"
 }

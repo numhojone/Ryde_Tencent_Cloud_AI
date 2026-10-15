@@ -1,0 +1,13 @@
+{
+  "dispute_id": "DISP-152",
+  "_source": "Synthetic (ticket ids and parties from the team's 60-ticket file)",
+  "trip_id": "TRIP-2026-2052",
+  "filed_by": "rider",
+  "rider_id": "R-9001",
+  "driver_id": "D-4410",
+  "dispute_type": "route_deviation",
+  "description": "On 23 September I took a Ryde from Clementi Mall to Serangoon NEX. The upfront estimate was about S$24.40 but I was charged S$32.04. The trip was about 5.0 km longer than the recommended route. Nobody told me why we left the normal route. I am requesting a refund of the excess fare.",
+  "filed_at": "2026-09-23T09:55:00+08:00",
+  "requested_resolution": "refund_excess_fare",
+  "requested_amount": 7.64
+}

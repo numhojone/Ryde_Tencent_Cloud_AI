@@ -1,0 +1,21 @@
+{
+  "source": "computed from Policy v2.1 and the scenario parameters (build_dataset60.py), not by the app",
+  "scenario": "repair_no_quote",
+  "ruling": "upheld",
+  "refund_amount": 140.0,
+  "goodwill_credit": 0.0,
+  "clause": "4.4",
+  "must_escalate": true,
+  "must_escalate_reason": [
+    "repair_claim"
+  ],
+  "fraud_flag_party": true,
+  "rationale": "The evidence does not meet policy 4.2 (timing, in-app camera, or link to the trip) or a required quote is missing. The claim is rejected and the fee reversed (policy 4.4). Repair claims always need human review (policy 6.1).",
+  "facts": {
+    "claim_type": "repair",
+    "claimed_amount": 140.0,
+    "verifiable_photo": true,
+    "claim_in_24h": true,
+    "repair_quote": false
+  }
+}

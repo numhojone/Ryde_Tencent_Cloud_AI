@@ -1,0 +1,13 @@
+{
+  "dispute_id": "DISP-142",
+  "_source": "Synthetic (ticket ids and parties from the team's 60-ticket file)",
+  "trip_id": "TRIP-2026-2042",
+  "filed_by": "rider",
+  "rider_id": "R-7823",
+  "driver_id": "D-7002",
+  "dispute_type": "route_deviation",
+  "description": "On 22 September I took a Ryde from Orchard Central to Pasir Ris Mall. The upfront estimate was about S$28.40 but I was charged S$34.16. The trip was about 3.8 km longer than the recommended route. The driver did not tell me about any route change or the reason. I am requesting a refund of the excess fare.",
+  "filed_at": "2026-09-22T12:20:00+08:00",
+  "requested_resolution": "refund_excess_fare",
+  "requested_amount": 5.76
+}

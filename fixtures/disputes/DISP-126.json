@@ -1,0 +1,13 @@
+{
+  "dispute_id": "DISP-126",
+  "_source": "Synthetic (ticket ids and parties from the team's 60-ticket file)",
+  "trip_id": "TRIP-2026-2026",
+  "filed_by": "rider",
+  "rider_id": "R-5120",
+  "driver_id": "D-2398",
+  "dispute_type": "property_damage",
+  "description": "The driver is claiming S$240 for damage to the car after my 2 October ride from Pasir Ris Mall to Chinatown Point. I did not damage anything. I am disputing the charge.",
+  "filed_at": "2026-10-02T18:54:00+08:00",
+  "requested_resolution": "reverse_damage_fee",
+  "requested_amount": 240.0
+}

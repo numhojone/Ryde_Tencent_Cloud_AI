@@ -1,0 +1,17 @@
+{
+  "source": "computed from Policy v2.1 and the scenario parameters (build_dataset60.py), not by the app",
+  "scenario": "unsafe_detour_night",
+  "ruling": "escalated",
+  "refund_amount": null,
+  "goodwill_credit": 0.0,
+  "clause": "5.1/5.2",
+  "must_escalate": true,
+  "must_escalate_reason": [
+    "safety_incident"
+  ],
+  "fraud_flag_party": true,
+  "rationale": "Safety-related dispute. AI may only gather evidence and prepare a case file. A human must review (policy 5.1, 5.2).",
+  "facts": {
+    "subtype": "unsafe_conduct"
+  }
+}

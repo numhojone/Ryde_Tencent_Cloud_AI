@@ -1,0 +1,13 @@
+{
+  "dispute_id": "DISP-114",
+  "_source": "Synthetic (ticket ids and parties from the team's 60-ticket file)",
+  "trip_id": "TRIP-2026-2014",
+  "filed_by": "rider",
+  "rider_id": "R-4521",
+  "driver_id": "D-2398",
+  "dispute_type": "no_show_charge",
+  "description": "My driver arrived at HarbourFront Centre very late on 26 September (the booking was for 16:50). I waited and then had to leave, and now I'm charged a S$5 no-show fee. Please reverse it.",
+  "filed_at": "2026-09-26T18:42:30+08:00",
+  "requested_resolution": "reverse_cancellation_fee",
+  "requested_amount": 5.0
+}

@@ -1,0 +1,19 @@
+{
+  "source": "computed from Policy v2.1 and the scenario parameters (build_dataset60.py), not by the app",
+  "scenario": "claim_filed_late",
+  "ruling": "upheld",
+  "refund_amount": 35.0,
+  "goodwill_credit": 0.0,
+  "clause": "4.4",
+  "must_escalate": false,
+  "must_escalate_reason": [],
+  "fraud_flag_party": true,
+  "rationale": "The evidence does not meet policy 4.2 (timing, in-app camera, or link to the trip) or a required quote is missing. The claim is rejected and the fee reversed (policy 4.4).",
+  "facts": {
+    "claim_type": "cleaning",
+    "claimed_amount": 35.0,
+    "verifiable_photo": true,
+    "claim_in_24h": false,
+    "repair_quote": false
+  }
+}

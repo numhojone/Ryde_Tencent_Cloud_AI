@@ -22,8 +22,12 @@ from typing import Any, Awaitable, Callable, Optional
 
 from pydantic import BaseModel, ValidationError
 
+import logging
+
 from app.config import settings
 from app.i18n import L, lang_rule
+
+_log = logging.getLogger("uvicorn.error")
 from app.llm import llm_client
 from app.tools import TOOL_SCHEMAS, call_tool, summarize_for_log
 
@@ -168,6 +172,14 @@ class BaseAgent:
 
     async def _llm_decide(self, messages: list[dict]) -> AgentAction:
         resp = await llm_client.chat(messages=messages, tools=self.tool_schemas())
+        if resp.finish_reason == "error":
+            # never fail silently: a visible notice in the chat, and the error in the server console (no key)
+            from app.agents.story_intake import _failure_kind, _scrub
+            kind = _failure_kind(resp.content or "")
+            _log.warning("Live AI call failed in %s (%s): %s", self.name, kind, _scrub(resp.content or ""))
+            await self._emit(type="warning", notice=True,
+                             content=L(self.lang, f"Live AI is unavailable ({kind}). Using offline rules.",
+                                       f"实时 AI 不可用（{kind}），改用离线规则。"))
         if resp.has_tool_calls:
             tcs = [{"id": tc.id, "name": tc.name, "args": tc.arguments,
                     "extra_content": tc.extra_content} for tc in resp.tool_calls]

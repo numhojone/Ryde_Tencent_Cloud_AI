@@ -1,0 +1,18 @@
+{
+  "source": "computed from Policy v2.1 and the scenario parameters (build_dataset60.py), not by the app",
+  "scenario": "fee_valid",
+  "ruling": "rejected",
+  "refund_amount": 0.0,
+  "goodwill_credit": 0.0,
+  "clause": "2.2",
+  "must_escalate": false,
+  "must_escalate_reason": [],
+  "fraud_flag_party": false,
+  "rationale": "Driver arrived on time, waited the 5-minute free period and contacted the rider by message and call. The S$5 fee stands (policy 2.2, 2.3).",
+  "facts": {
+    "arrival_minutes_after_schedule": -4.0,
+    "cancel_minutes_after_schedule": 7.0,
+    "driver_messages": 2,
+    "driver_calls": 1
+  }
+}

@@ -3,56 +3,54 @@
     LLM_MODE=deterministic python -m app.main          # in one terminal
     python scripts/smoke_three_pane.py [http://localhost:8000/]
 
-Signs in as the demo rider Sarah Tan (R-4521), types a DISP-001-style route story, confirms the trip it
-finds, and checks the rider sees the hand-off and the agent room shows the ruling. Then signs in as the
-support agent in a separate browser session and checks the case is in the queue with its summary.
-Exits non-zero on failure or on any browser console error.
+Signs in as Priya Nair (R-9001), types the vague route story, checks the picker offers her three route rides, picks
+the 23 Sep one (DISP-152, 5.0 km over, so a person decides), and checks all three panes fill: the rider is told a support agent
+has the case, the agent room shows the ruling, the console shows the case summary. Then the console asks the
+driver and the driver view shows the question under the case's own driver. Exits non-zero on failure or any
+browser console error.
 """
 import sys
 
 from playwright.sync_api import sync_playwright
 
 BASE = sys.argv[1] if len(sys.argv) > 1 else "http://localhost:8000/"
-STORY = "The driver took a long detour on the way to Changi Airport T3 and never told me."
+STORY = "My driver took a much longer route than usual and I paid more than I should have."
 
 errors: list[str] = []
-
-
-def sign_in(browser, rider_id=None):
+with sync_playwright() as pw:
+    browser = pw.chromium.launch()
     page = browser.new_context(viewport={"width": 1440, "height": 900}).new_page()
     page.on("console", lambda m: errors.append(m.text) if m.type == "error" else None)
     page.on("pageerror", lambda e: errors.append(str(e)))
     page.goto(BASE)
     page.wait_for_selector("#accountSelect option", state="attached")
-    if rider_id:
-        page.select_option("#accountSelect", rider_id)
-    else:
-        page.click("label.lg-opt:has(input[value=support])")
+    only_rider = page.locator("input[name=role]").count() == 0
+    page.select_option("#accountSelect", "R-9001")
     page.click("#signInBtn")
     page.wait_for_selector("#whoami:not(:empty)")
-    return page
-
-
-with sync_playwright() as pw:
-    browser = pw.chromium.launch()
-    rider = sign_in(browser, "R-4521")
-    rider.select_option("#modeSelect", "deterministic")
-    rider.fill("#riderInput", STORY)
-    rider.click("#riderSend")
-    rider.wait_for_selector(".tc-actions .btn.primary", timeout=15000)       # "Is this the one?"
-    room_idle = rider.locator("#chat .msg").count() == 0                     # nothing runs before the trip is confirmed
-    rider.click(".tc-actions .btn.primary")
-    rider.wait_for_selector(".rm.handoff", state="attached", timeout=30000)
-    rider.wait_for_selector("#chat .ruling", timeout=30000)
-    support = sign_in(browser)
-    support.wait_for_selector(".q-item", timeout=15000)
-    support.locator(".q-item").last.click()
-    support.wait_for_selector("#summary .sm-card", timeout=15000)
+    page.select_option("#modeSelect", "deterministic")
+    page.fill("#riderInput", STORY)
+    page.click("#riderSend")
+    page.wait_for_selector(".tc-list .tc", timeout=15000)
+    picker = page.locator(".tc-list .tc").count()
+    room_idle = page.locator("#chat .msg").count() == 0              # nothing runs before the trip is confirmed
+    page.locator(".tc-list .tc").filter(has_text="Clementi Mall").locator(".tc-btn").first.click()
+    page.wait_for_selector(".rm.handoff", state="attached", timeout=30000)
+    page.wait_for_selector("#chat .ruling", timeout=30000)
+    page.wait_for_selector("#summary .sm-card", timeout=15000)
+    page.fill("#askInput", "why did the drvier go thru Bukit Timah insted of the KPE?")
+    page.click("#askBtn"); page.wait_for_selector("#askConfirm:not([hidden])"); page.click("#qcSend")
+    page.wait_for_selector(".qa-item.asked_driver", timeout=15000)
+    page.click("#tgDriver")
+    page.wait_for_selector(".drv-case .drv-text", timeout=15000)
     checks = {
+        "login offers riders only": only_rider,
+        "picker with three rides": picker == 3,
         "room idle before confirm": room_idle,
-        "rider": rider.locator("#riderChat .rm").count() >= 4,
-        "room": rider.locator("#chat .msg").count() >= 5,
-        "support": "Partially upheld" in support.inner_text("#summary"),
+        "rider": "Priya Nair (R-9001)" in page.inner_text("#whoami"),
+        "room": page.locator("#chat .msg").count() >= 5,
+        "console": "DISP-152" in page.inner_text("#summary"),
+        "driver view": "Nur Aisyah (D-4410)" in page.inner_text("#driverChat"),
     }
     browser.close()
 

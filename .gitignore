@@ -29,3 +29,8 @@ demo-shot*.png
 demo-*.png
 shot-*.png
 pub-*.png
+
+# ---------- generated / incoming data (never part of the app) ----------
+build/
+incoming/
+incoming_new/

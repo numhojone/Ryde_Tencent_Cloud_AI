@@ -103,6 +103,9 @@ class OpenAICompatClient:
         tool_choice: str = "auto",
         temperature: float | None = None,
         max_tokens: int | None = 3072,
+        retries: int | None = None,
+        response_json: bool = False,
+        timeout: float | None = None,
     ) -> LLMResponse:
         client = self._ensure_client()
         kwargs: dict[str, Any] = {
@@ -115,20 +118,25 @@ class OpenAICompatClient:
             kwargs["tool_choice"] = tool_choice
         if max_tokens:
             kwargs["max_tokens"] = max_tokens
+        if response_json:
+            kwargs["response_format"] = {"type": "json_object"}
+        if timeout:
+            kwargs["timeout"] = timeout
         # 混元自定义参数（仅对混元官方 endpoint 启用；Token Plan 等其他兼容端点跳过，避免未知字段被拒）
         if "hunyuan" in (settings.llm_base_url or ""):
             kwargs["extra_body"] = {"enable_enhancement": True}
 
         # 429/5xx 指数退避重试。免费额度 RPM 很低，不重试几乎必然中途失败。
         last_err: Exception | None = None
-        for attempt in range(_MAX_RETRIES):
+        tries = max(1, retries if retries is not None else _MAX_RETRIES)   # retries=1: one request, no retry
+        for attempt in range(tries):
             try:
                 await _throttle()
                 resp = await client.chat.completions.create(**kwargs)
                 break
             except Exception as e:  # noqa: BLE001
                 last_err = e
-                if _is_retryable(e) and attempt < _MAX_RETRIES - 1:
+                if _is_retryable(e) and attempt < tries - 1:
                     wait = min(_MAX_BACKOFF, _BASE_BACKOFF * (2 ** attempt)) + random.uniform(0, 1.5)
                     await asyncio.sleep(wait)
                     continue

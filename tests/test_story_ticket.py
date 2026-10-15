@@ -96,10 +96,10 @@ def test_ambiguous_story_is_unresolved_and_never_ruled(text):
 
 
 def test_two_equally_likely_trips_are_not_guessed():
-    # Every no-show trip in the (unscoped) pool charged S$5 and the story names no place: do not pick one.
+    # Both no-show trips in the (unscoped, official-sample) pool charged S$5 and the story names no place: do not pick one.
     m = auto_match("The app charged me a S$5 cancellation fee but I never saw any car.")
     assert m["trip_id"] is None
-    assert {c["trip_id"] for c in m["candidates"][:3]} == {"TRIP-2026-09945", "TRIP-2026-10410", "TRIP-2026-30201"}
+    assert {c["trip_id"] for c in m["candidates"][:2]} == {"TRIP-2026-09945", "TRIP-2026-10410"}
 
 
 def test_explicit_trip_id_bypasses_matching():
@@ -179,20 +179,21 @@ def test_llm_output_is_grounded_and_malformed_facts_fall_back_to_rules():
 
 def test_api_trip_id_optional_and_unresolved_has_no_ruling():
     from session import login
-    c = login(TestClient(app), "R-3312")             # matching is scoped to the signed-in rider's trips
+    c = login(TestClient(app), "R-3312")             # matching is scoped to the signed-in rider's own rides
     r = c.post("/api/file", json={"complaint": "I want my money back.", "mode": "deterministic"}).json()
     assert r["status"] == "trip_unresolved" and r["ruling"] is None and r["candidates"]
-    r = c.post("/api/file", json={"complaint": "I was charged a S$35 cleaning fee but I never spilled anything.",
-                                  "trip_id": "auto", "mode": "deterministic"}).json()
-    assert r["trip_match"]["trip_id"] == "TRIP-2026-10201" and r["filed_ticket"]["dispute_type"] == "property_damage"
-    assert r["ruling"]["ruling"] == "upheld"
-    # another rider's trip is refused; its owner can file against it
-    assert c.post("/api/file", json={"complaint": "The driver took a long way round.", "trip_id": "TRIP-2026-09871",
-                                     "mode": "deterministic"}).status_code == 403
-    login(c, "R-4521")
-    r = c.post("/api/file", json={"complaint": "The driver took a long way round.", "trip_id": "TRIP-2026-09871",
+    assert all(x["trip_id"] in {t["trip_id"] for t in load_rider_trips("R-3312")} for x in r["candidates"])
+    own = next(t for t in load_rider_trips("R-3312") if t.get("ticket_type") == "property_damage")
+    story = f"I was charged a S${own['cleaning_fee_charged']:.0f} cleaning fee after my ride from {own['pickup_location']['name']} " \
+            f"to {own['dropoff_location']['name']} but I never spilled anything."
+    r = c.post("/api/file", json={"complaint": story, "trip_id": "auto", "mode": "deterministic"}).json()
+    assert r["trip_match"]["trip_id"] == own["trip_id"] and r["filed_ticket"]["dispute_type"] == "property_damage"
+    # another rider's trip is not on this account: 404, no hint that it exists
+    assert c.post("/api/file", json={"complaint": "The driver took a long way round.", "trip_id": "TRIP-2026-2011",
+                                     "mode": "deterministic"}).status_code == 404
+    r = c.post("/api/file", json={"complaint": "The driver took a long way round.", "trip_id": "TRIP-2026-2001",
                                   "mode": "deterministic"}).json()
-    assert r["ticket"]["trip_id"] == "TRIP-2026-09871" and r["trip_match"] is None
+    assert r["ticket"]["trip_id"] == "TRIP-2026-2001" and r["trip_match"] is None
     with c.stream("GET", "/api/file/stream", params={"complaint": "I want my money back.", "mode": "deterministic"}) as s:
         body = "".join(s.iter_text())
     kinds = [json.loads(line[6:])["type"] for line in body.splitlines() if line.startswith("data: ")]

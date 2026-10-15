@@ -1,0 +1,13 @@
+{
+  "dispute_id": "DISP-111",
+  "_source": "Synthetic (ticket ids and parties from the team's 60-ticket file)",
+  "trip_id": "TRIP-2026-2011",
+  "filed_by": "rider",
+  "rider_id": "R-4521",
+  "driver_id": "D-6021",
+  "dispute_type": "route_deviation",
+  "description": "On 18 September I took a Ryde from Tiong Bahru Plaza to Ang Mo Kio Hub. The upfront estimate was about S$18.16 but I was charged S$20.16. The trip was about 1.7 km longer than the recommended route. I asked about the route and did not get a proper explanation. I am requesting a refund of the excess fare.",
+  "filed_at": "2026-09-18T14:14:00+08:00",
+  "requested_resolution": "refund_excess_fare",
+  "requested_amount": 2.0
+}

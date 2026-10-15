@@ -1,0 +1,13 @@
+{
+  "dispute_id": "DISP-147",
+  "_source": "Synthetic (ticket ids and parties from the team's 60-ticket file)",
+  "trip_id": "TRIP-2026-2047",
+  "filed_by": "rider",
+  "rider_id": "R-7823",
+  "driver_id": "D-6021",
+  "dispute_type": "safety_incident",
+  "description": "On 6 October on my trip from Changi Business Park to Sengkang Compass One the driver shouted at me after I asked about the aircon and threatened to leave me by the road. I was scared.",
+  "filed_at": "2026-10-06T13:34:00+08:00",
+  "requested_resolution": "safety_review",
+  "requested_amount": null
+}

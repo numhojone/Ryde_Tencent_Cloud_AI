@@ -18,6 +18,8 @@ Nothing here decides a ruling, and no case exists until the rider confirms a tri
 """
 from __future__ import annotations
 
+import re
+
 from app.agents.intake import classify_by_rules
 from app.extract import extract_numbers, extract_times, find_places
 from app.i18n import CUR, L
@@ -67,9 +69,12 @@ def _why_category(category: str, t: dict, lang: str) -> str:
 
 
 def card(t: dict, lang: str, why: list[str] | None = None) -> dict:
+    from app.agents.intake import type_label
     tt = trip_time(t)
     pick, drop = route_of(t).split(" → ")
+    k = t.get("ticket_type")
     return {"trip_id": t["trip_id"], "pickup": pick, "dropoff": drop, "time": tt.isoformat() if tt else None,
+            "dispute_id": t.get("dispute_id"), "ticket_type": k, "ticket_label": type_label(k, lang) if k else None,
             # a cancelled trip was never paid for: what the rider was charged is the fee
             "fare": (t.get("cancellation_fee") or t.get("cancellation_fee_charged")) if is_cancelled(t) else _fare(t),
             "fare_kind": "fee" if is_cancelled(t) else "fare",
@@ -79,29 +84,94 @@ def card(t: dict, lang: str, why: list[str] | None = None) -> dict:
 
 def clarify_question(lang: str) -> str:
     return L(lang, "Could you tell me a bit more about what went wrong? For example: the route was longer than expected, "
-                   "the fare was higher than the quote, you were charged a cancellation or cleaning fee, or you felt unsafe.",
-                   "能再多说一点出了什么问题吗？例如：路线比预期绕远、车费高于报价、被收了取消费或清洁费，或者您感到不安全。")
+                   "you were charged a cancellation or cleaning fee, or you felt unsafe.",
+                   "能再多说一点出了什么问题吗？例如：路线比预期绕远、被收了取消费或清洁费，或者您感到不安全。")
 
 
-def find_trip(story: str, rider_id: str, lang: str = "en") -> dict:
-    """Stage 1 decision for one story, within one rider's trips.
+ONLY_YOUR_ACCOUNT = ("I can only look at trips on your account.", "我只能查看您账户中的行程。")
+_TRIP_ID = re.compile(r"\bTRIP-\d{4}-\d+\b", re.I)
+_RIDER_ID = re.compile(r"\bR-\d{4}\b", re.I)
+_DRIVER_ID = re.compile(r"\bD-\d{4}\b", re.I)
+_LIST = re.compile(r"\b(?:list|show|see|view|what are)\b[^.?!]{0,30}\b(?:my|all)\b[^.?!]{0,12}\b(?:rides|trips|bookings)\b"
+                   r"|\bmy (?:rides|trips)\b\s*\??$|我的(?:所有)?行程|列出.*行程", re.I)
 
-    Returns {state: clarify | none | confirm | pick, category, signals, message, candidates[], recent[]}.
+
+def names_someone_else(story: str, rider_id: str, trips: list[dict]) -> bool:
+    """Does the story point at a trip, rider or driver that is not this rider's? (Checked before anything else.)"""
+    from app.tools.fixtures import list_driver_ids, list_rider_ids, person_name
+    mine = {t["trip_id"].upper() for t in trips}
+    if any(m.group(0).upper() not in mine for m in _TRIP_ID.finditer(story)):
+        return True
+    if any(m.group(0).upper() != rider_id for m in _RIDER_ID.finditer(story)):
+        return True
+    my_drivers = {t.get("driver_id") for t in trips}
+    if any(m.group(0).upper() not in my_drivers for m in _DRIVER_ID.finditer(story)):
+        return True
+    low = story.lower()
+    for rid in list_rider_ids():                                # another rider by full name, or "Sarah's trip"
+        name = person_name(rid)
+        if rid == rider_id or not name:
+            continue
+        full = name.lower()
+        first = full.split()[0]
+        if full in low or re.search(rf"(?<![a-z]){re.escape(first)}'s\b", low):
+            return True
+    for did in list_driver_ids():                               # a driver who never drove this rider
+        name = person_name(did)
+        if did not in my_drivers and name and name.lower() in low:
+            return True
+    return False
+
+
+def preflight(story: str, rider_id: str, lang: str = "en") -> dict | None:
+    """The checks that never need language understanding: another rider's trip / name / id (refused), "list my
+    rides", and one of the rider's own trip ids. Returns a stage-1 result, or None to go on and classify."""
+    return find_trip(story, rider_id, lang, category="__preflight__")
+
+
+def find_trip(story: str, rider_id: str, lang: str = "en", category: str | None = None) -> dict | None:
+    """Stage 1 decision for one story, within one rider's own trips only.
+
+    category: the dispute type already understood (by the model in Live AI mode, or tapped by the rider); without
+    it, the keyword rules classify (Offline demo and the older callers).
+    Returns {state: foreign | list | clarify | none | confirm | pick, category, signals, message, candidates[], recent[]}.
+    The rider's trips are loaded first, from the session's rider_id; nothing else is ever looked at.
     """
-    category, signals = classify_by_rules(story)
     trips = load_rider_trips(rider_id)                    # only this rider's trips, whatever the story names
-    recent = sorted(trips, key=lambda t: -(trip_time(t).timestamp() if trip_time(t) else 0))
-    recent_cards = [card(t, lang) for t in recent[:MAX_CARDS]]
-    base = {"category": category if signals else None, "signals": signals, "recent": recent_cards}
+    by_date = sorted(trips, key=lambda t: -(trip_time(t).timestamp() if trip_time(t) else 0))
+    all_cards = [card(t, lang) for t in by_date]
+    peek = category == "__preflight__"
+    if category and not peek:
+        signals = [category]
+    elif peek:
+        category, signals = None, []
+    else:
+        category, signals = classify_by_rules(story)
+    base = {"category": category if signals else None, "signals": signals, "recent": all_cards}
+    if names_someone_else(story, rider_id, trips):
+        # no hint whether that trip, rider or driver exists
+        return {**base, "state": "foreign", "candidates": [], "recent": [], "message": L(lang, *ONLY_YOUR_ACCOUNT)}
+    if _LIST.search(story):
+        return {**base, "state": "list", "candidates": all_cards,
+                "message": L(lang, f"Here are your {len(all_cards)} rides. Tap the one you need help with.",
+                                   f"这是您的 {len(all_cards)} 趟行程。请点选需要处理的那一趟。")}
+    own_id = next((m.group(0).upper() for m in _TRIP_ID.finditer(story)), None)
+    if own_id:
+        t = next(t for t in trips if t["trip_id"].upper() == own_id)
+        return {**base, "state": "confirm", "candidates": [card(t, lang)],
+                "message": L(lang, "I found this trip. Is this the one?", "我找到了这趟行程。是这一趟吗？")}
+    if peek:
+        return None
     if not signals:
         return {**base, "state": "clarify", "message": clarify_question(lang), "candidates": []}
 
-    fits = [t for t in trips if category_fits(category, t)]
+    # the ticket on each trip says what kind of dispute it is; trip evidence is the fallback
+    fits = [t for t in trips if t.get("ticket_type") == category] or [t for t in trips if category_fits(category, t)]
     if not fits:
         return {**base, "state": "none", "candidates": [],
-                "message": L(lang, "I couldn't find a trip in your account that fits this. Here are your recent trips: tap one, "
+                "message": L(lang, "I couldn't find a ride of that kind on your account. Here are all your rides: tap one, "
                                    "or tell me more (where you were going, the date, the amount).",
-                                   "在您的账户中没有找到符合描述的行程。以下是您最近的行程：可以点选其中一趟，"
+                                   "在您的账户中没有找到这类行程。以下是您的全部行程：可以点选其中一趟，"
                                    "或者再补充一些细节（目的地、日期、金额）。")}
 
     places = find_places(story)
@@ -129,3 +199,71 @@ def find_trip(story: str, rider_id: str, lang: str = "en") -> dict:
 
 def owns_trip(rider_id: str, trip_id: str) -> bool:
     return any(t["trip_id"] == trip_id for t in load_rider_trips(rider_id))
+
+
+def type_mismatch(story: str, trip: dict, understood: str | None = None) -> dict | None:
+    """The story sounds like one kind of dispute but the trip's ticket is another: ask, never silently override.
+    understood: the type stage 1 already worked out (model or rider's tap); else the keyword rules decide."""
+    if understood in ("route_deviation", "no_show_charge", "property_damage", "safety_incident"):
+        category, signals = understood, [understood]
+    else:
+        category, signals = classify_by_rules(story)
+    ticket_type = trip.get("ticket_type")
+    if signals and ticket_type and category != ticket_type:
+        return {"story_type": category, "ticket_type": ticket_type}
+    return None
+
+
+# ---------------------------------------------------------------- quick-fill stories for the demo strip
+
+_VAGUE = {
+    "route_deviation": ("My driver took a much longer route than usual and I paid more than I should have.",
+                        "司机绕路了，走了更远的路线，我多付了钱。"),
+    "no_show_charge": ("The driver never came and I was still charged a $5 cancellation fee.", "司机一直没来，我还被收了$5取消费。"),
+    "property_damage": ("I was charged a cleaning fee but I never dirtied the car.", "我被收了清洁费，但我根本没有弄脏车。"),
+    "safety_incident": ("My driver was driving dangerously and I felt unsafe.", "司机开车很危险，我觉得很不安全。"),
+}
+
+
+def _specific(t: dict) -> tuple[str, str]:
+    tt = trip_time(t)
+    d_en, d_zh = f"{tt.day} {tt:%b}", f"{tt.month}月{tt.day}日"
+    a, b = route_of(t).split(" → ")
+    k = t.get("ticket_type")
+    if k == "route_deviation":
+        return (f"On {d_en} the driver took a long detour from {a} to {b} and charged me more.",
+                f"{d_zh}从{a}到{b}，司机绕路了，多收了我的钱。")
+    if k == "no_show_charge":
+        return (f"On {d_en} I waited at {a} but the driver never came, and I was charged a $5 cancellation fee.",
+                f"{d_zh}我在{a}等车，司机一直没来，还被收了$5取消费。")
+    if k == "property_damage":
+        fee = t.get("cleaning_fee_charged") or 0
+        return (f"I was charged a S${fee:.0f} cleaning fee after my ride from {a} on {d_en}, but I never dirtied the car.",
+                f"{d_zh}从{a}坐车后被收了S${fee:.0f}清洁费，但我根本没有弄脏车。")
+    return (f"On {d_en}, on my ride from {a} to {b}, the driver was driving dangerously and I felt unsafe.",
+            f"{d_zh}从{a}到{b}的行程中，司机开车很危险，我觉得很不安全。")
+
+
+def demo_stories(rider_id: str) -> list[dict]:
+    """Quick-fill stories built from this rider's own rides, so every button leads to a real match for them."""
+    from app.agents.intake import type_label
+    trips = sorted(load_rider_trips(rider_id), key=lambda t: trip_time(t).timestamp() if trip_time(t) else 0)
+    out = []
+    for k in ("route_deviation", "no_show_charge", "property_damage", "safety_incident"):
+        mine = [t for t in trips if t.get("ticket_type") == k]
+        if not mine:
+            continue
+        if len(mine) >= 2:
+            en, zh = _VAGUE[k]
+            out.append({"key": f"{k}_pick", "en": en, "zh": zh, "expect": "pick",
+                        "label_en": f"{type_label(k, 'en')} ({len(mine)} rides fit)", "label_zh": f"{type_label(k, 'zh')}（{len(mine)} 趟符合）"})
+        t = mine[-1]
+        en, zh = _specific(t)
+        tt = trip_time(t)
+        out.append({"key": f"{k}_one", "en": en, "zh": zh, "expect": "confirm", "trip_id": t["trip_id"],
+                    "label_en": f"{type_label(k, 'en')}, {tt.day} {tt:%b}", "label_zh": f"{type_label(k, 'zh')}，{tt.month}月{tt.day}日"})
+    out.append({"key": "list", "en": "Show me all my rides.", "zh": "列出我的所有行程。", "expect": "list",
+                "label_en": "List my rides", "label_zh": "列出我的行程"})
+    out.append({"key": "unclear", "en": "Something went wrong with my last ride.", "zh": "我上一趟行程出了点问题。", "expect": "clarify",
+                "label_en": "Unclear story", "label_zh": "描述不清"})
+    return out

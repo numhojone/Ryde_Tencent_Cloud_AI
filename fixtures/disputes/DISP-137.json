@@ -1,0 +1,13 @@
+{
+  "dispute_id": "DISP-137",
+  "_source": "Synthetic (ticket ids and parties from the team's 60-ticket file)",
+  "trip_id": "TRIP-2026-2037",
+  "filed_by": "rider",
+  "rider_id": "R-7001",
+  "driver_id": "D-1187",
+  "dispute_type": "safety_incident",
+  "description": "On 5 October from Novena Square to Clementi Mall the driver was on his phone during the ride, scrolling while driving and almost hitting the car in front. I felt unsafe.",
+  "filed_at": "2026-10-05T20:37:00+08:00",
+  "requested_resolution": "safety_review",
+  "requested_amount": null
+}

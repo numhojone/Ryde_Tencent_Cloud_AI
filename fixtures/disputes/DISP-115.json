@@ -1,0 +1,13 @@
+{
+  "dispute_id": "DISP-115",
+  "_source": "Synthetic (ticket ids and parties from the team's 60-ticket file)",
+  "trip_id": "TRIP-2026-2015",
+  "filed_by": "rider",
+  "rider_id": "R-4521",
+  "driver_id": "D-3456",
+  "dispute_type": "property_damage",
+  "description": "A S$25 cleaning fee was added more than a day after my trip from Bugis Junction to Woodlands MRT on 29 September. I did not make any mess. Please reverse it.",
+  "filed_at": "2026-10-01T09:48:00+08:00",
+  "requested_resolution": "reverse_cleaning_fee",
+  "requested_amount": 25.0
+}

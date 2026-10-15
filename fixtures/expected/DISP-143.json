@@ -1,0 +1,18 @@
+{
+  "source": "computed from Policy v2.1 and the scenario parameters (build_dataset60.py), not by the app",
+  "scenario": "left_early",
+  "ruling": "upheld",
+  "refund_amount": 5.0,
+  "goodwill_credit": 0.0,
+  "clause": "2.1",
+  "must_escalate": false,
+  "must_escalate_reason": [],
+  "fraud_flag_party": true,
+  "rationale": "Driver cancelled before the 5-minute free wait ended. The fee is voided (policy 2.1).",
+  "facts": {
+    "arrival_minutes_after_schedule": -1.5,
+    "cancel_minutes_after_schedule": 3.0,
+    "driver_messages": 1,
+    "driver_calls": 1
+  }
+}

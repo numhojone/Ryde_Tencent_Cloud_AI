@@ -1,0 +1,13 @@
+{
+  "dispute_id": "DISP-143",
+  "_source": "Synthetic (ticket ids and parties from the team's 60-ticket file)",
+  "trip_id": "TRIP-2026-2043",
+  "filed_by": "rider",
+  "rider_id": "R-7823",
+  "driver_id": "D-1187",
+  "dispute_type": "no_show_charge",
+  "description": "The driver cancelled my Changi Airport T3 pickup on 25 September only a few minutes after the scheduled time, before I even got downstairs, and charged me S$5. This does not seem fair.",
+  "filed_at": "2026-09-25T19:30:00+08:00",
+  "requested_resolution": "reverse_cancellation_fee",
+  "requested_amount": 5.0
+}

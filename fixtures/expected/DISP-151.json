@@ -1,0 +1,20 @@
+{
+  "source": "computed from Policy v2.1 and the scenario parameters (build_dataset60.py), not by the app",
+  "scenario": "just_noinform_large",
+  "ruling": "partial",
+  "refund_amount": 2.24,
+  "goodwill_credit": 0.0,
+  "clause": "1.3",
+  "must_escalate": true,
+  "must_escalate_reason": [
+    "deviation_over_2km"
+  ],
+  "fraud_flag_party": false,
+  "rationale": "The reroute was traffic-justified but the rider was not informed in time (policy 1.2). Partial refund of the excess distance fare (S$2.24). The deviation is over 2 km, so the AI recommendation needs human approval (policy 6.1).",
+  "facts": {
+    "deviation_km": 2.8,
+    "traffic_justified": true,
+    "rider_informed": false,
+    "excess_distance_fare": 2.24
+  }
+}

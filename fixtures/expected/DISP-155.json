@@ -1,0 +1,19 @@
+{
+  "source": "computed from Policy v2.1 and the scenario parameters (build_dataset60.py), not by the app",
+  "scenario": "valid_cleaning",
+  "ruling": "rejected",
+  "refund_amount": 0.0,
+  "goodwill_credit": 0.0,
+  "clause": "4.2",
+  "must_escalate": false,
+  "must_escalate_reason": [],
+  "fraud_flag_party": false,
+  "rationale": "Verifiable in-app photo evidence within 24 hours supports the claim and the fee is within the S$50 cap. The fee stands (policy 4.2, 4.3).",
+  "facts": {
+    "claim_type": "cleaning",
+    "claimed_amount": 22.0,
+    "verifiable_photo": true,
+    "claim_in_24h": true,
+    "repair_quote": false
+  }
+}

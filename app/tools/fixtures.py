@@ -22,7 +22,7 @@ class ToolError(Exception):
 
 # Directories a tool may read. fixtures/expected (ground truth) is never one of them.
 _READABLE = ("disputes", "trips", "profiles", "policies")
-_READABLE_FILES = ("precedents.json", "trip_parties.json", "trips_synthetic.json", "demo_accounts.json")
+_READABLE_FILES = ("precedents.json", "trip_parties.json")
 
 # ---------- rider scoping ----------
 # The rider whose data the current request / case may read. None = unrestricted (support agent, internal code).
@@ -69,34 +69,47 @@ def _load_dispute(dispute_id: str) -> dict:
     return d
 
 
-def _synthetic_trips() -> dict[str, dict]:
-    """Extra demo trips (fixtures/trips_synthetic.json, all synthetic), keyed by trip_id."""
-    p = FIXTURES_DIR / "trips_synthetic.json"
-    if not p.exists():
-        return {}
-    return {t["trip_id"]: t for t in _load_json("trips_synthetic.json").get("trips", [])}
+_CACHE: dict[str, tuple] = {}
+
+
+def _stamp(*paths: Path) -> tuple:
+    """A cheap change marker: the modification times of a file or of every file in a folder."""
+    out = []
+    for p in paths:
+        if p.is_dir():
+            out += [(f.name, f.stat().st_mtime_ns) for f in sorted(p.glob("*.json"))]
+        elif p.exists():
+            out.append((p.name, p.stat().st_mtime_ns))
+    return tuple(out)
+
+
+def _cached(key: str, stamp: tuple, build):
+    hit = _CACHE.get(key)
+    if hit and hit[0] == stamp:
+        return hit[1]
+    value = build()
+    _CACHE[key] = (stamp, value)
+    return value
+
+
+def _parties() -> dict:
+    """fixtures/trip_parties.json: trip_id -> rider_id, driver_id (the 6 sample trips and the 60 dataset trips).
+    Read-only: cached until the file changes."""
+    return _cached("parties", _stamp(FIXTURES_DIR / "trip_parties.json"), lambda: _load_json("trip_parties.json"))
 
 
 def all_trip_ids() -> list[str]:
-    ids = [p.stem for p in sorted((FIXTURES_DIR / "trips").glob("*.json"))]
-    return ids + [t for t in _synthetic_trips() if t not in ids]
+    return [p.stem for p in sorted((FIXTURES_DIR / "trips").glob("*.json"))]
 
 
 def _raw_trip(trip_id: str) -> dict:
-    syn = _synthetic_trips()
-    if "/" not in trip_id and "\\" not in trip_id and trip_id in syn and not (FIXTURES_DIR / "trips" / f"{trip_id}.json").exists():
-        return syn[trip_id]
     return _load_json(f"trips/{trip_id}.json")
 
 
 def trip_owner(trip: dict, trip_id: str | None = None) -> str | None:
-    td = trip.get("trip_data") or {}
-    if td.get("rider_id"):
-        return td["rider_id"]
-    try:
-        return (_load_json("trip_parties.json").get(trip_id or trip.get("trip_id")) or {}).get("rider_id")
-    except ToolError:
-        return None
+    """Who rode this trip: trip_parties.json decides (the trip file is the fallback)."""
+    p = _parties().get(trip_id or trip.get("trip_id")) or {}
+    return p.get("rider_id") or (trip.get("trip_data") or {}).get("rider_id")
 
 
 def _load_trip(trip_id: str) -> dict:
@@ -112,12 +125,7 @@ def _load_trip(trip_id: str) -> dict:
 
 
 def _scoped_driver_ids(rider_id: str) -> set[str]:
-    out = set()
-    for tid in all_trip_ids():
-        t = _raw_trip(tid)
-        if trip_owner(t, tid) == rider_id:
-            out.add((t.get("trip_data") or {}).get("driver_id") or get_trip_parties(tid, _check=False).get("driver_id"))
-    return out
+    return {p["driver_id"] for p in _parties().values() if p.get("rider_id") == rider_id}
 
 
 # ---------- 8 个对外工具 ----------
@@ -231,11 +239,42 @@ def _route(td: dict) -> str:
     return f"{(td.get('pickup_location') or {}).get('name', '?')} → {(td.get('dropoff_location') or {}).get('name', '?')}"
 
 
+def sample_dispute_ids() -> list[str]:
+    """The six sample cases (DISP-001 to DISP-006)."""
+    return [p.stem for p in sorted((FIXTURES_DIR / "disputes").glob("DISP-00*.json"))]
+
+
+def pool_trip_ids(rider_id: str | None = None) -> list[str]:
+    """The trips the app works with. For a rider: every trip trip_parties.json gives to that rider (their sample
+    trip, if any, and their dataset trips). With no rider (internal callers, the sample-case tests): the six sample
+    cases' trips."""
+    rid = rider_id or current_scope()
+    if rid:
+        return sorted(t for t, p in _parties().items() if p.get("rider_id") == rid)
+    return sorted({_load_json(f"disputes/{d}.json")["trip_id"] for d in sample_dispute_ids()})
+
+
+def ticket_for_trip(trip_id: str | None) -> dict | None:
+    """The dispute ticket filed on a trip (fixtures/disputes), if there is one (a copy: safe to change)."""
+    t = _tickets_by_trip().get(trip_id or "")
+    return dict(t) if t else None
+
+
+def _tickets_by_trip() -> dict[str, dict]:
+    def build():
+        out = {}
+        for p in sorted((FIXTURES_DIR / "disputes").glob("*.json")):
+            d = _load_json(f"disputes/{p.name}")
+            out[d["trip_id"]] = d
+        return out
+    return _cached("tickets", _stamp(FIXTURES_DIR / "disputes"), build)
+
+
 def list_trips() -> list[dict]:
-    """Trips a complaint can be filed against (scoped to the current rider when there is one)."""
+    """Trips a complaint can be filed against: the current rider's own rides."""
     parties = _load_json("trip_parties.json")
     out = []
-    for trip_id in all_trip_ids():
+    for trip_id in pool_trip_ids():
         try:
             trip = _load_trip(trip_id)
         except ToolError:
@@ -251,6 +290,7 @@ def list_trips() -> list[dict]:
             "rider_id": meta.get("rider_id") or td.get("rider_id"),
             "driver_id": meta.get("driver_id") or td.get("driver_id"),
             "synthetic": str(trip.get("_source", "")).lower().startswith("synthetic"),
+            "dispute_id": (ticket_for_trip(trip_id) or {}).get("dispute_id"),
         })
     return out
 
@@ -274,7 +314,8 @@ def _driver_name(trip: dict) -> str | None:
     td = trip.get("trip_data") or {}
     if td.get("driver_name"):
         return td["driver_name"]
-    return next((m.get("sender_name") for m in trip.get("chat_logs", []) if m.get("sender") == "driver" and m.get("sender_name")), None)
+    chat = next((m.get("sender_name") for m in trip.get("chat_logs", []) if m.get("sender") == "driver" and m.get("sender_name")), None)
+    return chat or person_name(td.get("driver_id"))
 
 
 def load_rider_trips(rider_id: str | None = None) -> list[dict]:
@@ -285,9 +326,9 @@ def load_rider_trips(rider_id: str | None = None) -> list[dict]:
     """
     rid = rider_id or current_scope()
     out = []
-    for tid in all_trip_ids():
+    for tid in pool_trip_ids(rid):
         try:
-            trip = _load_trip(tid)
+            trip = _load_trip(tid) if not rider_id else _raw_trip(tid)
         except ToolError:
             continue
         if rid and trip_owner(trip, tid) != rid:
@@ -299,6 +340,9 @@ def load_rider_trips(rider_id: str | None = None) -> list[dict]:
         td["driver_name"] = _driver_name(trip)
         td["rider_id"] = td.get("rider_id") or trip_owner(trip, tid)
         td["has_damage_claim"] = bool(trip.get("damage_evidence"))
+        ticket = ticket_for_trip(tid)
+        td["dispute_id"] = (ticket or {}).get("dispute_id")
+        td["ticket_type"] = (ticket or {}).get("dispute_type")
         out.append(td)
     return out
 
@@ -318,8 +362,8 @@ def list_disputes() -> list[dict]:
     """Preset tickets for the dropdown (scoped to the current rider when there is one)."""
     out = []
     scope = current_scope()
-    for p in sorted((FIXTURES_DIR / "disputes").glob("*.json")):
-        d = _load_json(f"disputes/{p.name}")
+    rows = [_load_json(f"disputes/{p.name}") for p in sorted((FIXTURES_DIR / "disputes").glob("*.json"))]
+    for d in rows:
         if scope and d.get("rider_id") != scope:
             continue
         out.append({
@@ -328,6 +372,10 @@ def list_disputes() -> list[dict]:
             "dispute_type": d["dispute_type"],
             "filed_by": d["filed_by"],
             "description": d["description"],
+            "rider_id": d.get("rider_id"),
+            "rider_name": person_name(d.get("rider_id")),
+            # the 60 dataset tickets: ids and parties from the team's file, all evidence synthetic
+            "synthetic_evidence": not d["dispute_id"].startswith("DISP-00"),
         })
     return out
 
@@ -337,12 +385,36 @@ def list_driver_ids() -> list[str]:
 
 
 def list_rider_ids() -> list[str]:
+    """The riders who can sign in: the rider profiles in fixtures/profiles/riders."""
     return [p.stem for p in sorted((FIXTURES_DIR / "profiles" / "riders").glob("*.json"))]
 
 
-def demo_accounts() -> dict:
-    """Display names and demo stories for the login screen (fixtures/demo_accounts.json, synthetic)."""
-    try:
-        return _load_json("demo_accounts.json")
-    except ToolError:
-        return {"riders": {}}
+def person_name(pid: str | None) -> str | None:
+    """A rider's or driver's name, from their profile (falls back to the ticket files)."""
+    if not pid or "/" in pid or "." in pid:
+        return None
+    for kind in ("riders", "drivers"):
+        p = FIXTURES_DIR / "profiles" / kind / f"{pid}.json"
+        if p.exists():
+            name = json.loads(p.read_text(encoding="utf-8")).get("name")
+            if name:
+                return name
+    for d in _tickets_by_trip().values():
+        for side in ("rider", "driver"):
+            if d.get(f"{side}_id") == pid and d.get(f"{side}_name"):
+                return d[f"{side}_name"]
+    return None
+
+
+_SURNAMES = {"tan", "lim", "lee", "ng", "ong", "wong", "goh", "chua", "chan", "koh", "teo", "ang", "yeo", "tay", "ho", "low",
+             "toh", "sim", "chong", "chia", "lau", "foo", "yap", "seah"}
+
+
+def first_name(full: str | None) -> str | None:
+    """'Wong Mei Ling' -> 'Mei Ling' (surname first); 'Sarah Tan' -> 'Sarah'."""
+    if not full:
+        return None
+    parts = full.split()
+    if len(parts) >= 3 and parts[0].lower() in _SURNAMES:
+        return " ".join(parts[1:])
+    return parts[0]

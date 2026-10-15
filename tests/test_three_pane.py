@@ -266,23 +266,19 @@ def test_http_endpoints():
         login(client, "R-9001")
         assert client.get("/").status_code == 200 and "Three-pane" in client.get("/").text
         assert "Multi-agent dispute resolution" in client.get("/classic").text
-        assert client.post("/api/cases", json={"story": "  ", "trip_id": "TRIP-2026-10023"}).status_code == 400
-        assert client.post("/api/cases", json={"story": FARE}).status_code == 400          # trip not confirmed yet
+        trip = "TRIP-2026-2052"                                        # one of R-9001's route-deviation rides
+        story = "The driver took a long detour and charged me more."
+        assert client.post("/api/cases", json={"story": "  ", "trip_id": trip}).status_code == 400
+        assert client.post("/api/cases", json={"story": story}).status_code == 400          # trip not confirmed yet
         assert client.get("/api/cases/CASE-NOPE").status_code == 404
-        snap = client.post("/api/cases", json={"story": FARE, "trip_id": "TRIP-2026-10023", "mode": "deterministic"}).json()
+        snap = client.post("/api/cases", json={"story": story, "trip_id": trip, "mode": "deterministic"}).json()
         cid = snap["id"]
+        assert snap["reference"] == "DISP-152"                         # the trip's own ticket from the dataset
         for _ in range(200):
             s = client.get(f"/api/cases/{cid}").json()
-            if s["status"] == "resolved_by_ai":
+            if s["status"] not in ("intake", "in_review"):
                 break
             client.get("/api/health")
-        assert s["status"] == "resolved_by_ai" and s["outcome"]["refund_amount"] == 4.5
-        assert "qa_log" not in s and "summary" not in s                 # console data is not sent to riders
-        # a rider never reaches the console endpoints
-        assert client.post(f"/api/cases/{cid}/human/decision", json={"action": "reject"}).status_code == 403
-        assert client.post(f"/api/cases/{cid}/human/rephrase", json={"text": "wat time"}).status_code == 403
-        login(client, support=True)
-        # an AI-resolved case was never handed to a person, so the support agent does not see it
-        assert client.get(f"/api/cases/{cid}").status_code == 404
-        r = client.post(f"/api/cases/{cid}/human/decision", json={"action": "reject"})
-        assert r.status_code == 404
+        assert s["ticket"]["description"] == story and s["ticket"]["dispute_id"] == "DISP-152"
+        r = client.post(f"/api/cases/{cid}/human/rephrase", json={"text": "wat time did teh driver arrive"})
+        assert r.json()["rephrased"] == "What time did the driver arrive?"

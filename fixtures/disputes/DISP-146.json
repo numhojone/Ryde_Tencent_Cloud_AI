@@ -1,0 +1,13 @@
+{
+  "dispute_id": "DISP-146",
+  "_source": "Synthetic (ticket ids and parties from the team's 60-ticket file)",
+  "trip_id": "TRIP-2026-2046",
+  "filed_by": "rider",
+  "rider_id": "R-7823",
+  "driver_id": "D-4410",
+  "dispute_type": "property_damage",
+  "description": "I was charged S$140 for car damage after my trip from Jurong East MRT to Orchard Central on 3 October, but I was never shown a quote or any proof. I am disputing it.",
+  "filed_at": "2026-10-03T16:02:00+08:00",
+  "requested_resolution": "reverse_damage_fee",
+  "requested_amount": 140.0
+}

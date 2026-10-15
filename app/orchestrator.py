@@ -14,7 +14,7 @@ from typing import AsyncGenerator
 from zoneinfo import ZoneInfo
 
 from app.agents.driver_advocate import DriverAdvocate
-from app.agents.intake import IntakeAgent, classify_by_rules, type_label
+from app.agents.intake import IntakeAgent, classify_by_rules, requested_resolution, type_label
 from app.extract import extract_facts
 from app.models import TriageResult
 from app.trip_match import claim_check, match_trip
@@ -28,6 +28,7 @@ from app.tools import call_tool, summarize_for_log
 
 
 _SENTINEL = object()
+_RES_TYPES = ("route_deviation", "no_show_charge", "fare_dispute", "property_damage", "safety_incident")
 _SGT = ZoneInfo("Asia/Singapore")
 
 
@@ -70,7 +71,10 @@ async def _triage_draft(draft: dict, emit, mode: str | None, lang: str = "en") -
             return None
         draft = {**draft, "trip_id": match["trip_id"], "match": match}
 
-    ia = IntakeAgent(emit, mode=mode, lang=lang)
+    # The story was already understood in stage 1 (one model call per rider message at most): here the intake only
+    # extracts facts, with the rules, and keeps that understanding.
+    understood = draft.get("understood")
+    ia = IntakeAgent(emit, mode="deterministic" if understood else mode, lang=lang)
     res = await ia.run({"draft": draft})
     if isinstance(res.output, TriageResult):
         triage = res.output.model_dump()
@@ -84,6 +88,18 @@ async def _triage_draft(draft: dict, emit, mode: str | None, lang: str = "en") -
 
     parties = get_trip_parties(draft["trip_id"])
     dispute_id = f"DISP-{_uuid.uuid4().hex[:6].upper()}"
+    if understood and triage["dispute_type"] != "safety_incident" and understood != triage["dispute_type"]:
+        triage = {**triage, "dispute_type": understood,
+                  "requested_resolution": requested_resolution(understood, triage["extracted_facts"]) if understood in _RES_TYPES else None}
+    base = draft.get("ticket")
+    if base:
+        # The trip already has a ticket (the organisers' dataset): keep its dispute_id, trip and driver and its
+        # dispute type; the rider's story replaces the placeholder description. Policy 5.2 still wins: safety
+        # indicators in the story make it a safety incident whatever the ticket says.
+        dispute_id = base["dispute_id"]
+        if triage["dispute_type"] != "safety_incident" and base.get("dispute_type"):
+            triage = {**triage, "dispute_type": base["dispute_type"],
+                      "requested_resolution": requested_resolution(base["dispute_type"], triage["extracted_facts"])}
     record = next((t for t in load_rider_trips() if t["trip_id"] == draft["trip_id"]), {})
     facts = triage["extracted_facts"]
     # The ticket in the same format as the sample tickets (fixtures/disputes), plus what the story says.

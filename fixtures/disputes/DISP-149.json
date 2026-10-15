@@ -1,0 +1,13 @@
+{
+  "dispute_id": "DISP-149",
+  "_source": "Synthetic (ticket ids and parties from the team's 60-ticket file)",
+  "trip_id": "TRIP-2026-2049",
+  "filed_by": "rider",
+  "rider_id": "R-7823",
+  "driver_id": "D-1187",
+  "dispute_type": "property_damage",
+  "description": "The driver claimed a S$35 cleaning fee more than a day after my 11 October trip from Tampines Mall to one-north. This feels too late to be valid. Please reverse it.",
+  "filed_at": "2026-10-12T18:55:00+08:00",
+  "requested_resolution": "reverse_cleaning_fee",
+  "requested_amount": 35.0
+}

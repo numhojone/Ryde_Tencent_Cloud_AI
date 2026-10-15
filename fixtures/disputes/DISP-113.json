@@ -1,0 +1,13 @@
+{
+  "dispute_id": "DISP-113",
+  "_source": "Synthetic (ticket ids and parties from the team's 60-ticket file)",
+  "trip_id": "TRIP-2026-2013",
+  "filed_by": "rider",
+  "rider_id": "R-4521",
+  "driver_id": "D-1187",
+  "dispute_type": "no_show_charge",
+  "description": "The driver never showed up at Paya Lebar Quarter on 23 September for my 11:05 pickup and never contacted me, but I was still charged a S$5 cancellation fee. I want the fee refunded.",
+  "filed_at": "2026-09-23T12:37:00+08:00",
+  "requested_resolution": "reverse_cancellation_fee",
+  "requested_amount": 5.0
+}

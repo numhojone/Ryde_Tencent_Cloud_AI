@@ -1,0 +1,20 @@
+{
+  "source": "computed from Policy v2.1 and the scenario parameters (build_dataset60.py), not by the app",
+  "scenario": "thin_chat",
+  "ruling": "escalated",
+  "refund_amount": null,
+  "goodwill_credit": 0.0,
+  "clause": "safety_net",
+  "must_escalate": true,
+  "must_escalate_reason": [
+    "thin_evidence"
+  ],
+  "fraud_flag_party": false,
+  "rationale": "Evidence is too thin to rule automatically (a source is empty or near-empty). Escalated to a human reviewer.",
+  "facts": {
+    "arrival_minutes_after_schedule": -1.0,
+    "cancel_minutes_after_schedule": 8.5,
+    "driver_messages": 1,
+    "driver_calls": 0
+  }
+}

@@ -1,0 +1,13 @@
+{
+  "dispute_id": "DISP-119",
+  "_source": "Synthetic (ticket ids and parties from the team's 60-ticket file)",
+  "trip_id": "TRIP-2026-2019",
+  "filed_by": "rider",
+  "rider_id": "R-4521",
+  "driver_id": "D-1187",
+  "dispute_type": "property_damage",
+  "description": "The driver is claiming S$120 for damage to the car after my 10 October ride from Sengkang Compass One to Changi Business Park. I did not damage anything. I am disputing the charge.",
+  "filed_at": "2026-10-11T04:41:00+08:00",
+  "requested_resolution": "reverse_damage_fee",
+  "requested_amount": 120.0
+}

@@ -1,0 +1,13 @@
+{
+  "dispute_id": "DISP-117",
+  "_source": "Synthetic (ticket ids and parties from the team's 60-ticket file)",
+  "trip_id": "TRIP-2026-2017",
+  "filed_by": "rider",
+  "rider_id": "R-4521",
+  "driver_id": "D-6021",
+  "dispute_type": "safety_incident",
+  "description": "On 4 October my driver from Punggol Waterway Point to Kallang Wave Mall was speeding on the expressway, weaving between lanes and braking hard. I asked him to slow down and he ignored me. I felt very unsafe.",
+  "filed_at": "2026-10-04T14:14:00+08:00",
+  "requested_resolution": "safety_review",
+  "requested_amount": null
+}

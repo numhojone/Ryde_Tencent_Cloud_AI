@@ -28,14 +28,14 @@ TYPE_LABELS = {  # Chinese labels (default English labels live in TYPE_LABELS_EN
     "route_deviation": "绕路多收费",
     "no_show_charge": "爽约取消费",
     "fare_dispute": "车费争议",
-    "property_damage": "财物损坏费用",
+    "property_damage": "财物损坏 / 清洁费",
     "safety_incident": "安全事件",
 }
 TYPE_LABELS_EN = {
     "route_deviation": "Route deviation",
     "no_show_charge": "No-show charge",
     "fare_dispute": "Fare dispute",
-    "property_damage": "Property damage",
+    "property_damage": "Property damage / cleaning fee",
     "safety_incident": "Safety incident",
 }
 
@@ -50,7 +50,9 @@ _SIGNALS: dict[str, tuple[str, ...]] = {
         "里程", "路线", "车费高", "计价", "多花钱", "绕了一大圈", "故意绕",
         "out of the way", "longer route", "long way", "detour", "overcharge", "overcharged",
         "over-charged", "charged more", "extra money", "mileage", "took longer", "scenic",
-        "go round", "round and round", "so far", "ambil jalan jauh", "jalan jauh", "caj lebih", "caj terlalu", "kena caj lebih",
+        "go round", "round and round", "so far", "longer way", "long way round", "longer than expected", "took a long way",
+        "wrong way", "the long way", "roundabout way", "pay more", "paid more", "more expensive", "higher fare", "extra",
+        "ambil jalan jauh", "jalan jauh", "caj lebih", "caj terlalu", "kena caj lebih",
         "சுற்றி", "அதிக கட்டணம்", "நீண்ட வழி",
     ),
     "no_show_charge": (
@@ -94,18 +96,36 @@ _AMOUNT_RE = re.compile(
 )
 
 
+# Generic words that hint at a route problem but also appear elsewhere ("extra cleaning fee"): half weight, so a
+# specific phrase in another category outvotes them.
+_WEAK = {"extra", "pay more", "paid more", "more expensive", "higher fare", "so far"}
+
+
+def _has(low: str, w: str) -> bool:
+    """Whole-word match for Latin words ("extra" is not in "extraordinary"); substring for CJK / Tamil."""
+    if w.isascii():
+        return re.search(rf"(?<![a-z]){re.escape(w)}(?![a-z])", low) is not None
+    return w in low
+
+
+def _weight(words: list[str]) -> float:
+    return sum(0.5 if w in _WEAK else 1.0 for w in words)
+
+
 def classify_by_rules(text: str, trip_status: str | None = None) -> tuple[str, list[str]]:
-    """Deterministic classification: keyword scoring, then trip status as a tie-breaker. Returns (type, signals)."""
+    """Deterministic classification: keyword scoring, then trip status as a tie-breaker. Returns (type, signals).
+
+    The fallback for story understanding (Offline demo mode, or when the Live AI call fails)."""
     low = (text or "").lower()
     safety = detect_safety(text)
     if safety:                                            # policy 5.2: flag regardless of the type the filer chose
         return "safety_incident", safety
-    hits = {t: [w for w in _SIGNALS.get(t, ()) if w.lower() in low] for t in SUPPORTED_TYPES if t != "safety_incident"}
-    ranked = sorted(hits.items(), key=lambda kv: len(kv[1]), reverse=True)
+    hits = {t: [w for w in _SIGNALS.get(t, ()) if _has(low, w.lower())] for t in SUPPORTED_TYPES if t != "safety_incident"}
+    ranked = sorted(hits.items(), key=lambda kv: _weight(kv[1]), reverse=True)
     top, second = ranked[0], ranked[1]
-    if len(top[1]) > len(second[1]):
+    if _weight(top[1]) > _weight(second[1]):
         return top[0], top[1]
-    tied = [k for k, v in ranked if v and len(v) == len(top[1])]
+    tied = [k for k, v in ranked if v and _weight(v) == _weight(top[1])]
     return _fallback_by_status(trip_status, tied), (top[1] if top[1] else [])
 
 

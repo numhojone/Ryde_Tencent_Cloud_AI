@@ -279,3 +279,24 @@ body.as-support .phone{margin-top:10px}
 .qc-row .select{max-width:160px}
 .qc-reason{font-size:11.5px;color:var(--mut)}
 .db-pending{margin:0;font-size:12px;color:var(--brand);background:var(--brand-tint);border-radius:8px;padding:6px 9px}
+
+/* ---------------- driver view: one block per case of the signed-in rider ---------------- */
+.drv-case{display:flex;flex-direction:column;gap:8px;padding:10px;border:1px solid var(--line);border-radius:14px;background:var(--surface-2)}
+.drv-head{display:flex;justify-content:space-between;align-items:baseline;gap:8px;font-size:12.5px}
+.drv-name{font-weight:650;color:var(--accent)}
+.drv-ref{font-family:var(--mono);font-size:11.5px;color:var(--mut)}
+.drv-rider{font-size:11.5px;color:var(--mut);margin-bottom:4px}
+
+/* quick-fill stories on their own row under the demo controls */
+.tp-fill-row{flex:1 1 100%;display:flex;align-items:center;gap:8px;min-width:0}
+.tp-fill-row .tp-fill-lbl{margin-left:0;flex:none}
+.tp-fill-row .tp-fills{flex-wrap:nowrap;overflow-x:auto;scrollbar-width:thin;padding-bottom:2px;min-width:0}
+@media (max-width:900px){ .tp-fill-row .tp-fill-lbl{display:none} }
+
+/* stage 1: where each intake answer came from, and Live AI failure notices */
+.intake-badge{align-self:flex-start;margin:0 6px 2px;font-size:10.5px;font-weight:600;border-radius:999px;padding:1px 8px;letter-spacing:.02em}
+.intake-badge.live{background:var(--accent-tint);color:var(--accent)}
+.intake-badge.rules{background:var(--surface-3);color:var(--txt-2)}
+.intake-badge.choice{background:var(--pos-tint);color:var(--pos)}
+.rm-notice{align-self:center;max-width:92%;font-size:12px;color:var(--brand);background:var(--brand-tint);border:1px solid var(--brand-line);
+  border-radius:10px;padding:6px 10px;text-align:center}

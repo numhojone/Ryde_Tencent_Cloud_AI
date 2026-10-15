@@ -1,0 +1,13 @@
+{
+  "dispute_id": "DISP-139",
+  "_source": "Synthetic (ticket ids and parties from the team's 60-ticket file)",
+  "trip_id": "TRIP-2026-2039",
+  "filed_by": "rider",
+  "rider_id": "R-7001",
+  "driver_id": "D-3456",
+  "dispute_type": "route_deviation",
+  "description": "On 11 October I took a Ryde from one-north to Changi Business Park. The upfront estimate was about S$33.52 but I was charged S$35.20. The trip was about 1.3 km longer than the recommended route. Nobody told me why we left the normal route. I am requesting a refund of the excess fare.",
+  "filed_at": "2026-10-11T19:50:00+08:00",
+  "requested_resolution": "refund_excess_fare",
+  "requested_amount": 1.68
+}

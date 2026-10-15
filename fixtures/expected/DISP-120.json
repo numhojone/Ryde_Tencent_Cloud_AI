@@ -1,0 +1,18 @@
+{
+  "source": "computed from Policy v2.1 and the scenario parameters (build_dataset60.py), not by the app",
+  "scenario": "driver_late_contact",
+  "ruling": "upheld",
+  "refund_amount": 5.0,
+  "goodwill_credit": 0.0,
+  "clause": "2.4",
+  "must_escalate": false,
+  "must_escalate_reason": [],
+  "fraud_flag_party": false,
+  "rationale": "Driver arrived more than 5 minutes after the scheduled pickup. The rider may cancel without charge (policy 2.4).",
+  "facts": {
+    "arrival_minutes_after_schedule": 11.5,
+    "cancel_minutes_after_schedule": 15.5,
+    "driver_messages": 1,
+    "driver_calls": 1
+  }
+}

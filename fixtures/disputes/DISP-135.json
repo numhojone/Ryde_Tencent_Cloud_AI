@@ -1,0 +1,13 @@
+{
+  "dispute_id": "DISP-135",
+  "_source": "Synthetic (ticket ids and parties from the team's 60-ticket file)",
+  "trip_id": "TRIP-2026-2035",
+  "filed_by": "rider",
+  "rider_id": "R-7001",
+  "driver_id": "D-6021",
+  "dispute_type": "property_damage",
+  "description": "I was charged a S$45 cleaning fee after my ride from Bedok Mall to Paya Lebar Quarter on 30 September. At most there was a small spill. I think this is too much. Please reverse the fee.",
+  "filed_at": "2026-10-01T13:02:00+08:00",
+  "requested_resolution": "reverse_cleaning_fee",
+  "requested_amount": 45.0
+}

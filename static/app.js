@@ -22,7 +22,7 @@ const I18N = {
       + 'then a judge verifies the evidence independently and rules.'
       + '<span class="es-note">The dropdown in the header replays the preset tickets.</span>',
     badgeLlm:(p,m)=>`${p} · ${m}`, badgeDet:'Deterministic fallback · no API key', badgeFail:'Health check failed',
-    t_route:'Route', t_noshow:'No-show', t_fare:'Fare', t_property:'Property', t_safety:'Safety', t_routeFull:'Route deviation', t_noshowFull:'No-show charge',
+    t_route:'Route', t_noshow:'No-show', t_fare:'Fare', t_property:'Property damage / cleaning fee', t_safety:'Safety', t_routeFull:'Route deviation', t_noshowFull:'No-show charge',
     chipFare:'Fare', chipProp:'Cleaning fee', chipSafe:'Safety', a_safetycase:'Safety case file',
     ppHead:'Policy v2.1 path', ppPath:{ai_final:'AI final ruling',ai_ruling_if_confident:'AI ruling if confident',human_review:'Human review'},
     ppReq:'Required confidence', ppFraud:'Fraud flag raises the bar to 95%', ppClauses:'Clauses', ppBreak:'Confidence breakdown',
@@ -49,7 +49,7 @@ const I18N = {
         get_traffic_reference:'Traffic',get_fare_breakdown:'Fare breakdown',get_damage_evidence:'Damage photos',
         search_precedents:'Precedents'},
     rateLimit:'Real LLM quota / rate limit (429). Switch the backend at the top right to "Deterministic fallback" and run again: same flow, same tools, same rulings, only the reasoning steps are scripted.\n\n',
-    tripAuto:'Auto-detect from my story', cbAuto:'Trip: auto-detect', chipVague:'Vague',
+    tripAuto:'Auto-detect from my story', synthEv:'(synthetic evidence)', cbAuto:'Trip: auto-detect', chipVague:'Vague',
     cbFootAuto:'No dispute type or trip selected: the intake agent works both out from these words',
     tmMatched:(id, p, d)=>`Matched your trip ${id} (${p} to ${d})`, tmConf:'Match confidence', tmWhy:'Why this trip',
     tuPick:'Pick the trip and I will file the same words against it:', tuNone:'no matching details',
@@ -84,7 +84,7 @@ const I18N = {
       + '法官再独立核验证据并给出裁决。'
       + '<span class="es-note">顶栏的下拉可重放预置工单。</span>',
     badgeLlm:(p,m)=>`${p} · ${m}`, badgeDet:'确定性回退 · 无需 API key', badgeFail:'健康检查失败',
-    t_route:'绕路', t_noshow:'爽约', t_fare:'车费', t_property:'财物', t_safety:'安全', t_routeFull:'绕路多收费', t_noshowFull:'爽约取消费',
+    t_route:'绕路', t_noshow:'爽约', t_fare:'车费', t_property:'财物损坏 / 清洁费', t_safety:'安全', t_routeFull:'绕路多收费', t_noshowFull:'爽约取消费',
     chipFare:'车费争议', chipProp:'清洁费', chipSafe:'安全事件', a_safetycase:'安全案件材料',
     ppHead:'政策 v2.1 裁决路径', ppPath:{ai_final:'AI 终局裁决',ai_ruling_if_confident:'置信度足够时 AI 裁决',human_review:'人工复核'},
     ppReq:'所需置信度', ppFraud:'欺诈标记将门槛提高到 95%', ppClauses:'条款', ppBreak:'置信度构成',
@@ -111,7 +111,7 @@ const I18N = {
         get_traffic_reference:'路况参考',get_fare_breakdown:'费用明细',get_damage_evidence:'损坏证据',
         search_precedents:'先例检索'},
     rateLimit:'真实 LLM 额度/限流（429）。请把右上角后端切换为「确定性回退」再跑一次 —— 流程、工具与裁决结果完全一致，只是推理步骤由剧本驱动。\n\n',
-    tripAuto:'根据我的描述自动识别', cbAuto:'行程：自动识别', chipVague:'描述含糊',
+    tripAuto:'根据我的描述自动识别', synthEv:'（合成证据）', cbAuto:'行程：自动识别', chipVague:'描述含糊',
     cbFootAuto:'未选择争议类型和行程：受理智能体会从这段话里判断',
     tmMatched:(id, p, d)=>`已匹配到你的行程 ${id}（${p} 至 ${d}）`, tmConf:'匹配置信度', tmWhy:'匹配依据',
     tuPick:'请选择行程，我会用同一段话针对该行程建档：', tuNone:'无匹配细节',
@@ -202,11 +202,21 @@ function renderDropdowns(){
   if (!sel || !tripSel) return;
   const cur = sel.value, curT = tripSel.value;
   sel.innerHTML = ''; tripSel.innerHTML = '';
-  disputes.forEach(x => {
-    const o = document.createElement('option'); o.value = x.dispute_id;
-    o.textContent = `${x.dispute_id} · ${typeLabel(x.dispute_type)} · ${x.description.slice(0,24)}…`;
-    sel.appendChild(o);
-  });
+  // sample cases first, then the dataset cases labelled "(synthetic evidence)"; grouped by rider when the list is long
+  const label = x => `${x.dispute_id} · ${typeLabel(x.dispute_type)}${x.synthetic_evidence ? ' ' + T('synthEv') : ''} · ${x.description.slice(0,24)}…`;
+  const ordered = disputes.slice().sort((a, b) => (a.synthetic_evidence - b.synthetic_evidence) || a.dispute_id.localeCompare(b.dispute_id));
+  if (ordered.length > 12){
+    const groups = {};
+    ordered.forEach(x => { const k = x.rider_id || '-'; (groups[k] = groups[k] || []).push(x); });
+    Object.keys(groups).sort().forEach(k => {
+      const g = document.createElement('optgroup');
+      g.label = groups[k][0].rider_name ? `${groups[k][0].rider_name} (${k})` : k;
+      groups[k].forEach(x => { const o = document.createElement('option'); o.value = x.dispute_id; o.textContent = label(x); g.appendChild(o); });
+      sel.appendChild(g);
+    });
+  } else {
+    ordered.forEach(x => { const o = document.createElement('option'); o.value = x.dispute_id; o.textContent = label(x); sel.appendChild(o); });
+  }
   const auto = document.createElement('option'); auto.value = 'auto'; auto.textContent = T('tripAuto');
   tripSel.appendChild(auto);
   trips.forEach(x => {

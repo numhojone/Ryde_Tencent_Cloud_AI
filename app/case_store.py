@@ -12,8 +12,8 @@ with the pane it is for:
 Statuses: intake -> in_review -> resolved_by_ai, or -> with_agent <-> waiting_for_rider | waiting_for_driver |
 waiting_for_both -> resolved_by_human. Support can ask the rider and the driver; both can be pending at once.
 
-Pane "driver" carries what the case's driver may see (questions from support, acknowledgements). Those events go
-to that driver's own stream (driver_id from the ticket), never to the rider's.
+Pane "driver" carries what the case's driver may see (questions from support, acknowledgements). The driver view is
+a demo pane inside the signed-in rider's own screen, showing only that rider's cases and each case's own driver.
 Nothing here reads fixtures/expected.
 """
 from __future__ import annotations
@@ -36,7 +36,7 @@ from app.extract import detect_language
 from app.i18n import L
 from app.orchestrator import resolve
 from app.tools import call_tool
-from app.tools.fixtures import rider_scope
+from app.tools.fixtures import rider_scope, ticket_for_trip
 
 _SGT = ZoneInfo("Asia/Singapore")
 STATUSES = ("intake", "in_review", "resolved_by_ai", "with_agent", "waiting_for_rider", "waiting_for_driver",
@@ -86,9 +86,13 @@ class Case:
     task: asyncio.Task | None = None
     busy: bool = False
 
+    base_reference: str | None = None   # the dispute_id of the trip's existing ticket (dataset), known at once
+    trip_id: str | None = None          # the confirmed trip
+    understood: str | None = None       # the dispute type stage 1 worked out (model or the rider's tap)
+
     @property
     def reference(self) -> str:
-        return (self.ticket or {}).get("dispute_id") or self.id
+        return (self.ticket or {}).get("dispute_id") or self.base_reference or self.id
 
     @property
     def driver_id(self) -> str | None:
@@ -121,7 +125,6 @@ class Case:
 
 
 CASES: dict[str, Case] = {}
-DRIVER_SUBS: dict[str, set] = {}      # driver_id -> queues of that driver's live stream
 
 
 def get_case(case_id: str) -> Case:
@@ -146,9 +149,6 @@ def publish(case: Case, pane: str, type_: str, **data) -> dict:
         case.room_events.append(ev)
     for q in list(case.subscribers):
         q.put_nowait(ev)
-    if pane == "driver" and case.driver_id:
-        for q in list(DRIVER_SUBS.get(case.driver_id, ())):
-            q.put_nowait(ev)
     return ev
 
 
@@ -229,9 +229,14 @@ def _fmt_trip(c: dict, lg: str) -> str:
 async def _run_pipeline(case: Case, story: str, trip_id: str | None) -> None:
     case.busy = True
     case.awaiting_trip, case.ruling, case.error = False, None, None
+    draft = {"trip_id": trip_id, "complaint": story}
+    if getattr(case, "understood", None):
+        draft["understood"] = case.understood     # stage 1 already understood the story: no second intake model call
+    base = ticket_for_trip(trip_id) if trip_id else None
+    if base:
+        draft["ticket"] = base          # reuse the trip's existing ticket (dispute_id, trip, driver, type)
     try:
-        async for ev in resolve(None, mode=case.mode, draft={"trip_id": trip_id, "complaint": story}, lang=case.lang,
-                                rider_id=case.rider_id):
+        async for ev in resolve(None, mode=case.mode, draft=draft, lang=case.lang, rider_id=case.rider_id):
             t = ev.get("type")
             publish(case, "room", t, **{k: v for k, v in ev.items() if k != "type"})
             if t == "trip_matched":
@@ -289,7 +294,7 @@ def _start_task(case: Case, story: str, trip_id: str | None) -> None:
 
 
 async def start_case(story: str, *, trip_id: str | None = None, mode: str | None = None, lang: str = "en",
-                     rider_id: str | None = None) -> Case:
+                     rider_id: str | None = None, understood: str | None = None) -> Case:
     story = (story or "").strip()
     if not story:
         raise CaseError(400, L(lang, "A story is required", "需要填写投诉内容"))
@@ -297,12 +302,14 @@ async def start_case(story: str, *, trip_id: str | None = None, mode: str | None
         raise CaseError(400, L(lang, "Message too long (max 2000 characters)", "内容过长（上限 2000 字）"))
     rider_lang = "zh" if (lang == "zh" or detect_language(story) == "zh") else "en"
     case = Case(id=f"CASE-{uuid.uuid4().hex[:6].upper()}", mode=mode, lang=lang, rider_lang=rider_lang, story=story,
-                rider_id=rider_id)
+                rider_id=rider_id, trip_id=trip_id or None,
+                base_reference=(ticket_for_trip(trip_id) or {}).get("dispute_id") if trip_id else None)
     CASES[case.id] = case
     publish(case, "case", "case_status", status=case.status, reference=case.reference)
     _add_rider_message(case, story, room=False, initial=True)
     _assistant(case, "Thanks for telling us. I'm checking your trip records now.",
                      "感谢您的反馈，我正在核查您的行程记录。")
+    case.understood = understood
     _start_task(case, story, trip_id or None)
     return case
 
@@ -330,7 +337,7 @@ async def rider_message(case: Case, text: str, trip_id: str | None = None) -> di
         if trip_id and case.rider_id:
             from app.rider_match import owns_trip
             if not owns_trip(case.rider_id, trip_id):
-                raise CaseError(403, L(case.lang, "That trip is not in your account.", "该行程不在您的账户中。"))
+                raise CaseError(404, L(case.lang, "I can only look at trips on your account.", "我只能查看您账户中的行程。"))
         _start_task(case, story, trip_id)
         return {"status": case.status, "rerun": True}
 
@@ -407,7 +414,7 @@ async def _send_to_driver(case: Case, entry: dict, text: str, final_text: str | 
     if _typing_delay():
         await asyncio.sleep(_typing_delay())
     entry["status"] = "asked_driver"
-    publish(case, "driver", "driver_question", question=driver_view(case, entry))
+    publish(case, "driver", "driver_question", question=driver_question_view(case, entry))
     return m
 
 
@@ -456,7 +463,7 @@ async def human_ask(case: Case, question: str, original: str | None = None, reci
 
 # ---------------------------------------------------------------- the driver
 
-def driver_view(case: Case, entry: dict) -> dict:
+def driver_question_view(case: Case, entry: dict) -> dict:
     """What a driver may see about one question: never the rider's story, claim, amount, profile or contact."""
     from app.auth import rider_first_name
     td = (case.tools or {}).get("get_trip_data") or {}
@@ -471,47 +478,48 @@ def driver_view(case: Case, entry: dict) -> dict:
             "reply": reply}
 
 
-def driver_questions(driver_id: str) -> list[dict]:
-    """Every question support sent to this driver, on cases whose trip they drove. Oldest first."""
+def driver_view(rider_id: str) -> list[dict]:
+    """The driver view inside a rider's screen: one block per case of THIS rider that has a driver, with that
+    case's own driver (from the trip), the trip card and support's questions. Nothing about other riders' cases."""
+    from app.tools.fixtures import person_name
     out = []
     for c in CASES.values():
-        if c.driver_id != driver_id:
+        if c.rider_id != rider_id or not c.driver_id:
             continue
-        for q in c.qa_log:
-            if q.get("recipient") == "driver" and q.get("sent_to_driver"):
-                out.append(driver_view(c, q))
-    return sorted(out, key=lambda q: q["at"] or "")
+        td = (c.tools or {}).get("get_trip_data") or {}
+        qs = [driver_question_view(c, q) for q in c.qa_log if q.get("recipient") == "driver" and q.get("sent_to_driver")]
+        out.append({"case_id": c.id, "reference": c.reference, "status": c.status,
+                    "driver": {"id": c.driver_id, "name": person_name(c.driver_id)},
+                    "trip": {"date": td.get("start_time") or td.get("scheduled_time"),
+                             "pickup": (td.get("pickup_location") or {}).get("name"),
+                             "dropoff": (td.get("dropoff_location") or {}).get("name")},
+                    "questions": qs, "waiting": sum(1 for q in qs if q["status"] == "waiting")})
+    return out
 
 
-def _driver_entry(driver_id: str, question_id: str | None) -> tuple[Case, dict]:
-    """The question the driver is replying to (the given one, else the newest waiting one). 404 if not theirs."""
-    found = []
-    for c in CASES.values():
-        if c.driver_id != driver_id:
-            continue
-        for q in c.qa_log:
-            if q.get("recipient") == "driver" and q.get("sent_to_driver"):
-                found.append((c, q))
+def _driver_entry(case: Case, question_id: str | None) -> dict:
+    """The question being answered (the given one, else the newest waiting one) on this case."""
+    found = [q for q in case.qa_log if q.get("recipient") == "driver" and q.get("sent_to_driver")]
     if question_id:
-        hit = [(c, q) for c, q in found if f"{c.id}:{q['id']}" == question_id]
+        hit = [q for q in found if f"{case.id}:{q['id']}" == question_id or q["id"] == question_id]
         if not hit:
             raise CaseError(404, "Unknown question")
         return hit[0]
-    waiting = [(c, q) for c, q in found if q.get("status") == "asked_driver"]
+    waiting = [q for q in found if q.get("status") == "asked_driver"]
     if not waiting:
         raise CaseError(409, "No question is waiting for a reply")
     return waiting[-1]
 
 
-async def driver_reply(driver_id: str, text: str, question_id: str | None = None) -> dict:
-    """The driver's answer. Kept as untrusted data in the case record: it feeds the summary and the person
-    handling the case, and never changes a ruling or a decision by itself."""
+async def driver_reply(case: Case, text: str, question_id: str | None = None) -> dict:
+    """The driver's answer on this case. Kept as untrusted data in the case record: it feeds the summary and the
+    person handling the case, and never changes a ruling or a decision by itself."""
     text = (text or "").strip()
     if not text:
         raise CaseError(400, "Reply is empty")
     if len(text) > 2000:
         raise CaseError(400, "Reply too long (max 2000 characters)")
-    case, q = _driver_entry(driver_id, question_id)
+    q = _driver_entry(case, question_id)
     if q.get("status") != "asked_driver":
         raise CaseError(409, "This question has already been answered")
     at = _now()
@@ -526,9 +534,9 @@ async def driver_reply(driver_id: str, text: str, question_id: str | None = None
     refresh_waiting(case)
     publish(case, "human", "qa", entry=dict(q))
     publish(case, "human", "summary", summary=human_summary(case, case.lang))
-    publish(case, "driver", "driver_reply_ack", question=driver_view(case, q),
+    publish(case, "driver", "driver_reply_ack", question=driver_question_view(case, q),
             text=L(case.lang, "Thanks. Your reply has been sent to Ryde Support.", "谢谢，您的回复已发送给 Ryde 客服。"))
-    return {"question": driver_view(case, q)}
+    return {"question": driver_question_view(case, q)}
 
 
 async def human_decision(case: Case, action: str, amount: float | None = None, note: str | None = None) -> dict:
@@ -568,13 +576,17 @@ async def human_decision(case: Case, action: str, amount: float | None = None, n
     return {"status": case.status, "decision": case.decision, "card": card}
 
 
+def case_for_trip(rider_id: str, trip_id: str) -> Case | None:
+    """The case this rider already has on this trip (one ticket, one case)."""
+    return next((c for c in CASES.values() if c.rider_id == rider_id and
+                 (c.trip_id == trip_id or (c.ticket or {}).get("trip_id") == trip_id)), None)
+
+
 def can_view(case: Case, sess: dict | None) -> bool:
-    """A rider sees only their own cases; a support agent sees any case that was handed to a person.
+    """A rider sees only their own cases (in every pane: chat, agent room, console, driver view).
     No session (internal callers and tests) sees everything."""
     if sess is None:
         return True
-    if sess.get("role") == "support":
-        return case.escalated
     return case.rider_id is not None and case.rider_id == sess.get("rider_id")
 
 

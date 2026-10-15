@@ -1,0 +1,13 @@
+{
+  "dispute_id": "DISP-160",
+  "_source": "Synthetic (ticket ids and parties from the team's 60-ticket file)",
+  "trip_id": "TRIP-2026-2060",
+  "filed_by": "rider",
+  "rider_id": "R-9001",
+  "driver_id": "D-7002",
+  "dispute_type": "safety_incident",
+  "description": "On 14 October on my ride from Bedok Mall to Tiong Bahru Plaza I suspect the driver had been drinking. He smelled of alcohol, kept drifting between lanes and braked suddenly. I want this investigated.",
+  "filed_at": "2026-10-14T20:41:00+08:00",
+  "requested_resolution": "safety_review",
+  "requested_amount": null
+}

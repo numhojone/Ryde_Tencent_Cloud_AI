@@ -1,14 +1,18 @@
 {
   "rider_id": "R-7823",
-  "account_age_days": 210,
-  "total_trips": 34,
+  "account_age_days": 242,
+  "total_trips": 50,
   "avg_rating": 3.9,
   "dispute_history": {
     "total_disputes": 4,
     "upheld": 1,
-    "rejected": 3
+    "rejected": 3,
+    "open_disputes": 11
   },
   "fraud_flags": 1,
   "fraud_flag_details": "flagged_for_frequent_late_cancellations",
-  "payment_method": "e-wallet"
+  "payment_method": "e-wallet",
+  "name": "Daniel Lim",
+  "account_created_at": "2026-02-15T00:00:00+08:00",
+  "profile_as_of": "2026-10-15"
 }

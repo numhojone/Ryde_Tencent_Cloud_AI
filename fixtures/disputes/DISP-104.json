@@ -1,0 +1,13 @@
+{
+  "dispute_id": "DISP-104",
+  "_source": "Synthetic (ticket ids and parties from the team's 60-ticket file)",
+  "trip_id": "TRIP-2026-2004",
+  "filed_by": "rider",
+  "rider_id": "R-3312",
+  "driver_id": "D-4410",
+  "dispute_type": "no_show_charge",
+  "description": "I was waiting at the entrance of Marina Bay Sands on 26 September for my 11:25 booking, but the driver cancelled and charged me a S$5 no-show fee. I never got a call from the driver. Please refund the fee.",
+  "filed_at": "2026-09-26T12:49:30+08:00",
+  "requested_resolution": "reverse_cancellation_fee",
+  "requested_amount": 5.0
+}
