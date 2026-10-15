@@ -29,7 +29,8 @@ class TriageResult(BaseModel):
     normalized_claim: str = Field(description="用平台术语重述的一句话主张")
     requested_amount: Optional[float] = None
     requested_resolution: Optional[str] = None
-    detected_signals: list[str] = Field(default_factory=list, description="触发分类的原文关键词/信号")
+    detected_signals: list[str] = Field(default_factory=list, description="Signals in the complaint that drove the classification")
+    safety_flag: bool = Field(default=False, description="Complaint contains safety indicators (policy 5.2): always human review")
 
 
 class AdvocateCase(BaseModel):
@@ -54,3 +55,10 @@ class Ruling(BaseModel):
     evidence_cited: list[str] = Field(default_factory=list)
     escalation_required: bool = False
     escalation_summary: Optional[str] = None
+    goodwill_credit: Optional[float] = None
+    policy_clauses: list[str] = Field(default_factory=list)
+    policy_path: Optional[dict] = None
+    confidence_breakdown: Optional[dict] = None
+    precedent_id: Optional[str] = None
+    recommendation: Optional[dict] = None
+    policy_check: Optional[dict] = None

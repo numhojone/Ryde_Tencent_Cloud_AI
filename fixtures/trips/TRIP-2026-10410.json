@@ -1,0 +1,64 @@
+{
+  "trip_id": "TRIP-2026-10410",
+  "_source": "Synthetic stress case: thin evidence",
+  "trip_data": {
+    "trip_id": "TRIP-2026-10410",
+    "rider_id": "R-7001",
+    "driver_id": "D-7002",
+    "pickup_location": {
+      "name": "Tanjong Pagar Centre",
+      "lat": 1.2766,
+      "lng": 103.8458
+    },
+    "dropoff_location": {
+      "name": "HarbourFront Centre",
+      "lat": 1.2653,
+      "lng": 103.822
+    },
+    "scheduled_time": "2026-09-17T08:30:00+08:00",
+    "driver_arrival_time": "2026-09-17T08:44:00+08:00",
+    "cancellation_time": "2026-09-17T08:50:00+08:00",
+    "status": "cancelled_no_show_rider",
+    "cancellation_fee_charged": 5.0,
+    "currency": "SGD"
+  },
+  "gps_telemetry": [
+    {
+      "timestamp": "2026-09-17T08:44:00+08:00",
+      "lat": 1.2803,
+      "lng": 103.848,
+      "speed_kmh": 15,
+      "status": "en_route"
+    },
+    {
+      "timestamp": "2026-09-17T08:45:00+08:00",
+      "lat": 1.28,
+      "lng": 103.8476,
+      "speed_kmh": 18,
+      "status": "en_route"
+    }
+  ],
+  "chat_logs": [],
+  "app_events": [
+    {
+      "timestamp": "2026-09-17T08:35:00+08:00",
+      "event_type": "driver_assigned",
+      "details": "Driver accepted the booking."
+    },
+    {
+      "timestamp": "2026-09-17T08:44:00+08:00",
+      "event_type": "driver_arrived",
+      "details": "System marked the driver as arrived (location about 420 m from the pickup point)."
+    },
+    {
+      "timestamp": "2026-09-17T08:44:00+08:00",
+      "event_type": "wait_timer_started",
+      "details": "Free waiting timer started."
+    },
+    {
+      "timestamp": "2026-09-17T08:50:00+08:00",
+      "event_type": "cancellation_fee_charged",
+      "details": "S$5.00 cancellation fee charged."
+    }
+  ]
+}

@@ -93,10 +93,10 @@ TOOL_SCHEMAS: list[dict] = [
         "type": "function",
         "function": {
             "name": "get_policy",
-            "description": "Return the policy that applies to a dispute type, with numeric thresholds and the refund formula. Rulings must cite the relevant clauses.",
+            "description": "Return the Ryde Dispute Resolution Policy v2.1 sections that apply to a dispute type (with section numbers such as 1.2, 2.3, 3.3) and the section 6 ruling thresholds. Rulings must cite the relevant sections.",
             "parameters": {
                 "type": "object",
-                "properties": {"dispute_type": {"type": "string", "description": "Dispute type, e.g. route_deviation or no_show_charge"}},
+                "properties": {"dispute_type": {"type": "string", "description": "One of route_deviation, no_show_charge, fare_dispute, property_damage, safety_incident"}},
                 "required": ["dispute_type"],
             },
         },
@@ -105,12 +105,36 @@ TOOL_SCHEMAS: list[dict] = [
         "type": "function",
         "function": {
             "name": "get_traffic_reference",
-            "description": "Get third-party traffic reference data: duration of the optimal vs the actual route under congestion. Used in route-deviation disputes to judge whether the detour was justified by traffic.",
+            "description": "Get historical traffic-API incidents around the trip (road, severity, start and clear time) and the system-recommended route. Used in route-deviation disputes to judge whether a reroute was traffic-justified.",
             "parameters": {
                 "type": "object",
                 "properties": {"trip_id": {"type": "string"}},
                 "required": ["trip_id"],
             },
+        },
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "get_fare_breakdown",
+            "description": "Get the fare quote vs actual fare, per-component breakdown (surge multiplier, surge amount, booking fee) and the surge pricing log including whether the rider was notified. Used for fare disputes and for distance-fare rates in route disputes.",
+            "parameters": {"type": "object", "properties": {"trip_id": {"type": "string"}}, "required": ["trip_id"]},
+        },
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "get_damage_evidence",
+            "description": "Get a property-damage claim: claim type and amount, photos (capture time, whether taken by the in-app camera, linked to the trip) and any repair quote. Used for property-damage disputes.",
+            "parameters": {"type": "object", "properties": {"trip_id": {"type": "string"}}, "required": ["trip_id"]},
+        },
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "search_precedents",
+            "description": "Search past rulings by dispute type. Optional fact tags (e.g. rider_not_informed, traffic_justified, surge_increase) rank results by overlap. Cite a relevant precedent case ID in the ruling rationale.",
+            "parameters": {"type": "object", "properties": {"dispute_type": {"type": "string"}, "tags": {"type": "array", "items": {"type": "string"}}}, "required": ["dispute_type"]},
         },
     },
 ]
@@ -126,6 +150,9 @@ DISPATCH: dict[str, Callable[..., Any]] = {
     "get_driver_profile": F.get_driver_profile,
     "get_policy": F.get_policy,
     "get_traffic_reference": F.get_traffic_reference,
+    "get_fare_breakdown": F.get_fare_breakdown,
+    "get_damage_evidence": F.get_damage_evidence,
+    "search_precedents": F.search_precedents,
 }
 
 

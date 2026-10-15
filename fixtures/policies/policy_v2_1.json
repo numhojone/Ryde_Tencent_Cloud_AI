@@ -1,0 +1,131 @@
+{
+  "policy_id": "ryde_dispute_resolution_policy",
+  "version": "2.1",
+  "effective_date": "2026-01-01",
+  "source": "Ryde Dispute Resolution Policy v2.1 (official hackathon document); text condensed, numbers unchanged",
+  "sections": {
+    "route_deviation": [
+      {
+        "id": "1.1",
+        "text": "Drivers may reroute from the GPS-recommended path for real-time traffic, road closures or congestion, but the rider must be informed of any deviation."
+      },
+      {
+        "id": "1.2",
+        "text": "The driver MUST inform the rider of a route deviation via in-app chat, or verbally (call recording as evidence), before or at the point of deviation. A brief reason is sufficient."
+      },
+      {
+        "id": "1.3",
+        "text": "Refund matrix: traffic reroute + rider informed and agrees + deviation > 1 km: no refund. Traffic reroute + rider NOT informed + deviation > 1 km: partial refund of the excess distance fare. Traffic reroute, not informed, deviation <= 1 km: no refund. Reroute WITHOUT traffic justification + deviation > 1 km: full refund of the excess distance fare. Without justification, deviation <= 1 km: no refund."
+      },
+      {
+        "id": "1.4",
+        "text": "Traffic justification is verified with historical traffic API data for the route segment at trip time. Deviation distance = actual_route_distance - recommended_route_distance. In-app chat or call recording confirming rider acknowledgement means the deviation is agreed."
+      }
+    ],
+    "no_show_charge": [
+      {
+        "id": "2.1",
+        "text": "The driver must wait at the pickup location for a free wait time of 5 minutes from the scheduled pickup time. After 5 minutes the driver may cancel as a rider no-show."
+      },
+      {
+        "id": "2.2",
+        "text": "A no-show cancellation fee of $5.00 is charged to the rider when the driver cancels after the free wait period. The fee goes to the driver as compensation."
+      },
+      {
+        "id": "2.3",
+        "text": "Before cancelling for no-show the driver MUST attempt to contact the rider with at least 1 in-app chat message AND at least 1 phone call (in-app calling). If either obligation is not met, the cancellation fee is voided."
+      },
+      {
+        "id": "2.4",
+        "text": "If the driver fails to arrive within scheduled pickup time + 5 minutes, the rider may cancel at no charge. If the driver fails to arrive AND fails to attempt contact, the rider is eligible for a $5.00 goodwill credit."
+      },
+      {
+        "id": "2.5",
+        "text": "3 or more no-show cancellations within a rolling 30 days flags the rider's account for review (upfront payment, possible suspension by Trust & Safety)."
+      }
+    ],
+    "fare_dispute": [
+      {
+        "id": "3.1",
+        "text": "The upfront quote is binding at the surge multiplier in effect at quote time. It includes base fare, distance fare, time fare, booking fee and any applicable surge."
+      },
+      {
+        "id": "3.2",
+        "text": "If the surge multiplier increases between quote and trip start, the rider MUST be notified in-app before or at pickup, stating the new multiplier, the revised estimated fare and an option to cancel without penalty."
+      },
+      {
+        "id": "3.3",
+        "text": "Surge increases + rider notified + rider proceeds: no refund. Surge increases + rider NOT notified: full refund of the surge differential (actual fare - quoted fare). Surge decreases: lower fare applies. Surge unchanged: quoted fare applies."
+      },
+      {
+        "id": "3.4",
+        "text": "surge_differential = actual_fare - upfront_quote. If the difference is attributable solely to the surge multiplier change (all other components unchanged), the full differential is refundable when the rider was not notified."
+      },
+      {
+        "id": "3.5",
+        "text": "Surge-exempt components: booking fee. Base, distance and time fares are subject to the surge multiplier."
+      }
+    ],
+    "property_damage": [
+      {
+        "id": "4.1",
+        "text": "Drivers may claim cleaning or repair fees for rider-caused damage (spills, vomit, stains, interior or exterior damage)."
+      },
+      {
+        "id": "4.2",
+        "text": "Evidence: photos submitted within 24 hours of trip completion; automatically timestamped by the in-app camera; verifiable (taken through the Ryde driver app's built-in camera, not external uploads); damage linked to the specific trip via GPS telemetry and trip timestamp."
+      },
+      {
+        "id": "4.3",
+        "text": "Cleaning fee: up to $50.00 with photo evidence, no external quote needed. Repair fee: cost of repair, requires a written quote from a certified workshop submitted within 7 days."
+      },
+      {
+        "id": "4.4",
+        "text": "If the rider disputes the claim it goes to human review in principle; if the evidence is insufficient (no timestamp, external photo, or damage not linked to the trip) the claim is rejected."
+      }
+    ],
+    "safety_incident": [
+      {
+        "id": "5.1",
+        "text": "Any dispute flagged safety-related is automatically escalated to human review (reckless driving, harassment, assault or threats, inappropriate conduct, accidents, anyone feeling unsafe)."
+      },
+      {
+        "id": "5.2",
+        "text": "AI agents MAY gather evidence, summarise accounts and prepare case files. AI agents CANNOT issue rulings, determine fault or recommend resolutions on safety incidents, and MUST flag any dispute with safety indicators for immediate human escalation regardless of the dispute type selected by the filer."
+      },
+      {
+        "id": "5.3",
+        "text": "Interim measures pending review: temporary suspension of the accused party's account, no new trip acceptance (driver) or booking (rider); lifted if the reviewer finds no violation."
+      }
+    ]
+  },
+  "ruling_thresholds": {
+    "monetary": [
+      {
+        "max_value_exclusive": 10,
+        "path": "ai_final",
+        "min_confidence": null
+      },
+      {
+        "max_value_inclusive": 50,
+        "path": "ai_ruling_if_confident",
+        "min_confidence": 0.8
+      },
+      {
+        "above": 50,
+        "path": "human_review",
+        "min_confidence": null
+      }
+    ],
+    "category": {
+      "safety_incident": "Always human review (section 5)",
+      "fare_dispute": "Under $10: AI final. $10 to $50: AI ruling if confidence >= 80%, else escalate. Over $50: always human review.",
+      "route_deviation": "AI ruling if confidence >= 80% and deviation <= 2 km, else escalate",
+      "property_damage": "Cleaning (<= $50): AI ruling if photo evidence is verifiable. Repair (> $50): always human review.",
+      "no_show_charge": "AI ruling is final (fee fixed at $5.00)"
+    },
+    "fraud_flag_min_confidence": 0.95,
+    "route_deviation_max_ai_km": 2.0,
+    "text_6_3": "Confidence is based on evidence completeness, policy clarity, precedent alignment and party credibility. If any party has a fraud flag >= 1 the confidence threshold is raised to 95% regardless of dispute value."
+  }
+}

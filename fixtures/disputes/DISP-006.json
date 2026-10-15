@@ -1,0 +1,13 @@
+{
+  "dispute_id": "DISP-006",
+  "_source": "Synthetic",
+  "trip_id": "TRIP-2026-10410",
+  "filed_by": "rider",
+  "rider_id": "R-7001",
+  "driver_id": "D-7002",
+  "dispute_type": "no_show_charge",
+  "description": "The app says the driver arrived and charged me a S$5 cancellation fee, but I never saw any car and the location was off. I don't think the driver really arrived.",
+  "filed_at": "2026-09-17T10:00:00+08:00",
+  "requested_resolution": "full_refund_of_cancellation_fee",
+  "requested_amount": 5.0
+}

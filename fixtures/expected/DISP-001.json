@@ -1,0 +1,6 @@
+{
+  "source": "dataset case_metadata / recommended_ruling",
+  "ruling": "partial",
+  "refund_amount": 3.44,
+  "rationale": "The driver deviated from the optimal PIE route due to a genuine vehicle fire and heavy congestion on PIE eastbound. The reroute to ECP was reasonable and safety-motivated, and the trip duration (37 min) was close to the estimate (35 min). However, the driver failed to inform the rider of the route change as required by Driver Policy §4.2. The rider's query at 13:24 and the driver's dismissive response further confirm the notification failure. A partial refund of the excess distance fare ($3.44) is awarded to the rider. The driver is not penalised for the full excess ($6.50) as the reroute was justified by traffic conditions and did not cause significant delay."
+}

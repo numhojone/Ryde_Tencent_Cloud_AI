@@ -72,22 +72,61 @@ def get_driver_profile(driver_id: str) -> dict:
 
 
 def get_policy(dispute_type: str) -> dict:
-    """根据争议类型返回适用的政策对象（含数值阈值与退费公式）。"""
-    mapping = {
-        "route_deviation": "route_deviation_policy",
-        "no_show_charge": "cancellation_policy",
-    }
-    policy_id = mapping.get(dispute_type)
-    if not policy_id:
+    """Return the Ryde policy v2.1 sections that apply to a dispute type, plus the section 6 ruling thresholds."""
+    pol = _load_json("policies/policy_v2_1.json")
+    secs = pol["sections"].get(dispute_type)
+    if secs is None:
         raise ToolError(f"No policy for dispute type: {dispute_type}")
-    return {"dispute_type": dispute_type, **_load_json(f"policies/{policy_id}.json")}
+    th = pol["ruling_thresholds"]
+    return {
+        "dispute_type": dispute_type,
+        "policy_version": pol["version"],
+        "sections": secs,
+        "category_threshold": th["category"].get(dispute_type),
+        "monetary_thresholds": th["monetary"],
+        "fraud_flag_min_confidence": th["fraud_flag_min_confidence"],
+        "confidence_note": th["text_6_3"],
+    }
 
 
 def get_traffic_reference(trip_id: str) -> dict:
-    """获取第三方交通参考数据（绕路争议用）。可能为 null。"""
+    """Third-party traffic reference for route-deviation disputes: incidents on the road segments around the trip,
+    plus the system-recommended route. May be empty."""
     trip = _load_trip(trip_id)
-    ref = trip.get("traffic_reference")
-    return {"trip_id": trip_id, "traffic_reference": ref}
+    return {"trip_id": trip_id, "traffic_conditions": trip.get("traffic_conditions", []),
+            "recommended_route": trip.get("optimal_route")}
+
+
+def get_fare_breakdown(trip_id: str) -> dict:
+    """Fare breakdown (quote vs actual, per-component) and the surge pricing log, for fare / route disputes."""
+    trip = _load_trip(trip_id)
+    td = trip.get("trip_data", {}) or {}
+    return {"trip_id": trip_id,
+            "fares": {k: td[k] for k in ("upfront_quote", "actual_fare", "fare_difference", "estimated_fare",
+                                         "fare_charged", "cleaning_fee_charged", "cancellation_fee_charged") if k in td},
+            "fare_breakdown": trip.get("fare_breakdown"), "surge_pricing_log": trip.get("surge_pricing_log")}
+
+
+def get_damage_evidence(trip_id: str) -> dict:
+    """Property-damage claim evidence: claim type/amount, photos (when, how captured, linked to trip), repair quote."""
+    trip = _load_trip(trip_id)
+    return {"trip_id": trip_id, "damage_evidence": trip.get("damage_evidence"),
+            "trip_end_time": (trip.get("trip_data") or {}).get("end_time")}
+
+
+_PREC_ALIAS = {"cancellation_fee": "no_show_charge"}
+
+
+def search_precedents(dispute_type: str, tags: list | None = None) -> dict:
+    """Search past rulings by dispute type; optional fact tags rank the results by overlap."""
+    want = set(tags or [])
+    out = []
+    for p in _load_json("precedents.json"):
+        if _PREC_ALIAS.get(p["dispute_type"], p["dispute_type"]) != dispute_type:
+            continue
+        out.append({**p, "tag_overlap": len(want & set(p.get("tags", [])))})
+    out.sort(key=lambda x: -x["tag_overlap"])
+    return {"dispute_type": dispute_type, "precedents": out}
 
 
 # ---------- 争议票据加载（编排器用，非 agent 工具）----------

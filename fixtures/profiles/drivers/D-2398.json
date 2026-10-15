@@ -4,15 +4,10 @@
   "total_trips": 3201,
   "avg_rating": 4.9,
   "dispute_history": {
-    "total": 1,
-    "upheld": 0,
+    "total_disputes": 1,
+    "upheld_against": 0,
     "rejected": 1
   },
-  "fraud_flags": [],
-  "fraud_flag_details": [],
-  "vehicle": {
-    "plate": "SGP 4521 M",
-    "model": "Honda HR-V",
-    "color": "White"
-  }
+  "fraud_flags": 0,
+  "vehicle": "Honda HR-V (SGP 4521 M)"
 }

@@ -1,12 +1,13 @@
 {
   "dispute_id": "DISP-002",
-  "trip_id": "TRIP-1002",
+  "_source": "Official Ryde sample dataset DISP-002",
+  "trip_id": "TRIP-2026-09945",
   "filed_by": "rider",
-  "rider_id": "RIDER-502",
-  "driver_id": "DRIVER-302",
+  "rider_id": "R-7823",
+  "driver_id": "D-2398",
   "dispute_type": "no_show_charge",
-  "description": "The driver never reached my pickup point but I was still charged a S$25 cancellation fee. I want a full refund.",
-  "filed_at": "2026-01-16T09:15:00+08:00",
+  "description": "I was at the pickup point at Tiong Bahru Plaza on time but the driver never showed up. I waited 10 minutes at the lobby and couldn't find the car. The app charged me a $5.00 cancellation fee for a 'no-show' which is completely unfair — I was there, the driver was not. I want the charge reversed immediately.",
+  "filed_at": "2026-09-13T09:20:00+08:00",
   "requested_resolution": "full_refund_of_cancellation_fee",
-  "requested_amount": 25.0
+  "requested_amount": 5.0
 }

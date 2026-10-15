@@ -1,0 +1,13 @@
+{
+  "driver_id": "D-4410",
+  "account_age_days": 610,
+  "total_trips": 1320,
+  "avg_rating": 4.6,
+  "dispute_history": {
+    "total_disputes": 4,
+    "upheld_against": 1,
+    "rejected": 3
+  },
+  "fraud_flags": 0,
+  "vehicle": "Toyota Camry (SKB 2210 L)"
+}

@@ -1,0 +1,13 @@
+{
+  "dispute_id": "DISP-005",
+  "_source": "Synthetic",
+  "trip_id": "TRIP-2026-10305",
+  "filed_by": "rider",
+  "rider_id": "R-5120",
+  "driver_id": "D-6021",
+  "dispute_type": "safety_incident",
+  "description": "The driver was speeding over 100 km/h on the expressway and ran a red light. When I asked him to slow down he shouted at me. I felt really unsafe and want a refund.",
+  "filed_at": "2026-09-16T08:00:00+08:00",
+  "requested_resolution": "refund",
+  "requested_amount": 24.0
+}

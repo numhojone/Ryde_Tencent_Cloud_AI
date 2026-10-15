@@ -33,10 +33,29 @@ MIN_EVIDENCE_POINTS = 3
 #   gps_telemetry < 3  → 连"是否到达过上车点"都无法判断
 #   chat_logs     < 2  → 无法构成一次完整沟通（联系尝试要靠它举证）
 #   app_events    < 2  → 无法还原计费/等待时间线
-NEAR_EMPTY_THRESHOLDS = {
-    "get_gps_telemetry": ("gps_telemetry", 3, "points"),
-    "get_chat_logs": ("chat_logs", 2, "messages"),
-    "get_app_events": ("app_events", 2, "events"),
+def _n(key):
+    return lambda r: len((r or {}).get(key, []) or [])
+
+
+def _present(path):
+    def f(r):
+        cur = r or {}
+        for k in path:
+            cur = (cur or {}).get(k) if isinstance(cur, dict) else None
+        return len(cur) if isinstance(cur, (list, dict)) and cur else 0
+    return f
+
+
+# (tool, label, counter, minimum) per dispute type. The minimum is what is needed to support the conclusion:
+#   route: GPS (was the route actually driven) + chat (was the rider told)
+#   no-show: GPS (did the driver arrive) + chat (contact) + events (timeline)
+#   fare: surge log (when did the multiplier change, was the rider notified) + chat
+#   property: damage evidence record with at least one photo + chat
+SOURCE_SPECS = {
+    "route_deviation": [("get_gps_telemetry", "gps_telemetry", _n("points"), 3), ("get_chat_logs", "chat_logs", _n("messages"), 2)],
+    "no_show_charge": [("get_gps_telemetry", "gps_telemetry", _n("points"), 3), ("get_chat_logs", "chat_logs", _n("messages"), 2), ("get_app_events", "app_events", _n("events"), 2)],
+    "fare_dispute": [("get_fare_breakdown", "surge_log", _present(["surge_pricing_log"]), 1), ("get_chat_logs", "chat_logs", _n("messages"), 1)],
+    "property_damage": [("get_damage_evidence", "damage_photos", _present(["damage_evidence", "photos"]), 1), ("get_chat_logs", "chat_logs", _n("messages"), 1)],
 }
 
 EventEmitter = Callable[[dict], Awaitable[None]]
@@ -65,40 +84,23 @@ async def _noop(_ev: dict) -> None:
     return None
 
 
-async def inspect(trip_id: str, emit: Optional[EventEmitter] = None) -> dict:
-    """重新拉取三个证据源，统计各自条数并判断是否空/近空。
+async def inspect(trip_id: str, emit: Optional[EventEmitter] = None, dtype: str = "no_show_charge") -> dict:
+    """Re-fetch the evidence sources this dispute type depends on and count them.
 
-    这里刻意重新调用工具（而不是复用 judge 已取到的数据）：安全网必须是独立的
-    一次核验，且工具调用会在事件流里可见，demo 上能直接看到这一步。
+    Deliberately calls the tools again instead of reusing what the judge fetched: the safety net is an
+    independent check, and the calls are visible in the event stream.
     """
     emit = emit or _noop
     sources: dict[str, dict] = {}
-
-    for tool_name, (label, threshold, key) in NEAR_EMPTY_THRESHOLDS.items():
-        await emit({
-            "type": "tool_call", "role": "safety_net", "tool": tool_name,
-            "args": {"trip_id": trip_id}, "summary": summarize_for_log(tool_name, {"trip_id": trip_id}),
-        })
+    for tool_name, label, counter, threshold in SOURCE_SPECS.get(dtype, SOURCE_SPECS["no_show_charge"]):
+        await emit({"type": "tool_call", "role": "safety_net", "tool": tool_name, "args": {"trip_id": trip_id},
+                    "summary": summarize_for_log(tool_name, {"trip_id": trip_id})})
         res = call_tool(tool_name, {"trip_id": trip_id})
-        if res["ok"]:
-            count = len((res["result"] or {}).get(key, []) or [])
-            error = None
-        else:
-            count = 0
-            error = res.get("error")
+        count, error = (counter(res["result"]), None) if res["ok"] else (0, res.get("error"))
         near_empty = count < threshold
-        await emit({
-            "type": "tool_result", "role": "safety_net", "tool": tool_name,
-            "ok": res["ok"], "result": {key: count, "near_empty": near_empty},
-        })
-        sources[label] = {
-            "tool": tool_name,
-            "count": count,
-            "threshold": threshold,
-            "near_empty": near_empty,
-            "error": error,
-        }
-
+        await emit({"type": "tool_result", "role": "safety_net", "tool": tool_name, "ok": res["ok"],
+                    "result": {label: count, "near_empty": near_empty}})
+        sources[label] = {"tool": tool_name, "count": count, "threshold": threshold, "near_empty": near_empty, "error": error}
     return sources
 
 
@@ -107,6 +109,7 @@ async def apply(
     trip_id: str,
     emit: Optional[EventEmitter] = None,
     lang: str = "en",
+    dtype: str = "no_show_charge",
 ) -> dict:
     """Run the safety net over the judge's ruling; return the final (possibly overridden) ruling."""
     emit = emit or _noop
@@ -119,8 +122,9 @@ async def apply(
                                    "安全网校验：核验裁决的证据基础是否充分（确定性规则，与模型无关）")})
 
     evidence = _distinct_evidence(ruling.get("evidence_cited"))
-    sources = await inspect(trip_id, emit)
+    sources = await inspect(trip_id, emit, dtype)
 
+    already_escalated = ruling.get("ruling") == "escalated"
     reasons: list[str] = []
     if len(evidence) < MIN_EVIDENCE_POINTS:
         reasons.append(L(lang,
@@ -156,6 +160,10 @@ async def apply(
     await emit({"type": "safety_net", "role": "safety_net",
                 "triggered": bool(reasons), "reasons": reasons, "checks": check})
 
+    if already_escalated and reasons:
+        final["safety_net"]["note"] = L(lang, "Already escalated by the policy thresholds; the evidence gaps are added to the case file.", "已因政策阈值升级人工；证据缺口一并记入案件材料。")
+        return final
+
     if not reasons:
         await emit({"type": "thinking", "role": "safety_net",
                     "content": L(lang,
@@ -174,6 +182,7 @@ async def apply(
     final["escalation_required"] = True
     # A blocked case gets no automatic payout; the amount is left to a human.
     final["refund_amount"] = None
+    final["goodwill_credit"] = None
     final["reasoning"] = L(lang,
         f"[Safety net override] The evidence base is insufficient, so this case is forced to human review and the model's automatic ruling is not adopted. "
         f"Trigger: {reasons_text}. "

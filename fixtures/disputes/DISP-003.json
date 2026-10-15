@@ -1,12 +1,13 @@
 {
   "dispute_id": "DISP-003",
-  "trip_id": "TRIP-1003",
+  "_source": "Official Ryde sample dataset (Document 1)",
+  "trip_id": "TRIP-2026-10023",
   "filed_by": "rider",
-  "rider_id": "RIDER-503",
-  "driver_id": "DRIVER-303",
-  "dispute_type": "no_show_charge",
-  "description": "The app says the driver arrived and charged me a S$25 cancellation fee, but I never saw any car and the location was off. I don't think the driver really arrived.",
-  "filed_at": "2026-01-17T10:00:00+08:00",
-  "requested_resolution": "full_refund_of_cancellation_fee",
-  "requested_amount": 25.0
+  "rider_id": "R-9001",
+  "driver_id": "D-3456",
+  "dispute_type": "fare_dispute",
+  "description": "Final fare of $16.50 was charged, but the upfront quote shown at booking was only $12.00. The rider was not informed of any fare change, surge pricing, or price adjustment before or during the trip. The rider requests a refund of the $4.50 difference.",
+  "filed_at": "2026-09-14T21:30:00+08:00",
+  "requested_resolution": "refund_of_surge_differential",
+  "requested_amount": 4.5
 }

@@ -1,18 +1,78 @@
-"""Judge agent: read-only, neutral arbiter.
+"""Judge agent: read-only, neutral arbiter working under Ryde Dispute Resolution Policy v2.1.
 
-Receives both advocates' cases, then independently re-queries the tools (it does not take either side's word),
-applies the policy thresholds / refund formula and outputs a ruling JSON.
-Confidence below the escalation threshold -> escalate to a human instead of ruling.
+Receives both advocates' cases, re-queries the tools itself, applies the clause rules, calibrates a confidence
+score from the four factors in policy 6.3 and applies the section 6 thresholds in code (app/thresholds.py).
 """
 from __future__ import annotations
 
 import json
 
 from app.agents.base import BaseAgent
-from app.agents import analysis
+from app.agents import analysis as A
+from app.agents import cases
 from app.config import settings
 from app.i18n import L, CUR
 from app.models import Ruling
+from app import thresholds
+
+CLAUSE_WORDS = {
+    "route_deviation": "1.2 to 1.4", "no_show_charge": "2.1 to 2.4", "fare_dispute": "3.2 to 3.4", "property_damage": "4.2 to 4.4",
+}
+
+
+def case_tags(dtype: str, f: dict) -> set[str]:
+    t: set[str] = set()
+    if dtype == "route_deviation":
+        if f.get("traffic_justified"): t.add("traffic_justified")
+        if not f.get("rider_informed"): t.add("rider_not_informed")
+        if f.get("over_tolerance"): t.add("deviation_over_1km")
+    elif dtype == "no_show_charge":
+        if f.get("arrived_in_time"): t.add("driver_arrived")
+        if f.get("driver_messages") == 0: t.add("no_message")
+        if f.get("driver_calls") == 0: t.add("no_call")
+        if f.get("policy_refund", 0) > 0: t.add("fee_voided")
+    elif dtype == "fare_dispute":
+        if f.get("surge_increased"): t.add("surge_increase")
+        if not f.get("rider_notified"): t.add("rider_not_notified")
+        if f.get("surge_only"): t.add("surge_only_difference")
+    return t
+
+
+def precedent_alignment(dtype: str, f: dict, label: str, prec: dict | None) -> tuple[float, str | None]:
+    plist = (prec or {}).get("precedents") or []
+    if not plist:
+        return 0.7, None
+    mine = case_tags(dtype, f)
+    best = max(plist, key=lambda p: len(mine & set(p.get("tags", []))))
+    overlap = len(mine & set(best.get("tags", [])))
+    if best.get("ruling") == label or (best.get("ruling") == "upheld" and label == "partial"):
+        return 1.0, best["case_id"]
+    if overlap >= 2:
+        return 0.5, best["case_id"]          # same facts, different outcome: a real conflict
+    return 0.9, best["case_id"]              # distinguishable facts
+
+
+def completeness(dtype: str, g: dict) -> float:
+    n = lambda tool, key: len((g.get(tool) or {}).get(key, []) or [])
+    checks = {
+        "route_deviation": [n("get_gps_telemetry", "points") >= 3, n("get_chat_logs", "messages") >= 2, bool((g.get("get_traffic_reference") or {}).get("traffic_conditions")), bool((g.get("get_fare_breakdown") or {}).get("fare_breakdown"))],
+        "no_show_charge": [n("get_gps_telemetry", "points") >= 3, n("get_chat_logs", "messages") >= 2, n("get_app_events", "events") >= 2],
+        "fare_dispute": [bool((g.get("get_fare_breakdown") or {}).get("surge_pricing_log")), bool((g.get("get_fare_breakdown") or {}).get("fare_breakdown")), n("get_chat_logs", "messages") >= 1],
+        "property_damage": [bool(((g.get("get_damage_evidence") or {}).get("damage_evidence") or {}).get("photos")), n("get_chat_logs", "messages") >= 1, n("get_app_events", "events") >= 1],
+    }.get(dtype, [False])
+    return round(sum(checks) / len(checks), 2)
+
+
+def clarity(dtype: str, f: dict) -> float:
+    if dtype == "route_deviation":
+        return {"within_tolerance": 1.0, "unjustified": 0.95, "justified_and_informed": 0.9, "justified_not_informed": 0.75}.get(f["outcome"], 0.7)
+    if dtype == "no_show_charge":
+        return 0.4 if f.get("gps_app_contradiction") else 1.0
+    if dtype == "fare_dispute":
+        return 0.6 if f["outcome"] == "unexplained_difference" else 1.0
+    if dtype == "property_damage":
+        return 0.95
+    return 0.5
 
 
 class Judge(BaseAgent):
@@ -22,185 +82,140 @@ class Judge(BaseAgent):
 
     def system_prompt(self) -> str:
         return (
-            "You are the JUDGE AGENT of the RydeResolve ride-hailing dispute platform: a neutral, read-only arbiter.\n\n"
+            "You are the JUDGE AGENT of the RydeResolve ride-hailing dispute platform: a neutral, read-only arbiter applying the "
+            "Ryde Dispute Resolution Policy v2.1.\n\n"
             "Duties:\n"
-            "1. You receive the cases built by the rider advocate and the driver advocate.\n"
-            "2. Do NOT trust either side. Independently call the tools to verify the key evidence "
-            "(GPS, app events, traffic reference, policy).\n"
-            "3. Apply the numeric thresholds and refund formula from the relevant policy to reach a ruling. "
-            "Cite policy clauses by ID (CN-1..CN-4, RD-1..RD-3) in evidence_cited.\n"
-            "4. Give a confidence_score (0-1). If it is below 0.6 you must not issue a final ruling: "
-            "output escalation_required=true with a case summary instead.\n\n"
+            "1. You receive the rider advocate's and driver advocate's cases. Do NOT trust either side: independently call the tools to verify the key "
+            "evidence (trip data, GPS, chat, app events, traffic reference, fare breakdown / surge log, damage evidence, policy, search_precedents).\n"
+            "2. Apply the numbered clauses: route deviation 1.2-1.4 (tolerance 1 km; refund = deviation km x distance rate; traffic-justified deviations exempt; "
+            "driver must inform the rider), no-show 2.1-2.4 (5 min free wait; driver must message AND call; fee S$5; driver no-show voids the fee), "
+            "fare 3.2-3.4 (surge increase without notification is refunded), property damage 4.2-4.4 (photos within 24 h, in-app camera, linked to trip; "
+            "cleaning capped at S$50). Cite clauses by number in evidence_cited.\n"
+            "3. Safety incidents (section 5) are never ruled by AI. If you see safety indicators, set ruling escalated and say so.\n"
+            "4. Give confidence_score (0-1) from: evidence completeness, policy clarity, precedent alignment, party credibility (6.3). "
+            "Escalation thresholds from section 6 are enforced separately in code after your answer; report your honest assessment.\n"
+            "5. If the policy gives a partial remedy, use ruling partial with the exact computed amount; goodwill credits (2.4) go in goodwill_credit, not refund_amount.\n\n"
             "Output strict JSON (no code fences):\n"
-            '{"dispute_id":"...","ruling":"upheld|rejected|partial|escalated",'
-            '"refund_amount":null,"confidence_score":0.0,"reasoning":"...",'
-            '"evidence_cited":[],"escalation_required":false,"escalation_summary":null}'
+            '{"dispute_id":"...","ruling":"upheld|rejected|partial|escalated","refund_amount":null,"confidence_score":0.0,'
+            '"reasoning":"...","evidence_cited":[],"escalation_required":false,"escalation_summary":null,"goodwill_credit":null,"policy_clauses":[]}'
         )
 
     def build_user_message(self, context: dict) -> str:
-        t = context["ticket"]
-        cases = context.get("cases", [])
-        # Join parts; do not write `... + X if c else "" + ...` (+ binds tighter than the ternary).
-        parts = ["Dispute ticket:\n" + json.dumps(t, ensure_ascii=False, indent=2)]
-        if cases:
-            parts.append("Rider advocate's case:\n" + json.dumps(cases[0], ensure_ascii=False, indent=2))
-        if len(cases) > 1:
-            parts.append("Driver advocate's case:\n" + json.dumps(cases[1], ensure_ascii=False, indent=2))
+        parts = ["Dispute ticket:\n" + json.dumps(context["ticket"], ensure_ascii=False, indent=2)]
+        cs = context.get("cases", [])
+        if cs:
+            parts.append("Rider advocate's case:\n" + json.dumps(cs[0], ensure_ascii=False, indent=2))
+        if len(cs) > 1:
+            parts.append("Driver advocate's case:\n" + json.dumps(cs[1], ensure_ascii=False, indent=2))
         parts.append("Independently call the tools to verify the key evidence, then output the ruling JSON.")
         return "\n\n".join(parts)
 
     def build_playbook(self, context: dict) -> list[dict]:
+        return cases.playbook(self.lang, context["ticket"])
+
+    def build_final(self, context: dict, g: dict) -> dict:
         lg = self.lang
         t = context["ticket"]
-        trip_id = t["trip_id"]
         dtype = t["dispute_type"]
-        steps = [
-            {"_thought": L(lg, "Independent check: re-fetch the trip data.", "独立核验：重新调取行程数据。"), "name": "get_trip_data", "args": {"trip_id": trip_id}},
-            {"_thought": L(lg, "Independent check: re-fetch the GPS trace.", "独立核验：重新调取 GPS 轨迹。"), "name": "get_gps_telemetry", "args": {"trip_id": trip_id}},
-            {"_thought": L(lg, "Independent check: re-fetch the chat log.", "独立核验：重新调取聊天记录。"), "name": "get_chat_logs", "args": {"trip_id": trip_id}},
-            {"_thought": L(lg, "Independent check: re-fetch the app events.", "独立核验：重新调取 App 事件。"), "name": "get_app_events", "args": {"trip_id": trip_id}},
-        ]
+        f = cases.compute_facts(dtype, g)
+        label = f["ruling_label"]
+        refund = f["policy_refund"]
+        goodwill = f.get("goodwill_credit") or None
+        prec_score, prec_id = precedent_alignment(dtype, f, label, g.get("search_precedents"))
+        cred = A.credibility_score(g.get("get_rider_profile"), g.get("get_driver_profile"))
+        comp, clar = completeness(dtype, g), clarity(dtype, f)
+        conf = A.calibrate_confidence(comp, clar, prec_score, cred)
+        profiles = [g.get("get_rider_profile") or {}, g.get("get_driver_profile") or {}]
+        th = thresholds.assess(dtype, f, conf, profiles, lg)
+
+        evidence = cases.evidence_lines(dtype, f, lg)
+        if prec_id:
+            evidence.append(L(lg, f"Precedent {prec_id} considered (alignment {prec_score})", f"参考先例 {prec_id}（一致度 {prec_score}）"))
+        reasoning = self._reason(dtype, f, lg)
+        out = {
+            "dispute_id": t["dispute_id"], "ruling": label, "refund_amount": refund, "goodwill_credit": goodwill,
+            "confidence_score": conf, "reasoning": reasoning, "evidence_cited": evidence,
+            "policy_clauses": cases.clauses_for(dtype, f), "escalation_required": False, "escalation_summary": None,
+            "confidence_breakdown": {"evidence_completeness": comp, "policy_clarity": clar, "precedent_alignment": prec_score, "party_credibility": cred},
+            "precedent_id": prec_id,
+        }
+        return self.apply_thresholds(out, th, lg, strict=settings.strict_escalation)
+
+    @staticmethod
+    def apply_thresholds(out: dict, th: dict, lg: str, strict: bool = False) -> dict:
+        out["policy_path"] = {"path": th["path"], "required_confidence": th["required_confidence"], "fraud_flag": th["fraud_flag"],
+                              "clause": th["clause"], "reasons": th["reasons"], "human_approval_only": th["human_approval_only"]}
+        if not th["escalation_required"]:
+            out["_summary"] = L(lg, f"Ruling {out['ruling']}, confidence {out['confidence_score']}.", f"裁决 {out['ruling']}，置信度 {out['confidence_score']}。")
+            return out
+        out["escalation_required"] = True
+        why = ("; " if lg == "en" else "；").join(th["reasons"])
+        if th["human_approval_only"] and not strict:
+            # AI recommendation stands, but a human must approve before it is executed
+            out["escalation_summary"] = L(lg, f"AI recommendation ({out['ruling']}, {CUR}{out['refund_amount']}) requires human approval: {why}",
+                                              f"AI 建议（{out['ruling']}，{CUR}{out['refund_amount']}）需人工批准：{why}")
+            out["_summary"] = L(lg, "Recommendation issued; human approval required.", "已给出建议，需人工批准。")
+            return out
+        out["recommendation"] = {"ruling": out["ruling"], "refund_amount": out["refund_amount"]}
+        out["escalation_summary"] = L(lg, f"Escalated under policy section 6: {why} AI recommendation: {out['ruling']}, {CUR}{out['refund_amount']}.",
+                                          f"依政策第 6 节升级人工：{why} AI 建议：{out['ruling']}，{CUR}{out['refund_amount']}。")
+        out["ruling"], out["refund_amount"] = "escalated", None
+        out["_summary"] = L(lg, "Thresholds not met; escalating.", "未达阈值，升级人工。")
+        return out
+
+    def post_process_llm(self, ruling: dict, ticket: dict, g: dict) -> dict:
+        """LLM path: the model decides; section 6 thresholds are still enforced in code using the facts the tools returned."""
+        lg, dtype = self.lang, ticket["dispute_type"]
+        if not isinstance(ruling, dict) or dtype not in cases.RULABLE:
+            return ruling
+        try:
+            f = cases.compute_facts(dtype, g)
+        except Exception:  # noqa: BLE001
+            return ruling
+        conf = float(ruling.get("confidence_score") or 0.5)
+        profiles = [g.get("get_rider_profile") or {}, g.get("get_driver_profile") or {}]
+        th = thresholds.assess(dtype, f, conf, profiles, lg)
+        ruling.setdefault("policy_clauses", cases.clauses_for(dtype, f))
+        if ruling.get("ruling") == "escalated":
+            ruling["escalation_required"] = True
+            ruling["policy_path"] = {"path": "human_review", "required_confidence": th["required_confidence"], "fraud_flag": th["fraud_flag"], "clause": th["clause"], "reasons": th["reasons"], "human_approval_only": False}
+            return ruling
+        # keep the model's numbers; add the deterministic cross-check
+        ruling["policy_check"] = {"ruling": f["ruling_label"], "refund_amount": f["policy_refund"],
+                                  "agrees": f["ruling_label"] == ruling.get("ruling") and abs((ruling.get("refund_amount") or 0) - f["policy_refund"]) < 0.02}
+        return self.apply_thresholds(ruling, th, lg, strict=settings.strict_escalation)
+
+    def _reason(self, dtype: str, f: dict, lg: str) -> str:
         if dtype == "route_deviation":
-            steps.append({"_thought": L(lg, "Independent check: re-fetch the traffic reference.", "独立核验：重新调取交通参考。"), "name": "get_traffic_reference", "args": {"trip_id": trip_id}})
-        steps += [
-            {"_thought": L(lg, "Check the rider profile.", "核验乘客画像。"), "name": "get_rider_profile", "args": {"rider_id": t["rider_id"]}},
-            {"_thought": L(lg, "Check the driver profile.", "核验司机画像。"), "name": "get_driver_profile", "args": {"driver_id": t["driver_id"]}},
-            {"_thought": L(lg, "Fetch the applicable policy and rule by its thresholds and formula.", "调取适用政策，按阈值与公式裁决。"), "name": "get_policy", "args": {"dispute_type": dtype}},
-        ]
-        return steps
-
-    def build_final(self, context: dict, gathered: dict) -> dict:
-        t = context["ticket"]
-        if t["dispute_type"] == "route_deviation":
-            return self._route_deviation_ruling(t, gathered, context)
-        return self._no_show_ruling(t, gathered, context)
-
-    # ---------------- route deviation ----------------
-    def _route_deviation_ruling(self, t: dict, g: dict, ctx: dict) -> dict:
-        lg = self.lang
-        f = analysis.route_deviation_facts(
-            g.get("get_trip_data", {}), g.get("get_policy", {}),
-            (g.get("get_traffic_reference") or {}).get("traffic_reference"), lg)
-        conf = 0.6
-        if (g.get("get_traffic_reference") or {}).get("traffic_reference"):
-            conf += 0.2
-        if f["deviation_pct"] > f["tolerance_pct"] + 5:
-            conf += 0.1
-        if g.get("get_trip_data", {}).get("fare_breakdown"):
-            conf += 0.02
-        conf = round(min(0.9, conf), 2)
-
-        refund = f["policy_refund"]
-        full_overcharge = round(f["fare_charged"] - f["optimal_fare"], 2)
-        if refund == 0:
-            ruling = "rejected"
-        elif refund >= full_overcharge - 0.01:
-            ruling = "upheld"
-        else:
-            ruling = "partial"
-
-        evidence = [
-            L(lg, f"Independent check: actual {f['actual_km']} km vs optimal {f['optimal_km']} km, deviation {f['deviation_pct']}% (tolerance {f['tolerance_pct']}%)",
-                  f"独立核验：实际 {f['actual_km']}km vs 最优 {f['optimal_km']}km，偏差 {f['deviation_pct']}%（阈值 {f['tolerance_pct']}%）"),
-            L(lg, f"Independent check: {f['traffic_note']}", f"独立核验：{f['traffic_note']}"),
-            L(lg, f"Refund formula (RD-2): max(0, {f['actual_km']} - {f['optimal_km']}*1.15) * {f['per_km_rate']} = {CUR}{refund}",
-                  f"退费公式 (RD-2)：max(0, {f['actual_km']}-{f['optimal_km']}*1.15)*{f['per_km_rate']} = {CUR}{refund}"),
-        ]
-        reasoning = L(lg,
-            f"Trip data independently shows a {f['deviation_pct']}% deviation, above the {f['tolerance_pct']}% tolerance (RD-1). "
-            f"{f['traffic_note']}, so the RD-3 traffic exemption does not apply. "
-            f"Under RD-2 the excess is refunded: {CUR}{refund} (rider claimed {CUR}{full_overcharge}, only partly supported).",
-            f"GPS/行程数据独立核验偏差 {f['deviation_pct']}% 超 {f['tolerance_pct']}% 阈值。"
-            f"{f['traffic_note']}，故不适用 RD-3 豁免。"
-            f"依 RD-2 退超出阈值部分 {CUR}{refund}（乘客主张 {CUR}{full_overcharge}，仅部分支持）。")
-
-        if conf < settings.escalation_threshold:
-            return self._escalate(t, ctx, conf, evidence, reasoning)
-        return {
-            "dispute_id": t["dispute_id"], "ruling": ruling, "refund_amount": refund,
-            "confidence_score": conf, "reasoning": reasoning, "evidence_cited": evidence,
-            "escalation_required": False, "escalation_summary": None,
-            "_summary": L(lg, f"Ruling {ruling}, confidence {conf}.", f"裁决 {ruling}，置信度 {conf}。"),
-        }
-
-    # ---------------- no-show cancellation fee ----------------
-    def _no_show_ruling(self, t: dict, g: dict, ctx: dict) -> dict:
-        lg = self.lang
-        f = analysis.no_show_facts(
-            g.get("get_trip_data", {}), g.get("get_gps_telemetry", {}),
-            g.get("get_app_events", {}), g.get("get_chat_logs", {}),
-            g.get("get_policy", {}))
-        points = len((g.get("get_gps_telemetry") or {}).get("points", []))
-        ev_arrived = any(e.get("event_type") == "driver_arrived" for e in (g.get("get_app_events") or {}).get("events", []))
-        contradiction = ev_arrived and f["near_points"] == 0
-        conf = 0.6
-        conf += 0.15 if points >= 4 else 0
-        conf += 0.1 if f["contact_attempts"] >= 1 else 0
-        conf += 0.1 if (f["driver_arrived"] and f["dwell_min"] >= f["free_wait_min"]) else 0
-        if contradiction:
-            conf -= 0.25
-        if points < 3:
-            conf -= 0.1
-        conf = round(max(0.1, min(0.9, conf)), 2)
-
-        refund = f["policy_refund"]
-        if refund == 0:
-            ruling = "rejected"
-        elif refund >= f["no_show_fee"] - 0.01:
-            ruling = "upheld"
-        else:
-            ruling = "partial"
-
-        cm = f["conditions_met"]
-        evidence = [
-            L(lg, f"Independent GPS check (CN-1): {f['near_points']} stopped point(s) within {f['pickup_proximity_m']} m of pickup, arrived={f['driver_arrived']}",
-                  f"独立核验 GPS：上车点 {f['pickup_proximity_m']}m 内停车点 {f['near_points']} 个，到达={f['driver_arrived']}"),
-            L(lg, f"Independent wait check (CN-2): dwell {f['dwell_min']} min vs free wait {f['free_wait_min']} min, met={cm['dwell_past_free_window']}",
-                  f"独立核验等待：停留 {f['dwell_min']} 分钟，免费等待 {f['free_wait_min']} 分钟，达标={cm['dwell_past_free_window']}"),
-            L(lg, f"Independent contact check (CN-3): {f['contact_attempts']} contact attempt(s) (required {f['min_contact_attempts']})",
-                  f"独立核验联系：联系尝试 {f['contact_attempts']} 次（要求 {f['min_contact_attempts']}）"),
-            L(lg, f"Policy conditions: {cm}", f"政策条件：{cm}"),
-        ]
-        reasoning = L(lg,
-            f"Independent check: arrived={cm['driver_arrived_proximity']}, waited long enough={cm['dwell_past_free_window']}, "
-            f"contacted rider={cm['contact_attempted']}. ",
-            f"独立核验：到达={cm['driver_arrived_proximity']}、等待达标={cm['dwell_past_free_window']}、联系达标={cm['contact_attempted']}。")
-        if f["all_conditions_met"]:
-            reasoning += L(lg, "All conditions met, so under CN-4 the cancellation fee stands; no refund.",
-                               "全部条件满足，依 CN-4 取消费有效，不予退费。")
-        else:
-            missing = [k for k, v in cm.items() if not v]
-            reasoning += L(lg, f"Conditions not all met ({missing}); under CN-4 refund {CUR}{refund}.",
-                               f"条件未全满足（{missing}），依 CN-4 应退 {CUR}{refund}。")
-
-        if conf < settings.escalation_threshold:
-            return self._escalate(t, ctx, conf, evidence, reasoning)
-        return {
-            "dispute_id": t["dispute_id"], "ruling": ruling, "refund_amount": refund,
-            "confidence_score": conf, "reasoning": reasoning, "evidence_cited": evidence,
-            "escalation_required": False, "escalation_summary": None,
-            "_summary": L(lg, f"Ruling {ruling}, confidence {conf}.", f"裁决 {ruling}，置信度 {conf}。"),
-        }
-
-    def _escalate(self, t: dict, ctx: dict, conf: float, evidence: list[str], reasoning: str) -> dict:
-        lg = self.lang
-        cases = ctx.get("cases", [])
-        rc = cases[0].get("claim") if cases else "N/A"
-        dc = cases[1].get("claim") if len(cases) > 1 else "N/A"
-        thr = settings.escalation_threshold
-        summary = L(lg,
-            f"Confidence {conf} < {thr}: the evidence is not enough for an automatic ruling; escalated to a human. "
-            f"Rider's claim: {rc}; driver's claim: {dc}. Verification found: {reasoning}",
-            f"置信度 {conf} < {thr}，证据不足以自动裁决，升级人工。乘客方主张：{rc}；司机方主张：{dc}。核验发现：{reasoning}")
-        return {
-            "dispute_id": t["dispute_id"], "ruling": "escalated", "refund_amount": None,
-            "confidence_score": conf, "reasoning": reasoning, "evidence_cited": evidence,
-            "escalation_required": True, "escalation_summary": summary,
-            "_summary": L(lg, f"Confidence {conf} too low; escalating for human review.", f"置信度 {conf} 不足，升级人工复核。"),
-        }
+            return L(lg,
+                f"The trip ran {f['deviation_km']} km over the estimate, beyond the 1 km tolerance (1.3). "
+                f"{'Traffic incidents ' + ', '.join(f['matched_incidents']) + ' justify the reroute (1.4), so the full excess is not owed. ' if f['traffic_justified'] else 'No traffic incident justifies it (1.4). '}"
+                f"{'The driver did inform the rider (1.2). ' if f['rider_informed'] else 'The driver did not inform the rider (1.2). '}"
+                f"Refund = {f['deviation_km']} km x {CUR}{f['distance_rate']} = {CUR}{f['policy_refund']}.",
+                f"行程比预估多 {f['deviation_km']} 公里，超出 1 公里容忍范围（1.3）。"
+                f"{'交通事件 ' + ', '.join(f['matched_incidents']) + ' 使改道合理（1.4），故不必退全部超出费用。' if f['traffic_justified'] else '没有交通事件能说明绕行合理（1.4）。'}"
+                f"{'司机已告知乘客（1.2）。' if f['rider_informed'] else '司机未告知乘客（1.2）。'}"
+                f"退款 = {f['deviation_km']} 公里 x {CUR}{f['distance_rate']} = {CUR}{f['policy_refund']}。")
+        if dtype == "no_show_charge":
+            ok = f["outcome"] == "fee_valid"
+            return L(lg,
+                f"Driver arrived in time={f['arrived_in_time']}, waited the free period={f['waited_free_period']}, messages={f['driver_messages']}, calls={f['driver_calls']}. "
+                + ("All conditions of 2.1 to 2.3 are met, so the S$5 fee stands (2.2)." if ok else f"Outcome {f['outcome']} (clause {f['clause']}): fee reversed."),
+                f"司机按时到达={f['arrived_in_time']}，等满免费期={f['waited_free_period']}，消息 {f['driver_messages']} 条，通话 {f['driver_calls']} 次。"
+                + ("条款 2.1 至 2.3 的条件均满足，S$5 费用成立（2.2）。" if ok else f"结果 {f['outcome']}（条款 {f['clause']}）：撤销费用。"))
+        if dtype == "fare_dispute":
+            return L(lg,
+                f"Surge rose from {f['surge_quote']}x to {f['surge_trip_start']}x before pickup and the rider was {'' if f['rider_notified'] else 'not '}notified (3.3). "
+                f"The {CUR}{f['difference']} difference equals the surge amount, so it is refunded in full ({CUR}{f['policy_refund']}) (3.4).",
+                f"上车前动态系数由 {f['surge_quote']}x 升至 {f['surge_trip_start']}x，乘客{'已' if f['rider_notified'] else '未'}被通知（3.3）。"
+                f"{CUR}{f['difference']} 差额等于动态加价，全额退还 {CUR}{f['policy_refund']}（3.4）。")
+        return L(lg,
+            f"Claim {f['claim_type']} of {CUR}{f['claimed_amount']}: verifiable photos {f['verifiable_photos']}, submitted within 24 h {f['submitted_in_24h']} (4.2). "
+            f"{'The claim is valid.' if f['claim_valid'] else 'The evidence does not meet the requirements, so the fee is reversed (4.4): ' + CUR + str(f['policy_refund']) + '.'}",
+            f"{f['claim_type']} 索赔 {CUR}{f['claimed_amount']}：可核验照片 {f['verifiable_photos']} 张，24 小时内提交={f['submitted_in_24h']}（4.2）。"
+            f"{'索赔成立。' if f['claim_valid'] else '证据不符合要求，撤销费用（4.4）：' + CUR + str(f['policy_refund']) + '。'}")
 
     def _fill_defaults(self, data: dict, context: dict) -> dict:
-        # In LLM mode the model may omit dispute_id / escalation fields; fill them in.
         data.setdefault("dispute_id", context["ticket"]["dispute_id"])
         data.setdefault("refund_amount", None)
         data.setdefault("confidence_score", 0.5)

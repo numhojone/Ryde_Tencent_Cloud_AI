@@ -4,19 +4,11 @@
   "total_trips": 34,
   "avg_rating": 3.9,
   "dispute_history": {
-    "total": 4,
+    "total_disputes": 4,
     "upheld": 1,
     "rejected": 3
   },
-  "fraud_flags": [
-    "frequent_late_cancellations"
-  ],
-  "fraud_flag_details": [
-    {
-      "flag": "frequent_late_cancellations",
-      "note": "Flagged for frequent late cancellations",
-      "severity": "medium"
-    }
-  ],
+  "fraud_flags": 1,
+  "fraud_flag_details": "flagged_for_frequent_late_cancellations",
   "payment_method": "e-wallet"
 }

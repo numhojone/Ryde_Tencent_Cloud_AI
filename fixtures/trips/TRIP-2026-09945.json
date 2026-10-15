@@ -1,24 +1,27 @@
 {
   "trip_id": "TRIP-2026-09945",
-  "_source": "Official Ryde sample dataset, DISP-002 (Tencent Cloud AI CAN DO IT Hackathon Singapore 2026)",
+  "_source": "Official Ryde sample dataset DISP-002 (no-show charge)",
   "trip_data": {
-    "pickup": {
-      "address": "Tiong Bahru Plaza",
+    "trip_id": "TRIP-2026-09945",
+    "rider_id": "R-7823",
+    "driver_id": "D-2398",
+    "pickup_location": {
+      "name": "Tiong Bahru Plaza",
       "lat": 1.2847,
       "lng": 103.8382
     },
-    "dropoff": {
-      "address": "VivoCity",
+    "dropoff_location": {
+      "name": "VivoCity",
       "lat": 1.2648,
       "lng": 103.8223
     },
     "scheduled_time": "2026-09-13T08:45:00+08:00",
-    "actual_pickup_time": null,
-    "actual_dropoff_time": null,
     "driver_arrival_time": "2026-09-13T08:43:00+08:00",
+    "driver_wait_start": "2026-09-13T08:43:00+08:00",
     "cancellation_time": "2026-09-13T08:51:00+08:00",
+    "cancellation_fee": 5.0,
+    "cancellation_reason": "rider_no_show",
     "status": "cancelled_no_show_rider",
-    "cancellation_fee_charged": 5.0,
     "currency": "SGD"
   },
   "gps_telemetry": [
@@ -96,7 +99,7 @@
       "timestamp": "2026-09-13T08:47:05+08:00",
       "sender": "driver",
       "type": "call",
-      "content": "Outgoing call to rider \u2014 not answered (rang 22s, no response)."
+      "content": "Outgoing call to rider — not answered (rang 22s, no response)."
     },
     {
       "timestamp": "2026-09-13T08:49:30+08:00",
@@ -168,6 +171,5 @@
       "event_type": "driver_released",
       "details": "Driver D-2398 released from trip. Trip status: cancelled (rider_no_show)."
     }
-  ],
-  "traffic_reference": null
+  ]
 }

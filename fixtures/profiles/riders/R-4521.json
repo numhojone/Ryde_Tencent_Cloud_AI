@@ -1,0 +1,21 @@
+{
+  "rider_id": "R-4521",
+  "account_age_days": 540,
+  "account_created_at": "2025-03-22T00:00:00+08:00",
+  "total_trips": 187,
+  "avg_rating": 4.8,
+  "dispute_history": {
+    "total_disputes": 2,
+    "upheld": 1,
+    "rejected": 1,
+    "last_dispute_date": "2026-07-10"
+  },
+  "fraud_flags": 0,
+  "payment_method": "credit_card",
+  "payment_provider": "Visa ending 4521",
+  "loyalty_tier": "silver",
+  "frequent_corridors": [
+    "Orchard → Changi Airport",
+    "CBD → Orchard"
+  ]
+}

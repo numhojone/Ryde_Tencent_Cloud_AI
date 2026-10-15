@@ -1,0 +1,106 @@
+{
+  "trip_id": "TRIP-2026-10305",
+  "_source": "Synthetic case written for this project (policy v2.1 section 5)",
+  "trip_data": {
+    "trip_id": "TRIP-2026-10305",
+    "rider_id": "R-5120",
+    "driver_id": "D-6021",
+    "pickup_location": {
+      "name": "Clarke Quay",
+      "lat": 1.31,
+      "lng": 103.85
+    },
+    "dropoff_location": {
+      "name": "Tampines Mall",
+      "lat": 1.342,
+      "lng": 103.948
+    },
+    "start_time": "2026-09-15T23:05:00+08:00",
+    "end_time": "2026-09-15T23:21:00+08:00",
+    "status": "completed",
+    "currency": "SGD",
+    "fare_charged": 24.0
+  },
+  "gps_telemetry": [
+    {
+      "timestamp": "2026-09-15T23:05:00+08:00",
+      "lat": 1.31,
+      "lng": 103.85,
+      "speed_kmh": 0
+    },
+    {
+      "timestamp": "2026-09-15T23:07:00+08:00",
+      "lat": 1.314,
+      "lng": 103.856,
+      "speed_kmh": 45
+    },
+    {
+      "timestamp": "2026-09-15T23:09:00+08:00",
+      "lat": 1.318,
+      "lng": 103.862,
+      "speed_kmh": 62
+    },
+    {
+      "timestamp": "2026-09-15T23:11:00+08:00",
+      "lat": 1.322,
+      "lng": 103.868,
+      "speed_kmh": 95
+    },
+    {
+      "timestamp": "2026-09-15T23:13:00+08:00",
+      "lat": 1.326,
+      "lng": 103.874,
+      "speed_kmh": 104
+    },
+    {
+      "timestamp": "2026-09-15T23:15:00+08:00",
+      "lat": 1.33,
+      "lng": 103.88,
+      "speed_kmh": 98
+    },
+    {
+      "timestamp": "2026-09-15T23:17:00+08:00",
+      "lat": 1.334,
+      "lng": 103.886,
+      "speed_kmh": 70
+    },
+    {
+      "timestamp": "2026-09-15T23:19:00+08:00",
+      "lat": 1.338,
+      "lng": 103.892,
+      "speed_kmh": 55
+    },
+    {
+      "timestamp": "2026-09-15T23:21:00+08:00",
+      "lat": 1.342,
+      "lng": 103.898,
+      "speed_kmh": 0
+    }
+  ],
+  "chat_logs": [
+    {
+      "message_id": "MSG-001",
+      "sender": "rider",
+      "timestamp": "2026-09-15T23:11:00+08:00",
+      "message": "Please slow down, we're doing over 100 on the expressway."
+    },
+    {
+      "message_id": "MSG-002",
+      "sender": "driver",
+      "timestamp": "2026-09-15T23:11:40+08:00",
+      "message": "Relax lah, I'm in a hurry too."
+    }
+  ],
+  "app_events": [
+    {
+      "timestamp": "2026-09-15T23:12:30+08:00",
+      "event_type": "speeding_alert",
+      "details": "Speed 104 km/h in a 80 km/h zone."
+    },
+    {
+      "timestamp": "2026-09-15T23:21:00+08:00",
+      "event_type": "trip_ended",
+      "details": "Trip completed."
+    }
+  ]
+}

@@ -1,27 +1,38 @@
 {
-  "_comment": "Trip -> parties. For free-text complaints the system fills in rider_id / driver_id from the trip_id (riders never supply their own GPS logs).",
-  "TRIP-1001": {
-    "rider_id": "RIDER-501",
-    "driver_id": "DRIVER-301",
-    "route": "Jurong Gateway → Changi Airport T3",
-    "outcome": "Trip completed"
-  },
-  "TRIP-1002": {
-    "rider_id": "RIDER-502",
-    "driver_id": "DRIVER-302",
-    "route": "Bishan MRT → Raffles Place",
-    "outcome": "Trip cancelled, cancellation fee charged"
-  },
-  "TRIP-1003": {
-    "rider_id": "RIDER-503",
-    "driver_id": "DRIVER-303",
-    "route": "Tanjong Pagar Centre → HarbourFront",
-    "outcome": "Trip cancelled, cancellation fee charged"
+  "TRIP-2026-09871": {
+    "rider_id": "R-4521",
+    "driver_id": "D-1187",
+    "route": "Orchard Central → Changi Airport T3",
+    "outcome": "Trip completed (route deviated)"
   },
   "TRIP-2026-09945": {
     "rider_id": "R-7823",
     "driver_id": "D-2398",
     "route": "Tiong Bahru Plaza → VivoCity",
-    "outcome": "Trip cancelled, cancellation fee charged"
+    "outcome": "Trip cancelled, S$5 no-show fee charged"
+  },
+  "TRIP-2026-10023": {
+    "rider_id": "R-9001",
+    "driver_id": "D-3456",
+    "route": "Bugis Junction → Marina Bay Sands",
+    "outcome": "Trip completed (fare S$16.50 vs quote S$12.00)"
+  },
+  "TRIP-2026-10201": {
+    "rider_id": "R-3312",
+    "driver_id": "D-4410",
+    "route": "Orchard MRT → Changi Business Park",
+    "outcome": "Trip completed, S$35 cleaning fee charged"
+  },
+  "TRIP-2026-10305": {
+    "rider_id": "R-5120",
+    "driver_id": "D-6021",
+    "route": "Clarke Quay → Tampines Mall",
+    "outcome": "Trip completed (speeding alert)"
+  },
+  "TRIP-2026-10410": {
+    "rider_id": "R-7001",
+    "driver_id": "D-7002",
+    "route": "Tanjong Pagar Centre → HarbourFront",
+    "outcome": "Trip cancelled, S$5 no-show fee charged"
   }
 }

@@ -1,12 +1,13 @@
 {
   "dispute_id": "DISP-001",
-  "trip_id": "TRIP-1001",
+  "_source": "Official Ryde sample dataset DISP-001",
+  "trip_id": "TRIP-2026-09871",
   "filed_by": "rider",
-  "rider_id": "RIDER-501",
-  "driver_id": "DRIVER-301",
+  "rider_id": "R-4521",
+  "driver_id": "D-1187",
   "dispute_type": "route_deviation",
-  "description": "My driver deliberately took a much longer route from Jurong Gateway to Changi Airport. It should be about 30 km but he drove 42 km, so I was overcharged. I want the extra fare refunded.",
-  "filed_at": "2026-01-15T09:40:00+08:00",
-  "requested_resolution": "full_refund_of_overcharge",
-  "requested_amount": 48.0
+  "description": "The driver took a significantly longer route from Orchard Central to Changi Airport T3. I normally take the PIE which takes about 35 minutes and costs around $28. On this trip the driver went through Geylang and East Coast area, taking 37 minutes and the fare was $35. The driver did not inform me about any route change or traffic. The extra distance was 4.3 km and I was overcharged. I am requesting a refund of the excess fare.",
+  "filed_at": "2026-09-12T14:35:00+08:00",
+  "requested_resolution": "refund_of_excess_fare",
+  "requested_amount": 6.5
 }

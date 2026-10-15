@@ -17,6 +17,7 @@ from app.config import settings
 from app.i18n import L, norm_lang
 from app.safety_net import apply as apply_safety_net
 from app.tools.fixtures import get_trip_parties, load_dispute_ticket
+from app.tools import call_tool, summarize_for_log
 
 
 _SENTINEL = object()
@@ -72,6 +73,47 @@ async def _triage_draft(draft: dict, emit, mode: str | None, lang: str = "en") -
     return ticket
 
 
+async def _safety_case_file(ticket: dict, emit, lang: str) -> dict:
+    """Policy section 5: AI may gather evidence and prepare a case file, but may not rule, assign fault or recommend a resolution."""
+    await emit({"type": "phase", "phase": "safety_intake",
+                "message": L(lang, "Safety indicators found (policy 5.2): the AI will only gather evidence and prepare a case file; it cannot rule",
+                                   "发现安全指标（政策 5.2）：AI 只收集证据并整理案件材料，不得裁决")})
+    tid = ticket["trip_id"]
+    calls = [("get_trip_data", {"trip_id": tid}), ("get_gps_telemetry", {"trip_id": tid}), ("get_chat_logs", {"trip_id": tid}),
+             ("get_app_events", {"trip_id": tid}), ("get_rider_profile", {"rider_id": ticket["rider_id"]}),
+             ("get_driver_profile", {"driver_id": ticket["driver_id"]}), ("get_policy", {"dispute_type": "safety_incident"})]
+    g: dict = {}
+    for name, args in calls:
+        await emit({"type": "tool_call", "role": "safety_case", "agent": "safety_case", "tool": name, "args": args, "summary": summarize_for_log(name, args)})
+        res = call_tool(name, args)
+        if res["ok"]:
+            g[name] = res["result"]
+        await emit({"type": "tool_result", "role": "safety_case", "agent": "safety_case", "tool": name, "ok": res["ok"],
+                    "result": {k: (v if not isinstance(v, list) else f"{len(v)} items") for k, v in (res.get("result") or {}).items()} if res["ok"] else res})
+    pts = (g.get("get_gps_telemetry") or {}).get("points", [])
+    max_speed = max([p.get("speed_kmh", 0) for p in pts], default=0)
+    msgs = (g.get("get_chat_logs") or {}).get("messages", [])
+    events = (g.get("get_app_events") or {}).get("events", [])
+    facts = [
+        L(lang, f"Rider's account (verbatim): {ticket['description']}", f"乘客陈述（原话）：{ticket['description']}"),
+        L(lang, f"GPS: {len(pts)} points, maximum recorded speed {max_speed} km/h", f"GPS：{len(pts)} 个点，记录到的最高车速 {max_speed} 公里/小时"),
+        L(lang, f"Chat log: {len(msgs)} message(s)", f"聊天记录：{len(msgs)} 条"),
+        L(lang, f"App events: {len(events)} ({', '.join(e.get('event_type', '?') for e in events[:6])})", f"App 事件：{len(events)} 条（{', '.join(e.get('event_type', '?') for e in events[:6])}）"),
+    ]
+    interim = [
+        L(lang, "Temporarily suspend the accused driver's account and block new trip acceptance pending review (policy 5.3).", "审核期间暂停被指控司机的账号并禁止接新单（政策 5.3）。"),
+        L(lang, "Lifted automatically if the human reviewer finds no violation (policy 5.3).", "若人工审核认定无违规，则自动解除（政策 5.3）。"),
+    ]
+    summary = L(lang, "Safety incident: escalated to human review under policy 5.1/5.2. The AI has not determined fault or recommended a resolution. "
+                      "Case file and suggested interim measures (5.3) are attached for the reviewer.",
+                      "安全事件：依政策 5.1/5.2 升级人工复核。AI 未判定责任，也未建议处理方案。案件材料与建议的临时措施（5.3）已附上。")
+    return {"dispute_id": ticket["dispute_id"], "ruling": "escalated", "refund_amount": None, "confidence_score": 1.0,
+            "reasoning": summary, "evidence_cited": facts, "escalation_required": True, "escalation_summary": summary,
+            "policy_clauses": ["5.1", "5.2", "5.3"],
+            "policy_path": {"path": "human_review", "required_confidence": None, "fraud_flag": False, "clause": "5.2", "reasons": [summary], "human_approval_only": False},
+            "case_file": {"facts": facts, "interim_measures": interim, "requested_refund": ticket.get("requested_amount")}}
+
+
 async def _run_flow(dispute_id: str, emit, mode: str | None = None,
                     draft: dict | None = None, lang: str = "en") -> None:
     if draft is not None:
@@ -96,6 +138,13 @@ async def _run_flow(dispute_id: str, emit, mode: str | None = None,
         },
     })
 
+    # ---------- Safety incidents never go to the advocates or the judge ----------
+    if ticket["dispute_type"] == "safety_incident":
+        ruling = await _safety_case_file(ticket, emit, lang)
+        await emit({"type": "ruling", "ruling": ruling, "elapsed_ms": round((time.time() - t0) * 1000)})
+        await emit({"type": "done"})
+        return
+
     # ---------- 阶段一：两位 advocate 并行 ----------
     await emit({"type": "phase", "phase": "advocates", "message": L(lang, "Rider and driver advocates gather evidence and build their cases in parallel", "乘客方与司机方辩护智能体并行取证、构建案件")})
     ctx = {"ticket": ticket}
@@ -115,10 +164,12 @@ async def _run_flow(dispute_id: str, emit, mode: str | None = None,
     jr = await judge.run(jctx)
 
     ruling = jr.output.model_dump() if hasattr(jr.output, "model_dump") else jr.output
+    if judge._mode() == "llm" and isinstance(ruling, dict):
+        ruling = judge.post_process_llm(ruling, ticket, judge._gathered)
 
     # ---------- 阶段三：安全网（确定性证据完备性校验）----------
     # 无论模型给出多高的置信度，只要证据基础不牢就拦下升级人工。
-    ruling = await apply_safety_net(ruling, ticket["trip_id"], emit, lang)
+    ruling = await apply_safety_net(ruling, ticket["trip_id"], emit, lang, ticket["dispute_type"])
 
     await emit({"type": "ruling", "ruling": ruling, "elapsed_ms": round((time.time() - t0) * 1000)})
     await emit({"type": "done"})

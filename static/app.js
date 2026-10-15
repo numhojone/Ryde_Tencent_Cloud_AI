@@ -14,7 +14,12 @@ const I18N = {
     idle:'Idle', working:'Gathering…', finished:'Done', reasoning:'Reasoning',
     emptyHint:'Write a complaint in your own words above, pick a trip and press "Submit and rule".<br>The system first works out the dispute type, then two advocate agents gather evidence in parallel and a judge verifies it independently before ruling.<br><span style="font-size:12px">(The dropdown at the top right replays the preset tickets.)</span>',
     badgeLlm:(p,m)=>`${p} · ${m}`, badgeDet:'Deterministic fallback · no API key', badgeFail:'Health check failed',
-    t_route:'Route', t_noshow:'No-show', t_routeFull:'Route deviation', t_noshowFull:'No-show charge',
+    t_route:'Route', t_noshow:'No-show', t_fare:'Fare', t_property:'Property', t_safety:'Safety', t_routeFull:'Route deviation', t_noshowFull:'No-show charge',
+    chipFare:'Fare', chipProp:'Cleaning fee', chipSafe:'Safety', a_safetycase:'Safety case file',
+    ppHead:'Policy v2.1 path', ppPath:{ai_final:'AI final ruling',ai_ruling_if_confident:'AI ruling if confident',human_review:'Human review'}, ppReq:'Required confidence', ppFraud:'Fraud flag raises the bar to 95%', ppClauses:'Clauses', ppBreak:'Confidence breakdown',
+    cbk:{evidence_completeness:'Evidence completeness',policy_clarity:'Policy clarity',precedent_alignment:'Precedent alignment',party_credibility:'Party credibility'},
+    goodwill:'Goodwill credit', pendApproval:' · AI recommendation, human approval required', recHead:'AI recommendation (not executed)',
+    sfHead:'Safety case file for the human reviewer', sfInterim:'Suggested interim measures (policy 5.3)', sfNote:'The AI has not determined fault or recommended a resolution.',
     argsResult:'Arguments / result', ok:'✓ done', fail:'✗ failed', pending:'…',
     noCase:'No case', riderCase:'Rider case', driverCase:'Driver case', claim:'Claim', ask:'Request', clauses:'Clauses cited',
     cbHead:"Rider's own words", cbTrip:'Trip', cbFoot:'No dispute type selected: the intake agent decides it',
@@ -44,7 +49,12 @@ const I18N = {
     idle:'待命', working:'取证中…', finished:'已完成', reasoning:'推理',
     emptyHint:'在上方用你自己的话写一条投诉，选好行程，点「提交并裁决」。<br>系统会先判定争议类型，再由两位辩护智能体并行取证、法官独立核验给出裁决。<br><span style="font-size:12px">（右上角下拉可重放预置工单）</span>',
     badgeLlm:(p,m)=>`${p} · ${m}`, badgeDet:'确定性回退 · 无需 API key', badgeFail:'健康检查失败',
-    t_route:'绕路', t_noshow:'爽约', t_routeFull:'绕路多收费', t_noshowFull:'爽约取消费',
+    t_route:'绕路', t_noshow:'爽约', t_fare:'车费', t_property:'财物', t_safety:'安全', t_routeFull:'绕路多收费', t_noshowFull:'爽约取消费',
+    chipFare:'车费争议', chipProp:'清洁费', chipSafe:'安全事件', a_safetycase:'安全案件材料',
+    ppHead:'政策 v2.1 裁决路径', ppPath:{ai_final:'AI 终局裁决',ai_ruling_if_confident:'置信度足够时 AI 裁决',human_review:'人工复核'}, ppReq:'所需置信度', ppFraud:'欺诈标记将门槛提高到 95%', ppClauses:'条款', ppBreak:'置信度构成',
+    cbk:{evidence_completeness:'证据完整度',policy_clarity:'政策清晰度',precedent_alignment:'先例一致度',party_credibility:'当事人可信度'},
+    goodwill:'善意补偿', pendApproval:' · AI 建议，需人工批准', recHead:'AI 建议（未执行）',
+    sfHead:'供人工复核的安全案件材料', sfInterim:'建议的临时措施（政策 5.3）', sfNote:'AI 未判定责任，也未建议处理方案。',
     argsResult:'参数 / 结果', ok:'✓ 完成', fail:'✗ 失败', pending:'…',
     noCase:'无案件', riderCase:'乘客方案件', driverCase:'司机方案件', claim:'主张', ask:'诉求', clauses:'引用条款',
     cbHead:'乘客原话', cbTrip:'行程', cbFoot:'未选择争议类型 —— 类型由受理分类智能体判定',
@@ -71,6 +81,7 @@ const esc = s => String(s == null ? '' : s).replace(/&/g,'&amp;').replace(/</g,'
 const AGENTS = {
   intake:{key:'a_intake',cls:'intake'}, rider_advocate:{key:'a_rider',cls:'rider'},
   driver_advocate:{key:'a_driver',cls:'driver'}, judge:{key:'a_judge',cls:'judge'}, safety_net:{key:'a_safety',cls:'safety'},
+  safety_case:{key:'a_safetycase',cls:'safety'},
 };
 const agentName = a => AGENTS[a] ? T(AGENTS[a].key) : a;
 
@@ -83,7 +94,7 @@ let lastToolEl = {};
 let health = null, disputes = [], trips = [];
 let busy = null;   // 'file' | 'run' | null
 
-function typeLabel(t){ return t==='route_deviation' ? T('t_route') : t==='no_show_charge' ? T('t_noshow') : t; }
+function typeLabel(t){ return ({route_deviation:'t_route',no_show_charge:'t_noshow',fare_dispute:'t_fare',property_damage:'t_property',safety_incident:'t_safety'}[t]) ? T({route_deviation:'t_route',no_show_charge:'t_noshow',fare_dispute:'t_fare',property_damage:'t_property',safety_incident:'t_safety'}[t]) : t; }
 function rulingLabel(r){ return (T('rl')||{})[r] || r; }
 
 function applyStatic(){
@@ -239,6 +250,26 @@ function addRuling(r){
   const cls = {upheld:'upheld',rejected:'rejected',partial:'partial',escalated:'escalated'}[r.ruling]||'partial';
   const ev = (r.evidence_cited||[]).map(e => `<div class="r-ev">${esc(e)}</div>`).join('');
   const refund = r.refund_amount!=null ? `<div class="refund">${T('refund')} <b>${CUR}${esc(r.refund_amount)}</b></div>` : '';
+  const gw = r.goodwill_credit ? `<div class="refund">${T('goodwill')} <b>${CUR}${esc(r.goodwill_credit)}</b></div>` : '';
+  const pp = r.policy_path;
+  let ppBox = '';
+  if (pp){
+    const bk = r.confidence_breakdown ? Object.keys(r.confidence_breakdown).map(k => `<span class="tg-sig">${esc((T('cbk')||{})[k]||k)} ${esc(r.confidence_breakdown[k])}</span>`).join('') : '';
+    ppBox = `<div class="triage-box"><div class="tg-head">${T('ppHead')}</div>
+      <div class="tg-line"><span class="tg-badge">${esc((T('ppPath')||{})[pp.path]||pp.path)}</span>
+      <span class="tg-conf">${T('ppClauses')}: ${esc((r.policy_clauses||[]).join(', ')||pp.clause)}</span>
+      ${pp.required_confidence!=null?`<span class="tg-conf">${T('ppReq')} <b>${esc(pp.required_confidence)}</b></span>`:''}</div>
+      ${pp.fraud_flag?`<div class="tg-reason">${T('ppFraud')}</div>`:''}
+      ${(pp.reasons||[]).map(x=>`<div class="tg-reason">${esc(x)}</div>`).join('')}
+      ${bk?`<div class="tg-sigs">${T('ppBreak')}: ${bk}</div>`:''}</div>`;
+  }
+  const rec = r.recommendation ? `<div class="ma-box"><div class="ma-head">${T('recHead')}</div><div class="ma-line"><b>${T('maRuling')}</b> ${esc(rulingLabel(r.recommendation.ruling))}　<b>${T('maRefund')}</b> ${r.recommendation.refund_amount!=null?CUR+esc(r.recommendation.refund_amount):'-'}</div></div>` : '';
+  let sfBox = '';
+  if (r.case_file){
+    sfBox = `<div class="ma-box"><div class="ma-head">${T('sfHead')}</div>${(r.case_file.facts||[]).map(x=>`<div class="r-ev">${esc(x)}</div>`).join('')}
+      <div class="ma-head" style="margin-top:8px">${T('sfInterim')}</div>${(r.case_file.interim_measures||[]).map(x=>`<div class="r-ev">${esc(x)}</div>`).join('')}
+      <div class="ma-reason">${T('sfNote')}</div></div>`;
+  }
   const esc_ = (r.escalation_required && r.escalation_summary) ? `<div class="esc-box">${esc(r.escalation_summary)}</div>` : '';
   let maBox = '';
   if (ma){
@@ -248,9 +279,9 @@ function addRuling(r){
       <div class="ma-reason">${esc(ma.reasoning)}</div>${maEv}</div>`;
   }
   card.innerHTML = `<div class="r-head"><span class="badge ${cls}">${esc(rulingLabel(r.ruling))}</span>
-      <span class="conf">${T('conf')} <b>${esc(r.confidence_score)}</b>${r.escalation_required?T('escalated'):''}</span>${refund}</div>
+      <span class="conf">${T('conf')} <b>${esc(r.confidence_score)}</b>${r.ruling==='escalated'?T('escalated'):(r.escalation_required?T('pendApproval'):'')}</span>${refund}${gw}</div>
     ${sn&&sn.triggered?`<div class="sn-flag">${T('snFlag')}</div>`:''}
-    <div class="r-reason">${esc(r.reasoning)}</div><div class="r-ev-title">${T('evTitle')}</div>${ev}${maBox}${esc_}`;
+    <div class="r-reason">${esc(r.reasoning)}</div><div class="r-ev-title">${T('evTitle')}</div>${ev}${ppBox}${rec}${sfBox}${maBox}${esc_}`;
   timeline.appendChild(card); scroll();
 }
 
@@ -264,6 +295,7 @@ function appendEvent(ev){
       else if (ev.phase==='cases_submitted'){ setAgentStatus('rider_advocate','done'); setAgentStatus('driver_advocate','done'); addCases(ev.rider_case, ev.driver_case); }
       else if (ev.phase==='judge') setAgentStatus('judge','active');
       else if (ev.phase==='safety_net') setAgentStatus('safety_net','active');
+      else if (ev.phase==='safety_intake') setAgentStatus('safety_net','active');
       break;
     case 'complaint_received': addComplaint(ev.complaint, ev.trip_id); break;
     case 'triage_result': setAgentStatus('intake','done'); addTriage(ev); break;
@@ -271,7 +303,7 @@ function appendEvent(ev){
     case 'tool_call': addToolCall(ev.agent, ev.tool, ev.args, ev.summary); break;
     case 'tool_result': addToolResult(ev.agent, ev.tool, ev.ok, ev.result); break;
     case 'safety_net': setAgentStatus('safety_net','done'); addSafetyNet(ev); break;
-    case 'ruling': setAgentStatus('judge','done'); addRuling(ev.ruling); break;
+    case 'ruling': setAgentStatus('judge','done'); setAgentStatus('safety_net','done'); addRuling(ev.ruling); break;
     case 'warning': addThinking(ev.agent, ev.content); break;
     case 'done': break;
     case 'error': {

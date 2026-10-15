@@ -19,15 +19,21 @@ from app.i18n import L, CUR
 from app.models import TriageResult
 
 # 平台当前支持的争议类型（与 fixtures/policies 一一对应）
-SUPPORTED_TYPES = ("route_deviation", "no_show_charge")
+SUPPORTED_TYPES = ("route_deviation", "no_show_charge", "fare_dispute", "property_damage", "safety_incident")
 
 TYPE_LABELS = {  # Chinese labels (default English labels live in TYPE_LABELS_EN)
     "route_deviation": "绕路多收费",
     "no_show_charge": "爽约取消费",
+    "fare_dispute": "车费争议",
+    "property_damage": "财物损坏费用",
+    "safety_incident": "安全事件",
 }
 TYPE_LABELS_EN = {
     "route_deviation": "Route deviation",
     "no_show_charge": "No-show charge",
+    "fare_dispute": "Fare dispute",
+    "property_damage": "Property damage",
+    "safety_incident": "Safety incident",
 }
 
 
@@ -57,6 +63,28 @@ _SIGNALS: dict[str, tuple[str, ...]] = {
     ),
 }
 
+_SIGNALS["fare_dispute"] = (
+    "surge", "upfront", "quote", "quoted", "price was", "fare was", "higher than", "more than the price", "price changed", "charged more than",
+    "not told", "wasn't told", "dynamic pricing", "peak pricing", "price jump", "报价", "预付", "加价", "动态定价", "涨价", "价格变", "比报价", "高于报价",
+    "harga naik", "lonjakan", "விலை",
+)
+_SIGNALS["property_damage"] = (
+    "cleaning fee", "clean fee", "cleaning charge", "vomit", "spill", "dirty", "mess", "stain", "damage fee", "damaged the car", "scratch", "dent",
+    "清洁费", "清洗费", "弄脏", "呕吐", "污渍", "损坏", "划痕", "yuran pembersihan", "kotor", "muntah", "சுத்தம்",
+)
+SAFETY_SIGNALS = (
+    "unsafe", "felt unsafe", "scared", "afraid", "threat", "threaten", "harass", "assault", "attacked", "hit me", "touched", "grope", "stalk",
+    "reckless", "speeding", "red light", "drunk", "drink driving", "accident", "crash", "collision", "shouted at me", "abusive", "inappropriate",
+    "不安全", "害怕", "威胁", "骚扰", "袭击", "危险驾驶", "超速", "闯红灯", "酒驾", "事故", "撞", "辱骂", "性骚扰",
+    "tak selamat", "takut", "ancam", "ganggu", "bahaya", "பாதுகாப்பற்ற", "மிரட்டல்",
+)
+
+
+def detect_safety(text: str) -> list[str]:
+    low = (text or "").lower()
+    return [w for w in SAFETY_SIGNALS if w.lower() in low]
+
+
 _AMOUNT_RE = re.compile(
     r"(?:¥|￥|s\$|sgd\s*|\$|rmb\s*)\s*(\d+(?:\.\d+)?)|(\d+(?:\.\d+)?)\s*(?:元|块|块钱|块 RMB|dollars?|sgd)",
     re.IGNORECASE,
@@ -64,30 +92,26 @@ _AMOUNT_RE = re.compile(
 
 
 def classify_by_rules(text: str, trip_status: str | None = None) -> tuple[str, list[str]]:
-    """确定性分类：关键词打分 + 行程状态兜底。返回 (dispute_type, 命中的信号)。"""
+    """Deterministic classification: keyword scoring, then trip status as a tie-breaker. Returns (type, signals)."""
     low = (text or "").lower()
-    hits: dict[str, list[str]] = {t: [] for t in SUPPORTED_TYPES}
-    for dtype, words in _SIGNALS.items():
-        for w in words:
-            if w.lower() in low:
-                hits[dtype].append(w)
-
-    rd, ns = hits["route_deviation"], hits["no_show_charge"]
-    if len(rd) > len(ns):
-        return "route_deviation", rd
-    if len(ns) > len(rd):
-        return "no_show_charge", ns
-    if rd and ns and len(rd) == len(ns):
-        # 平手：行程状态说话。被取消的行程不可能有绕路争议。
-        return _fallback_by_status(trip_status), rd + ns
-    # 一个都没命中：只看行程状态
-    return _fallback_by_status(trip_status), []
+    safety = detect_safety(text)
+    if safety:                                            # policy 5.2: flag regardless of the type the filer chose
+        return "safety_incident", safety
+    hits = {t: [w for w in _SIGNALS.get(t, ()) if w.lower() in low] for t in SUPPORTED_TYPES if t != "safety_incident"}
+    ranked = sorted(hits.items(), key=lambda kv: len(kv[1]), reverse=True)
+    top, second = ranked[0], ranked[1]
+    if len(top[1]) > len(second[1]):
+        return top[0], top[1]
+    tied = [k for k, v in ranked if v and len(v) == len(top[1])]
+    return _fallback_by_status(trip_status, tied), (top[1] if top[1] else [])
 
 
-def _fallback_by_status(trip_status: str | None) -> str:
+def _fallback_by_status(trip_status: str | None, tied: list[str] | None = None) -> str:
     s = (trip_status or "").lower()
     if "cancel" in s:
         return "no_show_charge"
+    if tied:
+        return tied[0]
     return "route_deviation"
 
 
@@ -103,6 +127,17 @@ def extract_amount(text: str) -> float | None:
         return None
 
 
+_CLAIMS = {
+    "route_deviation": ("Driver took a longer route and overcharged the rider; rider requests a refund of the excess.", "司机绕路导致多收车费，请求退还超出部分。"),
+    "no_show_charge": ("A no-show cancellation fee was charged although the rider says the driver did not arrive; rider requests a refund.", "乘客称司机未到达却被收取爽约取消费，请求退款。"),
+    "fare_dispute": ("The final fare is higher than the upfront quote; rider requests a refund of the difference.", "最终车费高于预付报价，乘客请求退还差额。"),
+    "property_damage": ("A cleaning/damage fee was charged to the rider; rider disputes it and requests reversal.", "乘客被收取清洁/损坏费，对此提出异议并请求撤销。"),
+    "safety_incident": ("Rider reports a safety concern during the trip; case is flagged for mandatory human review.", "乘客报告行程中的安全问题；案件已标记，必须人工复核。"),
+}
+_RESOLUTION = {"route_deviation": "full_refund_of_overcharge", "no_show_charge": "full_refund_of_cancellation_fee", "fare_dispute": "refund_of_fare_difference",
+               "property_damage": "reverse_fee", "safety_incident": "human_review"}
+
+
 class IntakeAgent(BaseAgent):
     """Reads a free-text complaint -> decides dispute_type -> normalises the claim."""
 
@@ -115,8 +150,12 @@ class IntakeAgent(BaseAgent):
             "You are the INTAKE / TRIAGE AGENT of the RydeResolve ride-hailing dispute platform. "
             "You classify a rider's plain-language complaint into one of the dispute types the platform supports.\n\n"
             "Supported types (choose exactly one):\n"
-            "1. route_deviation: rider says the driver took a longer or wrong route, mileage looks wrong, or they were overcharged.\n"
-            "2. no_show_charge: rider says the driver never arrived / never picked them up / made them wait, yet a cancellation fee was charged.\n\n"
+            "1. route_deviation: the driver took a longer or different route and the rider was charged more.\n"
+            "2. no_show_charge: a cancellation / no-show fee was charged although the rider says the driver never arrived or never waited.\n"
+            "3. fare_dispute: the final fare is higher than the upfront quote (surge, price change) and the rider disputes the difference.\n"
+            "4. property_damage: a cleaning or damage fee was charged to the rider for the vehicle.\n"
+            "5. safety_incident: ANY safety indicator (reckless driving, speeding, harassment, threats, assault, inappropriate conduct, accident, feeling unsafe). "
+            "Policy 5.2 says to flag these for human escalation regardless of what else the complaint says: set safety_flag true and choose safety_incident.\n\n"
             "How to work:\n"
             "1. Read the complaint and pick out the key signals (long route / overcharge vs. driver did not come / waited for nothing). "
             "The complaint may be in English, Singlish, Malay, Tamil or Chinese; understand it in whatever language it is written in.\n"
@@ -130,7 +169,7 @@ class IntakeAgent(BaseAgent):
             '{"dispute_type":"route_deviation","classification_confidence":0.9,'
             '"classification_reasoning":"...","normalized_claim":"...",'
             '"requested_amount":null,"requested_resolution":"full_refund_of_overcharge",'
-            '"detected_signals":["longer route","overcharged"]}'
+            '"detected_signals":["longer route","overcharged"],"safety_flag":false}'
         )
 
     def build_user_message(self, context: dict) -> str:
@@ -180,18 +219,10 @@ class IntakeAgent(BaseAgent):
                 f"确定性分类规则：命中「{label}」信号 "
                 + (sep.join(signals[:6]) if signals else "无（按行程状态兜底）")
                 + f"；行程 status={status or '未知'}。"),
-            "normalized_claim": (
-                L(lg, "Driver took a longer route and overcharged the rider; rider requests a refund of the excess.",
-                      "司机绕路导致多收车费，请求退还超出部分。")
-                if dtype == "route_deviation" else
-                L(lg, "Driver did not arrive / did not pick the rider up but a cancellation fee was charged; rider requests a refund.",
-                      "司机未按时到达/未接到乘客却被收取消费，请求退还取消费。")
-            ),
+            "normalized_claim": _CLAIMS[dtype][0 if lg == "en" else 1],
             "requested_amount": amount,
-            "requested_resolution": (
-                "full_refund_of_overcharge" if dtype == "route_deviation"
-                else "full_refund_of_cancellation_fee"
-            ),
+            "requested_resolution": _RESOLUTION[dtype],
+            "safety_flag": dtype == "safety_incident",
             "detected_signals": signals,
             "_summary": L(lg, f"Classified as {label} ({dtype}).", f"分类完成：{label}（{dtype}）。"),
         }
@@ -213,4 +244,10 @@ class IntakeAgent(BaseAgent):
         data.setdefault("requested_amount", extract_amount(text))
         data.setdefault("requested_resolution", None)
         data.setdefault("detected_signals", signals)
+        # Policy 5.2 is enforced in code: any safety indicator in the text overrides the model's choice.
+        if detect_safety(text):
+            data["dispute_type"] = "safety_incident"
+            data["safety_flag"] = True
+        else:
+            data["safety_flag"] = data.get("dispute_type") == "safety_incident"
         return data

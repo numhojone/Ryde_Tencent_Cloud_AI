@@ -46,6 +46,7 @@ class Settings:
     llm_max_iterations: int = field(default_factory=lambda: int(os.environ.get("LLM_MAX_ITERATIONS", "14")))
     llm_temperature: float = field(default_factory=lambda: float(os.environ.get("LLM_TEMPERATURE", "0.2")))
     # 置信度低于该阈值则升级人工
+    strict_escalation: bool = field(default_factory=lambda: os.environ.get("STRICT_ESCALATION", "false").lower() in ("1", "true", "yes"))
     escalation_threshold: float = field(default_factory=lambda: float(os.environ.get("ESCALATION_THRESHOLD", "0.6")))
 
     # --- 服务 ---

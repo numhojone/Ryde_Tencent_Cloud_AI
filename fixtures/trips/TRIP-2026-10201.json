@@ -1,0 +1,92 @@
+{
+  "trip_id": "TRIP-2026-10201",
+  "_source": "Synthetic case written for this project (policy v2.1 section 4)",
+  "trip_data": {
+    "trip_id": "TRIP-2026-10201",
+    "rider_id": "R-3312",
+    "driver_id": "D-4410",
+    "pickup_location": {
+      "name": "Orchard MRT",
+      "lat": 1.304,
+      "lng": 103.8318
+    },
+    "dropoff_location": {
+      "name": "Changi Business Park",
+      "lat": 1.334,
+      "lng": 103.964
+    },
+    "start_time": "2026-09-10T22:10:00+08:00",
+    "end_time": "2026-09-10T22:48:00+08:00",
+    "status": "completed",
+    "currency": "SGD",
+    "fare_charged": 31.0,
+    "cleaning_fee_charged": 35.0
+  },
+  "gps_telemetry": [
+    {
+      "timestamp": "2026-09-10T22:10:00+08:00",
+      "lat": 1.304,
+      "lng": 103.8318,
+      "speed_kmh": 0
+    },
+    {
+      "timestamp": "2026-09-10T22:25:00+08:00",
+      "lat": 1.32,
+      "lng": 103.9,
+      "speed_kmh": 70
+    },
+    {
+      "timestamp": "2026-09-10T22:48:00+08:00",
+      "lat": 1.334,
+      "lng": 103.964,
+      "speed_kmh": 0
+    }
+  ],
+  "chat_logs": [
+    {
+      "message_id": "MSG-001",
+      "sender": "driver",
+      "timestamp": "2026-09-10T22:09:00+08:00",
+      "message": "Hi, I'm at the taxi stand, black Camry."
+    },
+    {
+      "message_id": "MSG-002",
+      "sender": "rider",
+      "timestamp": "2026-09-10T22:49:20+08:00",
+      "message": "Thanks. Why was I charged a cleaning fee? I did not spill anything."
+    }
+  ],
+  "app_events": [
+    {
+      "timestamp": "2026-09-10T22:48:00+08:00",
+      "event_type": "trip_ended",
+      "details": "Trip completed."
+    },
+    {
+      "timestamp": "2026-09-12T05:30:00+08:00",
+      "event_type": "damage_claim_filed",
+      "details": "Driver filed cleaning claim S$35.00 (seat stain)."
+    },
+    {
+      "timestamp": "2026-09-12T05:31:00+08:00",
+      "event_type": "cleaning_fee_charged",
+      "details": "S$35.00 cleaning fee charged to rider."
+    }
+  ],
+  "damage_evidence": {
+    "claim_type": "cleaning",
+    "claimed_amount": 35.0,
+    "claim_filed_at": "2026-09-12T05:30:00+08:00",
+    "photos": [
+      {
+        "photo_id": "PH-1",
+        "taken_at": "2026-09-12T05:12:00+08:00",
+        "source": "external_upload",
+        "timestamped_by_app_camera": false,
+        "linked_to_trip": false,
+        "description": "Rear seat stain"
+      }
+    ],
+    "repair_quote": null
+  }
+}

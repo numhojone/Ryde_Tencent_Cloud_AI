@@ -2,96 +2,67 @@
 
 > **Title**: RydeResolve
 >
-> **Subtitle**: A multi-agent dispute resolution system with a deterministic evidence-sufficiency safety net
+> **Subtitle**: Policy-grounded multi-agent dispute resolution with an evidence safety net
 >
-> **Blurb (8 words)**: *Autonomous dispute resolution where every ruling is evidence-audited.*
+> **Blurb (8 words)**: *Autonomous dispute resolution where every ruling is audited.*
 
-> **Live demo**: https://a530bc9f1a32e974f.sg2.agentos-app.run
-> Type a complaint in your own words (English, Singlish, Malay, Tamil or Chinese) and the system works out the dispute type itself. An EN / 中文 toggle switches the interface and the language of the agents' output. The dropdown at the top right replays four preset disputes, including the official Ryde sample.
+> **Live demo**: https://a530bc9f1a32e974f.sg2.agentos-app.run (update by republishing the new folder)
 
 ---
 
 ## 1. Project Overview
 
-**Target scenario.** Riders and drivers on a ride-hailing platform like Ryde file disputes after a trip ends. We built two dispute types: **route deviation** (the rider says the driver took a longer route and overcharged) and **no-show charge** (the rider says the driver never arrived but a cancellation fee was applied). Today these go to human agents, who pull GPS logs, chat history, app events and policy pages from separate tools. The challenge brief puts resolution time at typically 24 to 72 hours per dispute.
+**Target scenario.** Riders and drivers on a ride-hailing platform like Ryde file disputes after a trip. RydeResolve handles the four rulable categories in the Ryde Dispute Resolution Policy v2.1 (**route deviation, no-show charge, fare dispute, property damage**) and routes the fifth, **safety incidents**, to humans as the policy requires. Today these go to human agents who pull GPS, chat, app events and policy pages from separate tools; the challenge brief puts resolution at typically 24 to 72 hours.
 
-**Users.** Platform support teams who staff these queues. Riders and drivers benefit second, from faster and more consistent outcomes.
+**Users.** Platform support teams first; riders and drivers benefit from faster and more consistent outcomes.
 
-**Value proposition.** The rider writes a complaint in their own words. An intake agent classifies it, two advocate agents build each side's case from the trip evidence, and a judge agent re-checks the evidence itself and issues a structured ruling in under 30 seconds. A deterministic safety net then checks whether the evidence behind the ruling is thick enough to act on. If it isn't, the case goes to a human instead of an automatic refund, however confident the model claims to be.
-
----
+**Value proposition.** The rider writes a complaint in their own words. An intake agent picks the dispute type, two advocate agents build each side's case from the trip evidence, and a judge re-checks the evidence itself and rules by numbered policy clause. The policy's own thresholds (monetary tiers, 80% / 95% confidence, 2 km route limit, repair claims) are then applied in code, and a deterministic safety net blocks automatic action when the evidence is thin.
 
 ## 2. Real-World Scenario Insights
 
-**Where the pain point comes from.** Disputes like these are high in volume and small per ticket, so human triage is slow and hard to keep consistent. Two similar disputes can end differently depending on which agent picks them up. The 24 to 72 hour turnaround comes from the challenge brief.
+Disputes are high volume and small per ticket, so manual triage is slow and inconsistent. The hard part is not a faster chatbot: the system must (a) retrieve evidence, (b) apply the written policy by clause, (c) commit to a number, and (d) know when **not** to act automatically. (a) to (c) suit a language model; (d) is the Ryde policy's own design (section 6 thresholds, section 5 safety rule) and we enforce it in code, independent of the model's self-reported confidence.
 
-**Who it affects.**
-- **Riders** wait a day or more to learn whether a small charge will be refunded.
-- **Drivers** see legitimate cancellation fees challenged, and outcomes vary from case to case.
-- **Support teams** touch every case, including ones where the policy outcome is clear.
-
-**The core problem.** The goal is not a faster chatbot. The system has to: **(a)** retrieve the evidence (GPS, chat, app events, traffic reference), **(b)** apply the written policy rules by clause, **(c)** commit to a number, and **(d)** refuse to auto-refund when the evidence is too thin to support the conclusion. Steps (a) to (c) suit a language model. Step (d) is a code rule that does not depend on the model's self-reported confidence.
-
----
-
-## 3. Comprehensive Solution Design
-
-### 3.1 Business flow
+## 3. Solution Design
 
 ```
-Complaint (free text) -> Intake -> Advocates -> Judge -> Safety net -> Auto-ruling (upheld / partial / rejected)
-                                                                   \-> Escalation queue (human review)
+Complaint -> Intake -> Advocates (parallel) -> Judge -> Policy thresholds (6) -> Safety net -> Ruling | Human review
+                 \-> safety indicators (5.2) -> Safety case file -> Human review (no AI ruling)
 ```
 
-Every ruling carries the spec fields (`dispute_id`, `ruling`, `refund_amount`, `confidence_score`, `reasoning`, `evidence_cited`, `escalation_required`) plus two system fields: a `safety_net` audit block, and a `model_assessment` block that preserves the model's own judgment. A human reviewer can see what the model thought, what the system observed, and why the system overrode it.
+- **Intake agent**: five types; any safety indicator in the text forces the safety path regardless of the type the filer chose (5.2). Works in English, Singlish, Malay, Tamil and Chinese.
+- **Advocates** (rider, driver) run in parallel and cite only tool data.
+- **Judge** re-queries 11 read-only tools, applies clauses by number (1.2 to 1.4, 2.1 to 2.4, 3.2 to 3.4, 4.2 to 4.4), searches precedents (section 7) and calibrates confidence from the four factors in policy 6.3.
+- **Policy thresholds** (`app/thresholds.py`): fare under S$10 AI final; S$10 to S$50 needs 80%; over S$50 human; route deviation over 2 km needs human approval; repair claims human; a party fraud flag raises the bar to 95%.
+- **Safety net**: Rule A (fewer than 3 distinct evidence points) and a per-dispute-type Rule B (required sources too thin). It forces `escalated` and preserves the model's verdict in `model_assessment`.
+- **Safety incidents**: the AI gathers evidence, summarises the rider's account and suggests interim measures (5.3). It does not rule, assign fault or recommend a resolution (5.2).
+- Interface and agent output in English and Chinese; rulings, clause numbers and amounts never change with language. An LLM backend (OpenAI-compatible) and a deterministic backend share the same event flow.
 
-### 3.2 Technical design
+### Worked examples (offline, deterministic backend)
 
-All agents share one tool layer (8 tools) and one runtime (`BaseAgent.run`). FastAPI streams every step over SSE, so tool calls and agent reasoning are visible as they happen.
-
-1. **Intake agent** reads the rider's free-text complaint, picks the dispute type and reports a classification confidence. It classifies the complaint only. It does not decide the outcome.
-2. **Rider Advocate** and **Driver Advocate** run in parallel (`asyncio.gather`). Each is prompted to cite only data returned by tools, and each produces a symmetric case (claim, evidence, cited policy, requested refund).
-3. **Judge** does not rely on the advocates' summaries. It re-queries the same 8 tools (`get_trip_data`, `get_gps_telemetry`, `get_chat_logs`, `get_app_events`, `get_rider_profile`, `get_driver_profile`, `get_policy`, `get_traffic_reference`) and walks the policy clauses (CN-1 to CN-4 for no-shows, RD-1 to RD-3 for route deviation).
-4. **Safety net** is a deterministic module (`app/safety_net.py`) that runs after the judge. It uses fixed thresholds and ignores the model's confidence score:
-   - **Rule A**: the judge's `evidence_cited` list has fewer than 3 distinct items after deduplication.
-   - **Rule B**: a behavioral evidence source is empty or near-empty (GPS under 3 points, chat under 2 messages, app events under 2).
-
-   If either rule fires, the ruling becomes `escalated`, the refund is withheld, and the model's original verdict is kept in `model_assessment`. Rule B reads the data tools directly. Rule A counts what the judge cited, so it checks how well the ruling is supported, not whether the model is right.
-
-The interface and the agents' output are available in English and Chinese; only human-readable text changes, never rulings, clause IDs or numbers. The backend is switchable. The demo path calls a real LLM through an OpenAI-compatible endpoint. A scripted deterministic fallback follows the same event flow and needs no API key, so the demo still runs if the LLM quota is exhausted.
-
-### 3.3 How the design works in practice: DISP-003
-
-`TRIP-1003` has only **2 GPS points**, **0 chat messages**, and an app event placing the driver about 420 m from the pickup, well outside the 100 m arrival threshold in clause CN-1. On the real LLM path (Gemini 3.5 Flash Lite), the judge read the evidence and returned `upheld / refund S$25 / confidence 1.0`, a full automatic refund.
-
-That reading is defensible. The app event states the 420 m distance directly, and no contact was logged. The problem is the evidence base: two GPS points and no chat is thin for a ruling that moves money with no human involved. The safety net sees two of the three behavioral sources below their minimums, forces `escalated`, and keeps the judge's `upheld / S$25 / 1.0` in `model_assessment` so the human reviewer starts from the model's reasoning. The UI shows the model's judgment and the override side by side.
-
-> Confidence is the model's self-assessment, and it can be high on a thin evidence base. The check on whether the evidence is sufficient is code, so it behaves the same way every time.
-
----
+| Case | Source | Result |
+|---|---|---|
+| DISP-001 route deviation, 4.3 km | official sample | partial S$3.44 (4.3 km x S$0.80): traffic justified the reroute (1.4) but the driver did not inform the rider (1.2). Over 2 km, so human approval required |
+| DISP-002 no-show | official sample | rejected: arrived early, waited, 4 messages and a call; S$5 fee stands (2.2) |
+| DISP-003 fare dispute | official sample | upheld S$4.50: surge 1.0x to 1.5x, rider not notified (3.3) |
+| DISP-004 property damage | synthetic | upheld S$35: photo taken over 24 h after the trip and not linked to it (4.2, 4.4) |
+| DISP-005 safety incident | synthetic | escalated: case file prepared, no AI ruling (5.2) |
+| DISP-006 thin evidence | synthetic | model-side answer overridden by the safety net: 2 GPS points, no chat; escalated |
 
 ## 4. Business Value
 
-Real-LLM results below were measured on the three original synthetic cases (`DISP-001` route deviation, `DISP-002` no-show, `DISP-003` no-show with sparse evidence) on Gemini 3.5 Flash Lite via Google AI Studio, before the fixtures were relabelled to Singapore places and S$ (the relabel changes names and currency labels, not the numbers or logic). `DISP-004` is the official Ryde sample (Tiong Bahru Plaza no-show); we have run it in the deterministic fallback, where the charge stands (`rejected`, refund 0), matching the dataset's expected outcome.
-
 | Dimension | Today (manual) | RydeResolve |
 |---|---|---|
-| **Time to ruling** | 24 to 72 hours (per the challenge brief) | **17.6 to 27.5 s end to end**, including tool calls and the safety-net check |
-| **Audit trail** | Scattered across tools | **22 to 27 tool calls per case**, each streamed as an event |
-| **Policy traceability** | Held in the agent's head | Rulings cite policy clauses (CN-1 to CN-4, RD-1 to RD-3) in `evidence_cited` |
-| **Thin-evidence cases** | Handled case by case | On DISP-003 the safety net blocked the automatic refund and routed it to a human |
-| **Model confidence vs system check** | Not separated | Model confidence is stored in `model_assessment`. The safety net decides independently whether the evidence is enough |
+| Time to ruling | 24 to 72 hours (challenge brief) | seconds in our runs; we have not benchmarked at scale |
+| Audit trail | scattered across tools | every tool call and agent step streamed as an event |
+| Policy traceability | in the agent's head | rulings cite clause numbers and a policy path |
+| Risky cases | judged case by case | code-enforced thresholds; thin evidence and safety cases go to humans |
+| Model confidence vs system check | not separated | model verdict preserved, safety net decides independently |
 
-### Fixture results
+### Limits we state upfront
 
-- **DISP-001 (route deviation)**: judge `partial S$30 / 0.98`. Safety net not triggered (GPS 10, chat 5, events 3). Final `partial S$30`, 27 tool calls. The deterministic fallback reaches the same amount.
-- **DISP-002 (no-show)**: judge `rejected S$0 / 1.0` (driver arrived, waited, and contacted the rider). Safety net not triggered (GPS 7, chat 3, events 8). Final `rejected S$0`, 22 tool calls. The fallback agrees.
-- **DISP-003 (no-show, sparse evidence)**: judge `upheld S$25 / 1.0`. Safety net **triggered** (GPS 2 of 3, chat 0 of 2). Final `escalated`, refund withheld, original verdict preserved. The deterministic fallback also escalates this case, but through its own scripted rule.
-
-### Limits we want to be upfront about
-
-- All results come from 3 synthetic fixtures, one official Ryde sample case and a few free-text tests, not from production Ryde data. The synthetic amounts are illustrative. We have not measured a real dispute volume or a real borderline-case rate, so we do not claim a cost saving figure.
-- LLM output can vary between runs. The deterministic safety net does not remove that variance. It limits the damage when the evidence is thin.
-- In the deterministic fallback, the judge and the advocates use the same analysis functions, so its re-check is independent in the data it fetches, not in the logic it applies. On the LLM path the judge's reasoning is the model's own.
-- The live demo runs on a free-tier LLM quota. If it runs out, the backend switcher lets a user continue on the scripted backend, which has the same flow but scripted reasoning text.
-- Non-English complaints (Singlish, Malay, Tamil, Chinese) are handled by the LLM's own language understanding on the real path. In the scripted fallback, intake uses keyword rules, which we tuned on a handful of example complaints and have not validated at scale.
+- Official sample datasets and a few synthetic cases only; no production data, no measured dispute volume, so we claim no cost-saving figure.
+- The real-LLM path has not been re-run since the Policy v2.1 rebuild; all numbers above are from the deterministic backend. LLM output can vary between runs, and the section 6 thresholds are enforced in code for exactly that reason.
+- In the deterministic backend the advocates and judge share analysis functions, so the judge's re-check is independent in the data it fetches, not the logic. On the LLM path the judge's reasoning is the model's own and is cross-checked against the policy computation.
+- The official route sample recommends a partial refund although 6.1 sends deviations over 2 km to a human; we return the recommendation flagged as needing human approval.
+- Confidence weighting (40/30/15/15) and the 100 m pickup radius are our own definitions.
+- Fixture-based: no live GPS, payments or refund execution.

@@ -1,0 +1,48 @@
+[
+  {
+    "case_id": "DISP-2026-0089",
+    "date": "2026-02-12",
+    "dispute_type": "route_deviation",
+    "tags": [
+      "traffic_justified",
+      "rider_not_informed",
+      "deviation_over_1km"
+    ],
+    "facts": "Driver rerouted from Geylang to Orchard via Nicoll Highway due to traffic. Deviation 1.8 km beyond the recommended route. Rider was not informed. Traffic data confirmed congestion on the original route.",
+    "ruling": "partial",
+    "refund_amount": 3.2,
+    "confidence": 0.91,
+    "rationale": "Valid traffic justification but no notification under section 1.2: refund of the excess distance fare only, not the whole trip."
+  },
+  {
+    "case_id": "DISP-2026-0142",
+    "date": "2026-04-03",
+    "dispute_type": "fare_dispute",
+    "tags": [
+      "surge_increase",
+      "rider_not_notified",
+      "surge_only_difference"
+    ],
+    "facts": "Upfront quote $9.50 at 1.0x. Surge rose to 1.4x between quote and pickup; rider not notified. Actual fare $12.70, a $3.20 difference entirely due to surge.",
+    "ruling": "upheld",
+    "refund_amount": 3.2,
+    "confidence": 0.96,
+    "rationale": "Section 3.3: surge increase without notification means the full surge differential is refunded."
+  },
+  {
+    "case_id": "DISP-2026-0211",
+    "date": "2026-05-18",
+    "dispute_type": "no_show_charge",
+    "tags": [
+      "driver_arrived",
+      "no_message",
+      "no_call",
+      "fee_voided"
+    ],
+    "facts": "Driver arrived, waited 6 minutes and cancelled. $5.00 fee charged. Chat and call records show zero messages and zero calls before cancelling. Rider arrived 1 minute after cancellation.",
+    "ruling": "upheld",
+    "refund_amount": 5.0,
+    "confidence": 0.98,
+    "rationale": "Section 2.3: the driver did not meet both contact obligations, so the $5.00 fee is voided and refunded."
+  }
+]

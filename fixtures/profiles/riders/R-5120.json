@@ -1,0 +1,12 @@
+{
+  "rider_id": "R-5120",
+  "account_age_days": 300,
+  "total_trips": 58,
+  "avg_rating": 4.9,
+  "dispute_history": {
+    "total_disputes": 0,
+    "upheld": 0,
+    "rejected": 0
+  },
+  "fraud_flags": 0
+}

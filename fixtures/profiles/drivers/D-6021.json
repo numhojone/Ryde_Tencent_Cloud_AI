@@ -1,0 +1,13 @@
+{
+  "driver_id": "D-6021",
+  "account_age_days": 150,
+  "total_trips": 410,
+  "avg_rating": 4.2,
+  "dispute_history": {
+    "total_disputes": 3,
+    "upheld_against": 1,
+    "rejected": 2
+  },
+  "fraud_flags": 0,
+  "vehicle": "Honda Fit (SKE 8832 Z)"
+}
