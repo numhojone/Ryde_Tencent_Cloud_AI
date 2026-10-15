@@ -44,7 +44,12 @@
   <!-- LEFT: the rider app -->
   <section class="pane pane-rider on" id="pane-rider" data-pane="rider" aria-labelledby="h-rider">
     <header class="pane-head">
-      <h2 id="h-rider" data-i18n="tpRider">Rider</h2>
+      <h2 id="h-rider" class="sr-only" data-i18n="tpRider">Rider</h2>
+      <div class="role-toggle" id="roleToggle" role="group" data-i18n-title="tgTitle" title="View as" hidden>
+        <button type="button" id="tgRider" data-view="rider" aria-pressed="true"><span data-i18n="tpRider">Rider</span><b class="tg-badge" hidden></b></button>
+        <button type="button" id="tgDriver" data-view="driver" aria-pressed="false"><span data-i18n="tpDriver">Driver</span><b class="tg-badge" hidden></b></button>
+      </div>
+      <span class="pane-title" id="riderTitle" data-i18n="tpRider">Rider</span>
       <span class="live" id="st-rider"><i></i><span></span></span>
     </header>
     <div class="whoami">
@@ -55,7 +60,7 @@
     <div class="phone">
       <div class="phone-bar">
         <span class="phone-app">Ryde</span>
-        <span class="phone-sub" data-i18n="tpHelp">Help with a trip</span>
+        <span class="phone-sub" id="phoneSub" data-i18n="tpHelp">Help with a trip</span>
       </div>
       <div class="ticket-bar" id="ticketBar" hidden>
         <span class="tb-ref" id="tbRef"></span>
@@ -63,6 +68,15 @@
       </div>
       <div class="phone-chat" id="riderChat" aria-live="polite">
         <div class="phone-empty" id="riderEmpty" data-i18n="tpRiderEmpty">Tell us what went wrong with your trip, in your own words.</div>
+      </div>
+      <div class="phone-chat" id="driverChat" aria-live="polite" hidden>
+        <div class="rm left drv-intro"><div class="rm-who">Ryde</div><div class="rm-bubble" data-i18n="drvIntro">You will only see questions from Ryde Support here.</div></div>
+        <div class="drv-pick" id="driverPick" hidden>
+          <label class="lg-field"><span data-i18n="drvPickLbl">View as driver (demo accounts)</span>
+            <select id="driverPickSelect" class="select"></select></label>
+          <button type="button" class="btn primary" id="driverPickBtn" data-i18n="drvPickBtn">Open driver inbox</button>
+        </div>
+        <div class="phone-empty" id="driverEmpty" data-i18n="drvEmpty" hidden>No questions from Ryde Support right now.</div>
       </div>
       <form class="phone-input" id="riderForm">
         <textarea id="riderInput" rows="1" maxlength="2000" data-i18n-ph="tpRiderPh" placeholder="Type a message"></textarea>
@@ -111,12 +125,28 @@
           <div class="qa-thread" id="qaThread"></div>
           <form class="qa-form" id="askForm">
             <textarea id="askInput" rows="2" maxlength="600" data-i18n-ph="tpAskPh" placeholder="e.g. did the driver call the rider before cancelling?"></textarea>
-            <button type="submit" class="btn" id="askBtn" data-i18n="tpCheck">Check wording</button>
+            <div class="qa-side">
+              <label class="qa-to-pick"><span data-i18n="askToShort">Ask</span>
+                <select id="askTo" class="select select-sm">
+                  <option value="auto" data-i18n="askAuto">Auto</option>
+                  <option value="rider" data-i18n="askRider">Rider</option>
+                  <option value="driver" data-i18n="askDriver">Driver</option>
+                </select></label>
+              <button type="submit" class="btn" id="askBtn" data-i18n="tpCheck">Check wording</button>
+            </div>
           </form>
           <div class="qa-confirm" id="askConfirm" hidden>
             <div class="qc-row"><span class="qc-k" data-i18n="tpYouWrote">You wrote</span><span class="qc-v" id="qcOrig"></span></div>
             <div class="qc-row"><span class="qc-k" data-i18n="tpSentAs">Will be sent as</span>
               <textarea id="qcEdit" rows="2" maxlength="600"></textarea></div>
+            <div class="qc-row"><span class="qc-k" data-i18n="askTo">If the record has no answer, ask</span>
+              <select id="qcTo" class="select select-sm">
+                <option value="rider" data-i18n="askRider">Rider</option>
+                <option value="driver" data-i18n="askDriver">Driver</option>
+              </select>
+              <span class="qc-reason" id="qcReason"></span></div>
+            <div class="qc-row"><span class="qc-k" id="qcPartyLbl"></span>
+              <textarea id="qcParty" rows="3" maxlength="900"></textarea></div>
             <p class="qc-note" id="qcNote"></p>
             <div class="qc-actions">
               <button type="button" class="btn" id="qcCancel" data-i18n="tpEdit">Back to edit</button>
@@ -138,6 +168,7 @@
           <input type="number" id="dbAmount" min="0" step="0.01" inputmode="decimal"></label>
         <label class="db-note"><span id="dbNoteLbl"></span>
           <textarea id="dbNote" rows="2" maxlength="600"></textarea></label>
+        <p class="db-pending" id="dbPending" hidden></p>
         <p class="db-err" id="dbErr" role="alert"></p>
         <div class="db-actions">
           <button type="button" class="btn" id="dbCancel" data-i18n="tpCancel">Cancel</button>

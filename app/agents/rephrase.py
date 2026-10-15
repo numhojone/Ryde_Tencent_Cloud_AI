@@ -38,7 +38,8 @@ TYPOS: dict[str, str] = {
     "chareg": "charge", "chargd": "charged", "arived": "arrived", "arrivd": "arrived", "waitied": "waited",
     "wated": "waited", "wiat": "wait", "calld": "called", "caled": "called", "traffc": "traffic", "trafic": "traffic",
     "acident": "accident", "accidnet": "accident", "speding": "speeding", "photoes": "photos", "evidance": "evidence",
-    "shld": "should", "wud": "would", "cud": "could", "confim": "confirm", "confrim": "confirm", "realy": "really", "alot": "a lot", "becaus": "because",
+    "shld": "should", "cancell": "cancelling", "cancle": "cancel", "cancled": "cancelled", "thru": "through",
+    "insted": "instead", "instaed": "instead", "becos": "because", "wher": "where", "geylang": "Geylang", "wud": "would", "cud": "could", "confim": "confirm", "confrim": "confirm", "realy": "really", "alot": "a lot", "becaus": "because",
 }
 _QWORDS = ("what", "when", "where", "which", "who", "whom", "whose", "why", "how", "did", "do", "does", "was", "were",
            "is", "are", "can", "could", "would", "will", "should", "has", "have", "had", "may", "might")
@@ -92,6 +93,27 @@ def rider_wrap(clean: str, rider_lang: str) -> str:
     return f"Hello, this is Ryde Support. To help us review your case, could you please answer one question: {clean}"
 
 
+def to_driver_person(text: str) -> str:
+    """A question about "the driver" becomes a question to the driver."""
+    t = re.sub(r"\b([Ww]as|[Ii]s) the driver\b",
+               lambda m: ("W" if m.group(1)[0] == "W" else "w") + "ere you" if m.group(1).lower() == "was"
+               else ("A" if m.group(1)[0] == "I" else "a") + "re you", text)
+    t = re.sub(r"\b[Tt]he driver's\b", "your", t)
+    t = re.sub(r"\b[Tt]he driver\b", "you", t)
+    return t.replace("司机", "您")
+
+
+def driver_wrap(clean: str, lang: str = "en") -> str:
+    """The polite template for a question to the driver (deterministic): "Could you please confirm: did you ...?"."""
+    q = to_driver_person(clean)
+    if lang == "zh" or re.search(r"[㐀-鿿]", q):
+        return f"您好，这里是 Ryde 客服。关于您近期的一趟行程，想请您确认：{q}"
+    first = (re.match(r"[A-Za-z']+", q) or [""])[0].lower()
+    lead = "tell us" if first in ("why", "where", "when", "how", "what", "which", "who") else "confirm"
+    q = q if q.startswith(("I ", "I'")) else q[:1].lower() + q[1:]
+    return f"Hello, this is Ryde Support. About a recent trip you drove, could you please {lead}: {q}"
+
+
 def rider_note(clean: str, rider_lang: str) -> str:
     """A decision note to the rider (deterministic): no question template, just a courteous lead-in."""
     if rider_lang == "zh":
@@ -123,23 +145,27 @@ class RephraseAgent(BaseAgent):
         clean = fix_text(text)
         if self.purpose == "rider":
             return rider_wrap(clean, self.rider_lang)
+        if self.purpose == "driver":
+            return driver_wrap(clean, self.rider_lang)
         if self.purpose == "note":
             return rider_note(clean, self.rider_lang)
         return clean
 
     def needs_model(self, text: str) -> bool:
         """Skip the model when the text is already clean and no translation is needed."""
-        translate = self.purpose in ("rider", "note") and self.rider_lang == "zh" and not re.search(r"[㐀-鿿]", text or "")
+        translate = self.purpose in ("rider", "driver", "note") and self.rider_lang == "zh" and not re.search(r"[㐀-鿿]", text or "")
         return translate or not is_clean(text)
 
     def tool_schemas(self) -> list[dict]:
         return []
 
     def system_prompt(self) -> str:
-        target = "Simplified Chinese" if self.purpose in ("rider", "note") and self.rider_lang == "zh" else "English"
+        target = "Simplified Chinese" if self.purpose in ("rider", "driver", "note") and self.rider_lang == "zh" else "English"
         job = {"qa": "Fix spelling and grammar of a support agent's question. Keep it a question with the same meaning.",
                "rider": "Rewrite a support agent's question to a ride-hailing customer: polite, professional, short. "
                         "Start with a greeting from Ryde Support.",
+               "driver": "Rewrite a support agent's question to a ride-hailing driver about one of their trips: polite, "
+                         "professional, short, addressed to the driver as 'you'. Start with a greeting from Ryde Support.",
                "note": "Rewrite a support agent's note to a ride-hailing customer: polite, professional, short."}[self.purpose]
         return (f"{job} Never add facts, promises or amounts that are not in the text. Write in {target}. "
                 'Output strict JSON only: {"text":"..."}')

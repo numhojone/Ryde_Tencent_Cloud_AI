@@ -58,22 +58,25 @@ async def health():
 @app.get("/api/auth/accounts")
 async def auth_accounts():
     """Demo accounts for the login screen. Demo only: no password."""
-    return {"riders": A.accounts(), "support": {"role": "support"}}
+    return {"riders": A.accounts(), "drivers": A.driver_accounts(), "support": {"role": "support"}}
 
 
 @app.post("/api/auth/login")
 async def auth_login(payload: dict):
-    """Sign in as a demo rider ({"rider_id": ...}) or as the support agent ({"role": "support"})."""
+    """Sign in as a demo rider ({"rider_id": ...}), driver ({"role": "driver", "driver_id": ...}) or the support agent."""
     if payload.get("role") == "support":
         sess = {"role": "support"}
+    elif payload.get("role") == "driver":
+        did = (payload.get("driver_id") or "").strip()
+        if did not in {a["driver_id"] for a in A.driver_accounts()}:
+            raise HTTPException(status_code=400, detail="Unknown demo account")
+        sess = {"role": "driver", "driver_id": did}
     else:
         rid = (payload.get("rider_id") or "").strip()
         if rid not in {a["rider_id"] for a in A.accounts()}:
             raise HTTPException(status_code=400, detail="Unknown demo account")
         sess = {"role": "rider", "rider_id": rid}
-    resp = JSONResponse({"ok": True, **sess})
-    resp.set_cookie(A.COOKIE, A.sign(sess), max_age=A.MAX_AGE, httponly=True, samesite="lax", path="/")
-    return resp
+    return _set_session(JSONResponse({"ok": True, **sess}), sess)
 
 
 @app.post("/api/auth/logout")
@@ -83,13 +86,120 @@ async def auth_logout():
     return resp
 
 
+def _set_session(resp, sess: dict):
+    resp.set_cookie(A.COOKIE, A.sign(A.cookie_payload(sess)), max_age=A.MAX_AGE, httponly=True, samesite="lax", path="/")
+    return resp
+
+
 @app.get("/api/auth/me")
-async def auth_me(sess: dict = Depends(A.session)):
+async def auth_me(sess: dict = Depends(A.any_session)):
     if sess["role"] == "support":
         return {"role": "support", "rider_id": None, "name": None, "stories": []}
+    if sess["role"] == "driver":
+        names = {a["driver_id"]: a["name"] for a in A.driver_accounts()}
+        return {"role": "driver", "driver_id": sess["driver_id"], "name": names.get(sess["driver_id"]), "stories": [],
+                "home": {"rider_id": sess["home"]["rider_id"]} if sess.get("home") else None}
     names = {a["rider_id"]: a["name"] for a in A.accounts()}
     return {"role": "rider", "rider_id": sess["rider_id"], "name": names.get(sess["rider_id"]),
             "stories": A.stories_for(sess["rider_id"])}
+
+
+# ---- demo Rider | Driver toggle ----
+def _rider_open_case(rider_id: str) -> "CS.Case | None":
+    mine = [c for c in CS.CASES.values() if c.rider_id == rider_id and c.ticket]
+    return mine[-1] if mine else None
+
+
+@app.get("/api/session/toggle")
+async def session_toggle(sess: dict = Depends(A.any_session)):
+    """State of the Rider | Driver toggle: who each side is and how many questions wait on each side.
+    Counts only; the driver's details are not shown on the rider side."""
+    if sess["role"] == "support":
+        raise HTTPException(status_code=403, detail="Not for support agents")
+    rider_id = sess["rider_id"] if sess["role"] == "rider" else (sess.get("home") or {}).get("rider_id")
+    names = {a["rider_id"]: a["name"] for a in A.accounts()}
+    rider = None
+    if rider_id:
+        pend = sum(c.pending()["rider"] for c in CS.CASES.values() if c.rider_id == rider_id)
+        rider = {"id": rider_id, "name": names.get(rider_id), "pending": pend}
+    driver = None
+    if sess["role"] == "driver":
+        did = sess["driver_id"]
+        driver = {"id": did, "pending": sum(1 for q in CS.driver_questions(did) if q["status"] == "waiting")}
+    else:
+        c = _rider_open_case(rider_id)
+        if c and c.driver_id:
+            driver = {"id": None, "case_id": c.id, "pending": c.pending()["driver"]}
+    # the demo driver list (the same public list as the login page) is only for the picker when there is no case
+    return {"role": sess["role"], "can_switch": A.role_switch_allowed(), "rider": rider, "driver": driver,
+            "drivers": A.driver_accounts() if A.role_switch_allowed() and not driver else []}
+
+
+@app.post("/api/session/role")
+async def session_role(payload: dict, sess: dict = Depends(A.any_session)):
+    """Demo only (DEMO_ROLE_SWITCH): switch between the rider and the driver of the rider's case. The rider session is
+    kept inside the driver session, so switching back needs no new login."""
+    if not A.role_switch_allowed():
+        raise HTTPException(status_code=403, detail="Role switching is off (DEMO_ROLE_SWITCH)")
+    if sess["role"] == "support":
+        raise HTTPException(status_code=403, detail="Not for support agents")
+    home = sess if sess["role"] == "rider" else sess.get("home")
+    want = payload.get("role")
+    if want == "rider":
+        if not home:
+            raise HTTPException(status_code=403, detail="This session has no rider to switch back to")
+        new = {"role": "rider", "rider_id": home["rider_id"]}
+    elif want == "driver":
+        cid = (payload.get("case_id") or "").strip()
+        if cid:
+            case = CS.CASES.get(cid)
+            if not case or not home or case.rider_id != home["rider_id"] or not case.driver_id:
+                raise HTTPException(status_code=404, detail="Unknown case")
+            did = case.driver_id
+        else:
+            did = (payload.get("driver_id") or "").strip()
+            if did not in {a["driver_id"] for a in A.driver_accounts()}:
+                raise HTTPException(status_code=400, detail="Unknown demo account")
+        new = {"role": "driver", "driver_id": did, "home": home}
+    else:
+        raise HTTPException(status_code=400, detail="role must be rider or driver")
+    return _set_session(JSONResponse({"ok": True, "role": new["role"]}), new)
+
+
+# ---- driver: receive questions from support, reply ----
+@app.get("/api/driver/questions")
+async def driver_questions(sess: dict = Depends(A.driver_session)):
+    """Questions from support on cases whose trip this driver drove. Nothing else about the case."""
+    return {"questions": CS.driver_questions(sess["driver_id"])}
+
+
+@app.post("/api/driver/reply")
+async def driver_reply(payload: dict, sess: dict = Depends(A.driver_session)):
+    return await _call(CS.driver_reply(sess["driver_id"], payload.get("text") or "", payload.get("question_id")))
+
+
+@app.get("/api/driver/events")
+async def driver_events(sess: dict = Depends(A.driver_session)):
+    """SSE for this driver only: support typing, new questions, reply acknowledgements."""
+    did = sess["driver_id"]
+    q: asyncio.Queue = asyncio.Queue()
+    CS.DRIVER_SUBS.setdefault(did, set()).add(q)
+
+    async def gen():
+        try:
+            yield ": connected\n\n"
+            while True:
+                try:
+                    ev = await asyncio.wait_for(q.get(), timeout=15)
+                except asyncio.TimeoutError:
+                    yield ": keepalive\n\n"
+                    continue
+                yield f"data: {json.dumps(ev, ensure_ascii=False)}\n\n"
+        finally:
+            CS.DRIVER_SUBS.get(did, set()).discard(q)
+
+    return StreamingResponse(gen(), media_type="text/event-stream",
+                             headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"})
 
 
 @app.get("/api/disputes")
@@ -317,7 +427,8 @@ async def case_events(case_id: str, after: int = 0, sess: dict = Depends(A.sessi
     case = _case_or_404(case_id, sess)
     q: asyncio.Queue = asyncio.Queue()
     case.subscribers.add(q)
-    hidden = ("human",) if sess["role"] == "rider" else ()       # riders never receive the console's events
+    # riders never receive the console's events, nor what was asked of the driver
+    hidden = ("human", "driver") if sess["role"] == "rider" else ()
     backlog = [e for e in case.events if e["seq"] > after and e["pane"] not in hidden]
 
     async def gen():
@@ -355,10 +466,18 @@ async def case_rephrase(case_id: str, payload: dict, sess: dict = Depends(A.supp
     return await _call(CS.human_rephrase(case, payload.get("text") or "", payload.get("purpose") or "qa"))
 
 
+@app.post("/api/cases/{case_id}/human/route")
+async def case_route(case_id: str, payload: dict, sess: dict = Depends(A.support_session)):
+    """Who a question would go to if the record cannot answer it (Auto), shown before anything is sent."""
+    case = _case_or_404(case_id, sess)
+    return await _call(CS.human_route(case, payload.get("question") or ""))
+
+
 @app.post("/api/cases/{case_id}/human/ask")
 async def case_ask(case_id: str, payload: dict, sess: dict = Depends(A.support_session)):
     case = _case_or_404(case_id, sess)
-    return await _call(CS.human_ask(case, payload.get("question") or "", payload.get("original")))
+    return await _call(CS.human_ask(case, payload.get("question") or "", payload.get("original"),
+                                    (payload.get("recipient") or "auto").strip().lower(), payload.get("party_text")))
 
 
 @app.post("/api/cases/{case_id}/human/decision")

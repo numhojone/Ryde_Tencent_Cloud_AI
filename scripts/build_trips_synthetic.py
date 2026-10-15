@@ -172,38 +172,44 @@ UNCLEAR = {"key": "unclear", "label_en": "Unclear story", "label_zh": "描述不
 ACCOUNTS = {
     "_source": "Synthetic",
     "_note": "Demo login accounts. Display names are invented for the demo (profiles carry no names); "
-             "R-4521's name is the one in the official DISP-001 chat log. Stories are suggestions for the demo strip.",
+             "R-4521's name is the one in the official DISP-001 chat log, and D-1187 / D-2398 are named in the official "
+             "DISP-001 / DISP-002 records. Stories are suggestions for the demo strip. A driver is only ever shown a "
+             "rider's first_name.",
+    "drivers": {
+        "D-1187": {"name": "Rajesh Kumar"}, "D-2398": {"name": "Lim Wei Ming"}, "D-3456": {"name": "Tan Boon Huat"},
+        "D-4410": {"name": "Nur Aisyah"}, "D-6021": {"name": "Hafiz Rahman"}, "D-7002": {"name": "Ong Kai Wen"},
+    },
     "riders": {
-        "R-4521": {"name": "Sarah Tan", "stories": [
+        "R-4521": {"first_name": "Sarah", "name": "Sarah Tan", "stories": [
             {"key": "route_pick", "label_en": "Longer route (two trips fit)", "label_zh": "绕路（两趟都符合）",
              "en": "My driver took a much longer route than usual and I paid more than I should have.",
              "zh": "司机绕路了，走了更远的路线，我多付了钱。"},
             {"key": "route_one", "label_en": "Detour to Changi T3", "label_zh": "去樟宜机场绕路",
              "en": "The driver took a long detour on the way to Changi Airport T3 and never told me.",
              "zh": "去樟宜机场的路上司机绕路了，也没告诉我。"}, UNCLEAR]},
-        "R-7823": {"name": "Daniel Lim", "stories": [
+        "R-7823": {"first_name": "Daniel", "name": "Daniel Lim", "stories": [
             {"key": "noshow_pick", "label_en": "No-show fee (two trips fit)", "label_zh": "爽约费（两趟都符合）",
              "en": "The driver never came and I was still charged a $5 cancellation fee.",
              "zh": "司机一直没来，我还被收了$5取消费。"},
             {"key": "no_match", "label_en": "Fare above quote (no such trip)", "label_zh": "车费高于报价（无此行程）",
              "en": "The fare was much higher than the upfront quote and nobody told me.",
              "zh": "车费比报价高很多，也没人通知我。"}, UNCLEAR]},
-        "R-9001": {"name": "Priya Nair", "stories": [
+        "R-9001": {"first_name": "Priya", "name": "Priya Nair", "stories": [
             {"key": "fare_one", "label_en": "Fare above quote", "label_zh": "车费高于报价",
              "en": "I was charged $16.50 but the quote was $12.00, and nobody told me the price went up.",
              "zh": "报价是$12.00，结果收了我$16.50，没人告诉我涨价。"},
             {"key": "no_match", "label_en": "No-show fee (no such trip)", "label_zh": "爽约费（无此行程）",
              "en": "The driver never showed up and I got a $5 cancellation fee.",
              "zh": "司机没来，我却被收了$5取消费。"}, UNCLEAR]},
-        "R-3312": {"name": "Wong Mei Ling", "stories": [
+        "R-3312": {"first_name": "Mei Ling", "name": "Wong Mei Ling", "stories": [
             {"key": "damage_one", "label_en": "Cleaning fee", "label_zh": "清洁费",
              "en": "I was charged a S$35 cleaning fee but I never spilled anything.",
              "zh": "我被收了S$35清洁费，但我根本没有弄脏车。"}, UNCLEAR]},
-        "R-5120": {"name": "Ahmad Faiz", "stories": [
+        "R-5120": {"first_name": "Ahmad", "name": "Ahmad Faiz", "stories": [
             {"key": "safety_one", "label_en": "Speeding driver", "label_zh": "司机超速",
              "en": "The driver was speeding over 100 km/h and shouted at me when I asked him to slow down.",
              "zh": "司机超速开到100 km/h以上，我让他开慢点他还吼我。"}, UNCLEAR]},
-        "R-7001": {"name": "Chloe Ng", "stories": [
+        "R-7001": {"first_name": "Chloe", "name": "Chloe Ng", "stories": [
             {"key": "noshow_one", "label_en": "No-show fee", "label_zh": "爽约费",
              "en": "The app charged me a S$5 cancellation fee but I never saw the driver.",
              "zh": "App收了我S$5取消费，但我根本没看到司机。"}, UNCLEAR]},

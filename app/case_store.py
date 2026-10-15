@@ -9,7 +9,11 @@ with the pane it is for:
 
 (The tag is `pane`, not `role`: orchestrator events already use `role` for the agent that sent them.)
 
-Statuses: intake -> in_review -> resolved_by_ai, or -> with_agent <-> waiting_for_rider -> resolved_by_human.
+Statuses: intake -> in_review -> resolved_by_ai, or -> with_agent <-> waiting_for_rider | waiting_for_driver |
+waiting_for_both -> resolved_by_human. Support can ask the rider and the driver; both can be pending at once.
+
+Pane "driver" carries what the case's driver may see (questions from support, acknowledgements). Those events go
+to that driver's own stream (driver_id from the ticket), never to the rider's.
 Nothing here reads fixtures/expected.
 """
 from __future__ import annotations
@@ -17,11 +21,13 @@ from __future__ import annotations
 import asyncio
 import datetime as _dt
 import json
+import os
 import uuid
 from dataclasses import dataclass, field
 from zoneinfo import ZoneInfo
 
 from app.agents import case_qa
+from app.agents.question_router import route as route_question
 from app.agents.rephrase import rephrase
 from app.case_views import (TRIP_TOOLS, handoff_message, human_outcome, human_summary, needs_human,
                             recommendation_of, rider_outcome)
@@ -33,7 +39,9 @@ from app.tools import call_tool
 from app.tools.fixtures import rider_scope
 
 _SGT = ZoneInfo("Asia/Singapore")
-STATUSES = ("intake", "in_review", "resolved_by_ai", "with_agent", "waiting_for_rider", "resolved_by_human")
+STATUSES = ("intake", "in_review", "resolved_by_ai", "with_agent", "waiting_for_rider", "waiting_for_driver",
+            "waiting_for_both", "resolved_by_human")
+HUMAN = ("with_agent", "waiting_for_rider", "waiting_for_driver", "waiting_for_both")   # a person has the case
 _TERMINAL = ("resolved_by_ai", "resolved_by_human")
 
 
@@ -59,6 +67,7 @@ class Case:
     status: str = "intake"
     ticket: dict | None = None
     rider_messages: list = field(default_factory=list)
+    driver_messages: list = field(default_factory=list)   # the driver's replies (untrusted text, kept as data)
     room_events: list = field(default_factory=list)
     human_messages: list = field(default_factory=list)
     qa_log: list = field(default_factory=list)
@@ -81,11 +90,19 @@ class Case:
     def reference(self) -> str:
         return (self.ticket or {}).get("dispute_id") or self.id
 
+    @property
+    def driver_id(self) -> str | None:
+        return (self.ticket or {}).get("driver_id")
+
+    def pending(self) -> dict:
+        return {"rider": sum(1 for q in self.qa_log if q.get("status") == "asked_rider"),
+                "driver": sum(1 for q in self.qa_log if q.get("status") == "asked_driver")}
+
     def record(self) -> dict:
-        """Everything the case-QA agent may read: the ticket, the facts, the rider's words, the tool outputs and
-        both advocates' arguments."""
+        """Everything the case-QA agent may read: the ticket, the facts, the rider's words, the driver's replies,
+        the tool outputs and both advocates' arguments."""
         return {"ticket": self.ticket, "extracted_facts": (self.ticket or {}).get("extracted_facts"),
-                "rider_messages": self.rider_messages, "tools": self.tools,
+                "rider_messages": self.rider_messages, "driver_messages": self.driver_messages, "tools": self.tools,
                 "rider_case": self.rider_case, "driver_case": self.driver_case}
 
     def snapshot(self) -> dict:
@@ -93,9 +110,9 @@ class Case:
                 "rider_id": self.rider_id, "escalated": self.escalated,
                 "rider_lang": self.rider_lang, "ticket": self.ticket, "rider_messages": self.rider_messages,
                 "human_messages": self.human_messages, "qa_log": self.qa_log, "decision": self.decision,
-                "outcome": self.outcome, "needs_human": self.status in ("with_agent", "waiting_for_rider"),
+                "outcome": self.outcome, "needs_human": self.status in HUMAN, "pending": self.pending(),
                 "awaiting_trip": self.awaiting_trip, "candidates": self.candidates,
-                "summary": human_summary(self, self.lang) if self.status in ("with_agent", "waiting_for_rider", "resolved_by_human") else None,
+                "summary": human_summary(self, self.lang) if self.status in HUMAN + ("resolved_by_human",) else None,
                 "last_seq": self.events[-1]["seq"] if self.events else 0}
 
     async def wait_idle(self) -> None:
@@ -104,6 +121,7 @@ class Case:
 
 
 CASES: dict[str, Case] = {}
+DRIVER_SUBS: dict[str, set] = {}      # driver_id -> queues of that driver's live stream
 
 
 def get_case(case_id: str) -> Case:
@@ -128,7 +146,27 @@ def publish(case: Case, pane: str, type_: str, **data) -> dict:
         case.room_events.append(ev)
     for q in list(case.subscribers):
         q.put_nowait(ev)
+    if pane == "driver" and case.driver_id:
+        for q in list(DRIVER_SUBS.get(case.driver_id, ())):
+            q.put_nowait(ev)
     return ev
+
+
+def _typing_delay() -> float:
+    """A short pause so the audience sees "Ryde Support is typing" before a question lands (0 in tests)."""
+    try:
+        return float(os.environ.get("DEMO_TYPING_DELAY", "0.8"))
+    except ValueError:
+        return 0.0
+
+
+def refresh_waiting(case: Case) -> None:
+    """Status from the questions still waiting for an answer: rider, driver, both, or none."""
+    if case.status not in HUMAN:
+        return
+    p = case.pending()
+    set_status(case, "waiting_for_both" if p["rider"] and p["driver"] else "waiting_for_rider" if p["rider"]
+               else "waiting_for_driver" if p["driver"] else "with_agent")
 
 
 def set_status(case: Case, status: str) -> None:
@@ -296,7 +334,7 @@ async def rider_message(case: Case, text: str, trip_id: str | None = None) -> di
         _start_task(case, story, trip_id)
         return {"status": case.status, "rerun": True}
 
-    if case.status == "waiting_for_rider":
+    if case.status in ("waiting_for_rider", "waiting_for_both"):
         q = _pending_question(case)
         if q:
             src = L(case.lang, f"Rider message, {msg['at'][11:16]}", f"乘客消息，{msg['at'][11:16]}")
@@ -305,11 +343,11 @@ async def rider_message(case: Case, text: str, trip_id: str | None = None) -> di
                                        extra_snippets=[{"source": src, "text": text, "score": 10}])
             q.update({"answer": res["answer"], "citations": res["citations"], "found": res["found"],
                       "status": "answered_after_reply", "used_model": res["used_model"]})
-            set_status(case, "with_agent")
+            refresh_waiting(case)
             publish(case, "human", "qa", entry=q)
         publish(case, "human", "summary", summary=human_summary(case, case.lang))
         _assistant(case, "Thank you. Your reply has been passed to the support agent.", "谢谢，您的回复已转交客服专员。")
-    elif case.status == "with_agent":
+    elif case.status in HUMAN:
         publish(case, "human", "rider_message", text=text, at=msg["at"])
         publish(case, "human", "summary", summary=human_summary(case, case.lang))
     return {"status": case.status, "rerun": False}
@@ -318,48 +356,179 @@ async def rider_message(case: Case, text: str, trip_id: str | None = None) -> di
 # ---------------------------------------------------------------- the support agent
 
 def _require_human(case: Case) -> None:
-    if case.status not in ("with_agent", "waiting_for_rider"):
+    if case.status not in HUMAN:
         raise CaseError(409, L(case.lang, "This case is not waiting for a support agent.", "该案件当前不需要客服处理。"))
 
 
 async def human_rephrase(case: Case, text: str, purpose: str = "qa") -> dict:
     if not (text or "").strip():
         raise CaseError(400, L(case.lang, "Text is empty", "内容为空"))
-    if purpose not in ("qa", "rider", "note"):
-        raise CaseError(400, "purpose must be qa, rider or note")
-    return await rephrase(text, purpose=purpose, mode=case.mode, lang=case.lang, rider_lang=case.rider_lang)
+    if purpose not in ("qa", "rider", "driver", "note"):
+        raise CaseError(400, "purpose must be qa, rider, driver or note")
+    return await rephrase(text, purpose=purpose, mode=case.mode, lang=case.lang,
+                          rider_lang=case.lang if purpose == "driver" else case.rider_lang)
 
 
-async def _send_to_rider(case: Case, text: str, purpose: str, original: str) -> dict:
-    """Everything a person sends to the rider goes through the rephrase agent first."""
-    r = await rephrase(text, purpose=purpose, mode=case.mode, lang=case.lang, rider_lang=case.rider_lang)
-    m = {"text": r["rephrased"], "original": original, "at": _now(), "kind": purpose}
+async def human_route(case: Case, question: str) -> dict:
+    """Who should a question go to if the record does not answer it? (Shown to the person before sending.)"""
+    if not (question or "").strip():
+        raise CaseError(400, L(case.lang, "Question is empty", "问题为空"))
+    r = await route_question(question, mode=case.mode, lang=case.lang)
+    if r["recipient"] == "driver" and not case.driver_id:
+        r = {**r, "recipient": "rider", "reason": L(case.lang, "No driver on this case.", "该案件没有司机。")}
+    return r
+
+
+async def _send_to_rider(case: Case, text: str, purpose: str, original: str, final_text: str | None = None) -> dict:
+    """Everything a person sends to the rider goes through the rephrase agent first (final_text: the rephrased
+    wording the person already saw and confirmed in the console)."""
+    if final_text is None:
+        final_text = (await rephrase(text, purpose=purpose, mode=case.mode, lang=case.lang, rider_lang=case.rider_lang))["rephrased"]
+    m = {"text": final_text, "original": original, "at": _now(), "kind": purpose, "to": "rider"}
     case.human_messages.append(m)
     if purpose != "note":          # a decision note reaches the rider on the outcome card itself
+        publish(case, "rider", "support_typing")
+        if _typing_delay():
+            await asyncio.sleep(_typing_delay())
         publish(case, "rider", "support_message", text=m["text"], at=m["at"], sender="Ryde Support")
     return m
 
 
-async def human_ask(case: Case, question: str, original: str | None = None) -> dict:
+async def _send_to_driver(case: Case, entry: dict, text: str, final_text: str | None = None) -> dict:
+    """Ask the case's driver. Rephrased for a driver; the driver only ever sees the question, the case reference,
+    the trip's date and route and the rider's first name."""
+    if final_text is None:
+        final_text = (await rephrase(text, purpose="driver", mode=case.mode, lang=case.lang, rider_lang=case.lang))["rephrased"]
+    m = {"text": final_text, "original": text, "at": _now(), "kind": "driver", "to": "driver", "question_id": entry["id"]}
+    case.human_messages.append(m)
+    entry["sent_to_driver"] = final_text
+    publish(case, "room", "system_note", text=L(case.lang, "Support asked the driver for clarification", "客服请司机补充说明"))
+    publish(case, "driver", "support_typing", reference=case.reference)
+    if _typing_delay():
+        await asyncio.sleep(_typing_delay())
+    entry["status"] = "asked_driver"
+    publish(case, "driver", "driver_question", question=driver_view(case, entry))
+    return m
+
+
+async def human_ask(case: Case, question: str, original: str | None = None, recipient: str = "auto",
+                    party_text: str | None = None) -> dict:
+    """Answer from the case record; if it does not hold the answer, ask the rider or the driver.
+
+    recipient: auto (routed by who the question is about) | rider | driver. party_text: the wording the person
+    confirmed for that party (already through the rephrase agent); without it the question is rephrased here.
+    """
     _require_human(case)
     question = (question or "").strip()
     if not question:
         raise CaseError(400, L(case.lang, "Question is empty", "问题为空"))
+    if recipient not in ("auto", "rider", "driver"):
+        raise CaseError(400, "recipient must be auto, rider or driver")
+    if recipient == "driver" and not case.driver_id:
+        raise CaseError(400, L(case.lang, "This case has no driver to ask.", "该案件没有可询问的司机。"))
     entry = {"id": f"Q{len(case.qa_log) + 1}", "original": (original or question).strip(), "question": question,
-             "at": _now(), "status": "answering"}
+             "at": _now(), "status": "answering", "recipient_requested": recipient}
     case.qa_log.append(entry)
     publish(case, "human", "qa", entry=dict(entry))
     res = await case_qa.answer(case.record(), question, mode=case.mode, lang=case.lang)
     entry.update({"answer": res["answer"], "citations": res["citations"], "found": res["found"],
                   "used_model": res["used_model"]})
     if res["found"]:
-        entry["status"] = "answered"
+        entry.update({"status": "answered", "recipient": None})
     else:
-        sent = await _send_to_rider(case, question, "rider", question)
-        entry.update({"status": "asked_rider", "sent_to_rider": sent["text"]})
-        set_status(case, "waiting_for_rider")
+        if recipient == "auto":
+            r = await human_route(case, question)
+            who, entry["route_reason"] = r["recipient"], r["reason"]
+        else:
+            who = recipient
+        entry["recipient"] = who
+        if who == "driver":
+            entry["answer"] = L(case.lang, "This is not in the case record or in anything the rider said. The question has been sent to the driver.",
+                                           "案件记录和乘客的陈述中都没有这一点。问题已发送给司机。")
+            await _send_to_driver(case, entry, question, party_text)
+        else:
+            sent = await _send_to_rider(case, question, "rider", question, party_text)
+            entry.update({"status": "asked_rider", "sent_to_rider": sent["text"]})
+        refresh_waiting(case)
     publish(case, "human", "qa", entry=dict(entry))
     return entry
+
+
+# ---------------------------------------------------------------- the driver
+
+def driver_view(case: Case, entry: dict) -> dict:
+    """What a driver may see about one question: never the rider's story, claim, amount, profile or contact."""
+    from app.auth import rider_first_name
+    td = (case.tools or {}).get("get_trip_data") or {}
+    reply = entry.get("reply") if entry.get("reply_from") == "driver" else None
+    return {"id": f"{case.id}:{entry['id']}", "case_id": case.id, "reference": case.reference,
+            "trip": {"date": td.get("start_time") or td.get("scheduled_time"),
+                     "pickup": (td.get("pickup_location") or {}).get("name"),
+                     "dropoff": (td.get("dropoff_location") or {}).get("name")},
+            "rider_first_name": rider_first_name(case.rider_id),
+            "text": entry.get("sent_to_driver"), "at": entry.get("at"),
+            "status": "waiting" if entry.get("status") == "asked_driver" else "answered",
+            "reply": reply}
+
+
+def driver_questions(driver_id: str) -> list[dict]:
+    """Every question support sent to this driver, on cases whose trip they drove. Oldest first."""
+    out = []
+    for c in CASES.values():
+        if c.driver_id != driver_id:
+            continue
+        for q in c.qa_log:
+            if q.get("recipient") == "driver" and q.get("sent_to_driver"):
+                out.append(driver_view(c, q))
+    return sorted(out, key=lambda q: q["at"] or "")
+
+
+def _driver_entry(driver_id: str, question_id: str | None) -> tuple[Case, dict]:
+    """The question the driver is replying to (the given one, else the newest waiting one). 404 if not theirs."""
+    found = []
+    for c in CASES.values():
+        if c.driver_id != driver_id:
+            continue
+        for q in c.qa_log:
+            if q.get("recipient") == "driver" and q.get("sent_to_driver"):
+                found.append((c, q))
+    if question_id:
+        hit = [(c, q) for c, q in found if f"{c.id}:{q['id']}" == question_id]
+        if not hit:
+            raise CaseError(404, "Unknown question")
+        return hit[0]
+    waiting = [(c, q) for c, q in found if q.get("status") == "asked_driver"]
+    if not waiting:
+        raise CaseError(409, "No question is waiting for a reply")
+    return waiting[-1]
+
+
+async def driver_reply(driver_id: str, text: str, question_id: str | None = None) -> dict:
+    """The driver's answer. Kept as untrusted data in the case record: it feeds the summary and the person
+    handling the case, and never changes a ruling or a decision by itself."""
+    text = (text or "").strip()
+    if not text:
+        raise CaseError(400, "Reply is empty")
+    if len(text) > 2000:
+        raise CaseError(400, "Reply too long (max 2000 characters)")
+    case, q = _driver_entry(driver_id, question_id)
+    if q.get("status") != "asked_driver":
+        raise CaseError(409, "This question has already been answered")
+    at = _now()
+    case.driver_messages.append({"text": text, "at": at, "question_id": q["id"]})
+    q.update({"reply": {"text": text, "at": at}, "reply_from": "driver"})
+    publish(case, "room", "system_note", text=L(case.lang, "Driver replied", "司机已回复"))
+    src = L(case.lang, f"Driver reply, {at[11:16]}", f"司机回复，{at[11:16]}")
+    res = await case_qa.answer(case.record(), q["question"], mode=case.mode, lang=case.lang,
+                               extra_snippets=[{"source": src, "text": text, "score": 10, "untrusted": True}])
+    q.update({"answer": res["answer"], "citations": res["citations"], "found": res["found"],
+              "status": "answered_after_reply", "used_model": res["used_model"]})
+    refresh_waiting(case)
+    publish(case, "human", "qa", entry=dict(q))
+    publish(case, "human", "summary", summary=human_summary(case, case.lang))
+    publish(case, "driver", "driver_reply_ack", question=driver_view(case, q),
+            text=L(case.lang, "Thanks. Your reply has been sent to Ryde Support.", "谢谢，您的回复已发送给 Ryde 客服。"))
+    return {"question": driver_view(case, q)}
 
 
 async def human_decision(case: Case, action: str, amount: float | None = None, note: str | None = None) -> dict:
@@ -382,7 +551,8 @@ async def human_decision(case: Case, action: str, amount: float | None = None, n
         entry = {"id": f"Q{len(case.qa_log) + 1}", "original": note, "question": note, "at": _now(), "status": "asked_rider",
                  "kind": "info_request", "answer": None, "citations": [], "found": False, "sent_to_rider": sent["text"]}
         case.qa_log.append(entry)
-        set_status(case, "waiting_for_rider")
+        entry["recipient"] = "rider"
+        refresh_waiting(case)
         publish(case, "human", "qa", entry=dict(entry))
         return {"status": case.status, "entry": entry}
 
@@ -410,7 +580,7 @@ def can_view(case: Case, sess: dict | None) -> bool:
 
 def list_cases(sess: dict | None = None) -> list[dict]:
     return [{"id": c.id, "reference": c.reference, "status": c.status, "rider_id": c.rider_id,
-             "needs_human": c.status in ("with_agent", "waiting_for_rider"), "escalated": c.escalated,
+             "needs_human": c.status in HUMAN, "escalated": c.escalated, "pending": c.pending(),
              "dispute_type": (c.ticket or {}).get("dispute_type"),
              "trip_id": (c.ticket or {}).get("trip_id"), "updated": c.events[-1]["at"] if c.events else None}
             for c in CASES.values() if can_view(c, sess)]

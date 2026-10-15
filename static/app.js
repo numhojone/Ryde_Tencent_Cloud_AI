@@ -834,6 +834,8 @@ function render(ev){
     case '_case': addCaseCard(ev.who, ev.case); break;
     case 'complaint_received': addComplaint(ev.complaint, ev.trip_id); showTyping('intake'); break;
     case 'rider_message': addRiderMessage(ev.text); break;
+    // a neutral line only: who was asked / who replied, never the text itself
+    case 'system_note': sealAll(); addDivider(ev.text); break;
     case 'trip_matched': addTripMatched(ev); break;
     case 'trip_unresolved': hideTyping('intake'); setRoster('intake','done'); sealAll(); addTripUnresolved(ev); break;
     // The ticket card (ticket_filed) replaces the triage card; keep the triage for its confidence and reasoning.
@@ -864,7 +866,7 @@ function render(ev){
 const PACE_BUDGET = 2200, PACE_MIN = 160, PACE_MAX = 520;
 const WEIGHT = {
   thinking:1, complaint_received:1, triage_result:0, safety_net:1, warning:1, error:1, _case:1,
-  trip_matched:1, trip_unresolved:1, ticket_filed:1, rider_message:1,
+  trip_matched:1, trip_unresolved:1, ticket_filed:1, rider_message:1, system_note:0.55,
   phase:0.55, ruling:0.6, tool_call:0.15, tool_result:0, agent_start:0, agent_final:0, done:0,
 };
 let queue = [], pumping = false, paceLeft = PACE_BUDGET;

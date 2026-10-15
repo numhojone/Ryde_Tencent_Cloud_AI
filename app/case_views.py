@@ -218,6 +218,8 @@ def human_summary(case, lg: str) -> dict:
         "policy_clause": (ruling.get("policy_path") or {}).get("clause"),
         "case_file": ruling.get("case_file"),
         "rider_replies": replies,
+        "driver_replies": list(getattr(case, "driver_messages", []) or []),
+        "pending": case.pending() if hasattr(case, "pending") else {"rider": 0, "driver": 0},
         # the platform records behind the evidence chips (long lists shortened, as in the agent room)
         "evidence": {k: _truncate(v) for k, v in tools.items()
                      if v and not (k == "get_damage_evidence" and not v.get("damage_evidence"))

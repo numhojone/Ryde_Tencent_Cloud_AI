@@ -35,11 +35,14 @@ Object.assign(R.I18N.en, {
   chose:t => `That one: ${t}`, otherTrips:'Your recent trips:', whyMatch:'Why it might match',
   st_completed:'completed', st_cancelled:'cancelled', feeOf:m => `${m} fee charged`,
   rs:{intake:'Checking your trip', in_review:'In review', resolved_by_ai:'Resolved', with_agent:'With a support agent',
-      waiting_for_rider:'Waiting for your reply', resolved_by_human:'Resolved'},
+      waiting_for_rider:'Waiting for your reply', waiting_for_driver:'With a support agent', waiting_for_both:'Waiting for your reply',
+      resolved_by_human:'Resolved'},
   hs:{intake:'Intake', in_review:'Agents working', resolved_by_ai:'Resolved by AI', with_agent:'Needs review',
-      waiting_for_rider:'Waiting for rider reply', resolved_by_human:'Resolved'},
+      waiting_for_rider:'Waiting for rider reply', waiting_for_driver:'Waiting for driver reply',
+      waiting_for_both:'Waiting for rider and driver', resolved_by_human:'Resolved'},
   live:{idle:'Idle', typing:'Typing', working:'Working', waiting:'Waiting for rider', resolved:'Resolved', review:'Needs review',
-        online:'Online', answering:'Answering', done:'Done', finding:'Finding trip', readonly:'Read-only'},
+        online:'Online', answering:'Answering', done:'Done', finding:'Finding trip', readonly:'Read-only',
+        replyNeeded:'Reply needed', waitingDriver:'Waiting for driver', waitingBoth:'Waiting for rider and driver'},
   ocRef:'Reference', ocByAi:'Decided from your trip records', ocByHuman:'Reviewed by a Ryde support agent',
   ocGoodwill:'Goodwill credit', ocNote:'Message from support',
   smWhy:'Why it needs a person', smRec:'AI recommendation', smNoRec:'No AI recommendation: the AI may not rule on safety incidents (policy 5.2).',
@@ -52,6 +55,16 @@ Object.assign(R.I18N.en, {
   qaSentRider:'Sent to the rider', qaReply:'Rider replied', qaSources:'Sources', qaYouWrote:'You wrote',
   dbDone:'Decision recorded. The rider has been told.', dbDecided:'Decision', riderSays:'Rider',
   errGeneric:'Something went wrong. Please try again.',
+  tpDriver:'Driver', tgTitle:'View as', drvHelp:'Driver inbox',
+  drvIntro:'You will only see questions from Ryde Support here.', drvEmpty:'No questions from Ryde Support right now.',
+  drvPickLbl:'View as driver (demo accounts)', drvPickBtn:'Open driver inbox', drvPh:'Reply to Ryde Support',
+  drvNoPending:'There is no question waiting for a reply.', drvRider:n => `Rider: ${n}`,
+  drvSignedIn:(n, id) => `Signed in as driver ${n} (${id})`, drvAck:'Thanks. Your reply has been sent to Ryde Support.',
+  askTo:'If the record has no answer, ask', askToShort:'Ask', askAuto:'Auto', askRider:'Rider', askDriver:'Driver',
+  willReceive:p => `The ${p} will receive`, toRider:'To rider', toDriver:'To driver', fromRecord:'From the record',
+  qaSent:'Sent', qaAnsweredLbl:'Answered', driverReplied:'Driver replied', riderReplied:'Rider replied',
+  driverPending:'A driver reply is still pending.', riderPending:'A rider reply is still pending.',
+  smDriverReplies:'Driver replies',
 });
 Object.assign(R.I18N.zh, {
   tpTitle:'Ryde 客服 | 三栏演示', tpTag:'乘客、智能体与客服，同一案件实时联动',
@@ -77,11 +90,12 @@ Object.assign(R.I18N.zh, {
   chose:t => `是这一趟：${t}`, otherTrips:'您最近的行程：', whyMatch:'可能符合的原因',
   st_completed:'已完成', st_cancelled:'已取消', feeOf:m => `已收费 ${m}`,
   rs:{intake:'正在核对行程', in_review:'审核中', resolved_by_ai:'已解决', with_agent:'已转客服专员',
-      waiting_for_rider:'等待您的回复', resolved_by_human:'已解决'},
+      waiting_for_rider:'等待您的回复', waiting_for_driver:'已转客服专员', waiting_for_both:'等待您的回复', resolved_by_human:'已解决'},
   hs:{intake:'受理中', in_review:'智能体处理中', resolved_by_ai:'AI 已解决', with_agent:'待人工审核',
-      waiting_for_rider:'等待乘客回复', resolved_by_human:'已解决'},
+      waiting_for_rider:'等待乘客回复', waiting_for_driver:'等待司机回复', waiting_for_both:'等待乘客和司机回复', resolved_by_human:'已解决'},
   live:{idle:'待命', typing:'输入中', working:'处理中', waiting:'等待乘客', resolved:'已解决', review:'待审核',
-        online:'在线', answering:'回答中', done:'完成', finding:'查找行程', readonly:'只读'},
+        online:'在线', answering:'回答中', done:'完成', finding:'查找行程', readonly:'只读',
+        replyNeeded:'待回复', waitingDriver:'等待司机', waitingBoth:'等待乘客和司机'},
   ocRef:'参考编号', ocByAi:'依据您的行程记录作出', ocByHuman:'由 Ryde 客服专员审核',
   ocGoodwill:'善意补偿', ocNote:'客服留言',
   smWhy:'为何需要人工', smRec:'AI 建议', smNoRec:'无 AI 建议：安全事件 AI 不得裁决（政策 5.2）。',
@@ -94,6 +108,16 @@ Object.assign(R.I18N.zh, {
   qaSentRider:'已发送给乘客', qaReply:'乘客回复', qaSources:'来源', qaYouWrote:'您输入的',
   dbDone:'决定已记录，并已通知乘客。', dbDecided:'决定', riderSays:'乘客',
   errGeneric:'出错了，请重试。',
+  tpDriver:'司机', tgTitle:'查看身份', drvHelp:'司机消息',
+  drvIntro:'这里只会显示 Ryde 客服向您提出的问题。', drvEmpty:'目前没有来自 Ryde 客服的问题。',
+  drvPickLbl:'以司机身份查看（演示账户）', drvPickBtn:'打开司机消息', drvPh:'回复 Ryde 客服',
+  drvNoPending:'目前没有待回复的问题。', drvRider:n => `乘客：${n}`,
+  drvSignedIn:(n, id) => `已登录司机：${n}（${id}）`, drvAck:'谢谢，您的回复已发送给 Ryde 客服。',
+  askTo:'若记录中没有答案，询问', askToShort:'询问', askAuto:'自动', askRider:'乘客', askDriver:'司机',
+  willReceive:p => `${p === 'driver' ? '司机' : '乘客'}将收到`, toRider:'发给乘客', toDriver:'发给司机', fromRecord:'来自记录',
+  qaSent:'已发送', qaAnsweredLbl:'已回答', driverReplied:'司机回复', riderReplied:'乘客回复',
+  driverPending:'仍在等待司机回复。', riderPending:'仍在等待乘客回复。',
+  smDriverReplies:'司机回复',
 });
 const T = R.T, CUR = 'S$';
 const $ = id => document.getElementById(id);
@@ -104,7 +128,10 @@ let me = null, health = null;
 let caseId = null, status = null, streams = [], summary = null, qa = {}, busy = false;
 let roomWorking = false, askBusy = false, decisionAction = null;
 let stage = 'describe', storyParts = [], finding = false, queueTimer = null;
+let view = 'rider', driverStream = null, driverQs = {}, toggleTimer = null, toggleState = null;
 const isSupport = () => me && me.role === 'support';
+const HUMAN_ST = ['with_agent', 'waiting_for_rider', 'waiting_for_driver', 'waiting_for_both'];
+const riderWaiting = st => st === 'waiting_for_rider' || st === 'waiting_for_both';
 
 /* ---------------------------------------------------------------- live status indicators */
 function setLive(pane, key, tone){
@@ -115,9 +142,13 @@ function setLive(pane, key, tone){
 function refreshLive(){
   const inp = $('riderInput');
   if (isSupport()) setLive('rider', 'readonly', 'idle');
+  else if (view === 'driver'){
+    const waiting = Object.values(driverQs).some(q => q.status === 'waiting');
+    setLive('rider', waiting ? 'replyNeeded' : 'online', waiting ? 'attn' : 'idle');
+  }
   else if (finding) setLive('rider', 'finding', 'busy');
   else if (document.activeElement === inp && inp.value.trim()) setLive('rider', 'typing');
-  else if (status === 'waiting_for_rider') setLive('rider', 'waiting', 'attn');
+  else if (riderWaiting(status)) setLive('rider', 'waiting', 'attn');
   else if (status === 'resolved_by_ai' || status === 'resolved_by_human') setLive('rider', 'resolved', 'ok');
   else setLive('rider', 'online', 'idle');
 
@@ -125,8 +156,11 @@ function refreshLive(){
   else if (caseId && status !== 'intake') setLive('room', 'done', 'ok');
   else setLive('room', 'idle');
 
-  if (askBusy) setLive('human', 'answering', 'busy');
+  if (!isSupport()) setLive('human', 'idle');                 // riders and drivers never see the console
+  else if (askBusy) setLive('human', 'answering', 'busy');
   else if (status === 'with_agent') setLive('human', 'review', 'attn');
+  else if (status === 'waiting_for_driver') setLive('human', 'waitingDriver', 'busy');
+  else if (status === 'waiting_for_both') setLive('human', 'waitingBoth', 'busy');
   else if (status === 'waiting_for_rider') setLive('human', 'waiting', 'busy');
   else if (status === 'resolved_by_human') setLive('human', 'resolved', 'ok');
   else setLive('human', 'idle');
@@ -177,9 +211,8 @@ function closeStreams(){ streams.forEach(s => s.close()); streams = []; }
 
 function onStatus(ev){
   status = ev.status;
-  if (ev.status === 'intake' || ev.status === 'in_review') roomWorking = true;
   const bar = $('ticketBar');
-  if (ev.reference && ev.reference.startsWith('DISP-')){ bar.hidden = false; $('tbRef').textContent = ev.reference; }
+  if (ev.reference && ev.reference.startsWith('DISP-')){ bar.hidden = view !== 'rider'; $('tbRef').textContent = ev.reference; }
   $('tbStatus').textContent = (T('rs') || {})[ev.status] || ev.status;
   $('tbStatus').dataset.s = ev.status;
   riderTyping(ev.status === 'intake' || ev.status === 'in_review');
@@ -218,7 +251,8 @@ function onRider(ev){
       if (ev.initial && !isSupport()) break;           // already in the rider's own chat from stage 1
       riderRow('right', null, 'me').textContent = ev.text; break;
     case 'assistant_message': riderRow('left', T('sRyde')).textContent = ev.text; break;
-    case 'support_message': riderRow('left', T('sSupport'), 'support').textContent = ev.text; break;
+    case 'support_typing': riderTyping(true); break;
+    case 'support_message': riderTyping(false); riderRow('left', T('sSupport'), 'support').textContent = ev.text; break;
     case 'trip_choice': break;                         // trips are confirmed in stage 1 now
     case 'ticket_update': break;                       // the ticket bar follows the case status
     case 'handoff': { const b = riderRow('left', T('sRyde'), 'handoff'); b.textContent = ev.text; break; }
@@ -315,6 +349,7 @@ async function chooseTrip(c){
 async function sendRider(text){
   text = (text || '').trim();
   if (!text || busy || finding || isSupport()) return;
+  if (view === 'driver') return sendDriverReply(text);
   if (caseId && (status === 'resolved_by_ai' || status === 'resolved_by_human')) resetCase();
   busy = true; $('riderSend').disabled = true;
   try {
@@ -335,7 +370,8 @@ async function sendRider(text){
   }
 }
 function syncRiderInput(){
-  $('riderSend').disabled = busy || finding || isSupport();
+  const noQuestion = view === 'driver' && !Object.values(driverQs).some(q => q.status === 'waiting');
+  $('riderSend').disabled = busy || finding || isSupport() || noQuestion;
 }
 
 function growRider(){ const i = $('riderInput'); i.style.height = 'auto'; i.style.height = Math.min(120, Math.max(42, i.scrollHeight)) + 'px'; }
@@ -349,7 +385,10 @@ $('riderForm').addEventListener('submit', e => { e.preventDefault(); sendRider($
 /* ---------------------------------------------------------------- MIDDLE: agent room */
 function onRoom(ev){
   R.enqueue(ev);
-  if (ev.type === 'done' || ev.type === 'error'){ roomWorking = false; refreshLive(); }
+  // the room's own events say whether the agents are working (the status stream can arrive out of order)
+  if (ev.type === 'done' || ev.type === 'error') roomWorking = false;
+  else if (ev.type !== 'system_note' && ev.type !== 'rider_message') roomWorking = true;
+  refreshLive();
 }
 function roomIdle(){
   R.reset();
@@ -472,6 +511,8 @@ function renderSummary(){
   }
   if ((s.rider_replies || []).length)
     card.appendChild(block(T('smReplies'), R.bullets(s.rider_replies.map(m => `${R.fmtTime(m.at)} · ${m.text}`))));
+  if ((s.driver_replies || []).length)
+    card.appendChild(block(T('smDriverReplies'), R.bullets(s.driver_replies.map(m => `${R.fmtTime(m.at)} · ${m.text}`))));
   box.appendChild(card);
 }
 
@@ -484,23 +525,45 @@ function renderQA(){
       th.appendChild(d); return;
     }
     const d = mk('div', 'qa-item ' + (e.status || ''));
+    const head = mk('div', 'qa-head');
+    // who the question went to (or that the record answered it), and where it stands
+    const to = e.recipient === 'driver' ? T('toDriver') : e.recipient === 'rider' ? T('toRider') : (e.status === 'answering' ? '' : T('fromRecord'));
+    if (to) head.appendChild(mk('span', 'qa-to qa-to-' + (e.recipient || 'record'), to));
+    const st = {answering:'qaAnswering', answered:'qaAnsweredLbl', asked_rider: e.kind === 'info_request' ? 'qaInfo' : 'qaSent',
+                asked_driver:'qaSent', answered_after_reply:'qaAnsweredLbl'}[e.status];
+    if (st) head.appendChild(mk('span', 'qa-status', T(st)));
+    d.appendChild(head);
     d.appendChild(mk('div', 'qa-q', e.question));
     if (e.original && e.original !== e.question) d.appendChild(mk('div', 'qa-orig', `${T('qaYouWrote')}: ${e.original}`));
-    const st = {answering:'qaAnswering', answered:'qaAnswered', asked_rider: e.kind === 'info_request' ? 'qaInfo' : 'qaAsked', answered_after_reply:'qaAfter'}[e.status];
-    if (st) d.appendChild(mk('span', 'qa-status', T(st)));
-    if (e.answer) d.appendChild(mk('div', 'qa-a', e.answer));
-    if ((e.citations || []).length){
-      const c = mk('div', 'qa-cites'); c.appendChild(mk('span', 'sm-k', T('qaSources')));
-      c.appendChild(R.tagList([...new Set(e.citations)], 'blue')); d.appendChild(c);
-    }
-    if (e.sent_to_rider) d.appendChild(mk('div', 'qa-sent', `${T('qaSentRider')}: ${e.sent_to_rider}`));
-    if (e.reply) d.appendChild(mk('div', 'qa-reply', `${T('qaReply')}: ${e.reply.text}`));
+    if (e.route_reason && e.recipient) d.appendChild(mk('div', 'qa-orig', e.route_reason));
+    if (e.status === 'answered' || e.status === 'answered_after_reply'){
+      if (e.answer) d.appendChild(mk('div', 'qa-a', e.answer));
+      if ((e.citations || []).length){
+        const c = mk('div', 'qa-cites'); c.appendChild(mk('span', 'sm-k', T('qaSources')));
+        c.appendChild(R.tagList([...new Set(e.citations)], 'blue')); d.appendChild(c);
+      }
+    } else if (e.answer && e.status !== 'answering') d.appendChild(mk('div', 'qa-a', e.answer));
+    const sent = e.sent_to_driver || e.sent_to_rider;
+    if (sent) d.appendChild(mk('div', 'qa-sent', `${e.sent_to_driver ? T('toDriver') : T('toRider')}: ${sent}`));
+    if (e.reply) d.appendChild(mk('div', 'qa-reply', `${e.reply_from === 'driver' ? T('driverReplied') : T('riderReplied')}: ${e.reply.text}`));
     th.appendChild(d);
   });
   const sc = $('consoleScroll'); sc.scrollTop = sc.scrollHeight;
 }
 
-/* ask: rephrase first, the human confirms or edits, then the case-QA agent answers */
+/* ask: rephrase first, then who it would go to (Auto / Rider / Driver); the person confirms or edits both the
+   question and the wording the rider or driver would receive; then the case-QA agent answers from the record,
+   and only if the record has no answer is the question sent. */
+let partySeq = 0;
+async function previewParty(){
+  const to = $('qcTo').value, q = $('qcEdit').value.trim(), my = ++partySeq;
+  $('qcPartyLbl').textContent = T('willReceive')(to === 'driver' ? T('askDriver').toLowerCase() : T('askRider').toLowerCase());
+  if (!q) return;
+  try {
+    const r = await api(`/api/cases/${caseId}/human/rephrase`, {text: q, purpose: to});
+    if (my === partySeq) $('qcParty').value = r.rephrased;
+  } catch (err){ $('qcNote').textContent = err.message; }
+}
 $('askForm').addEventListener('submit', async e => {
   e.preventDefault();
   const text = $('askInput').value.trim(); if (!text || !caseId || askBusy) return;
@@ -509,16 +572,24 @@ $('askForm').addEventListener('submit', async e => {
     const r = await api(`/api/cases/${caseId}/human/rephrase`, {text, purpose: 'qa'});
     $('qcOrig').textContent = r.original; $('qcEdit').value = r.rephrased;
     $('qcNote').textContent = r.changed ? T('tpChanged') : T('tpUnchanged');
+    const pick = $('askTo').value;
+    if (pick === 'auto'){
+      const route = await api(`/api/cases/${caseId}/human/route`, {question: r.rephrased});
+      $('qcTo').value = route.recipient; $('qcReason').textContent = route.reason;
+    } else { $('qcTo').value = pick; $('qcReason').textContent = ''; }
+    await previewParty();
     $('askForm').hidden = true; $('askConfirm').hidden = false; $('qcEdit').focus();
   } catch (err){ $('qcNote').textContent = err.message; }
   finally { askBusy = false; syncDecisionBar(); refreshLive(); }
 });
+$('qcTo').addEventListener('change', () => { $('qcReason').textContent = ''; previewParty(); });
 $('qcCancel').addEventListener('click', () => { $('askConfirm').hidden = true; $('askForm').hidden = false; $('askInput').focus(); });
 $('qcSend').addEventListener('click', async () => {
   const q = $('qcEdit').value.trim(); if (!q || askBusy) return;
   askBusy = true; $('qcSend').disabled = true; refreshLive();
   try {
-    await api(`/api/cases/${caseId}/human/ask`, {question: q, original: $('qcOrig').textContent});
+    await api(`/api/cases/${caseId}/human/ask`, {question: q, original: $('qcOrig').textContent,
+      recipient: $('qcTo').value, party_text: $('qcParty').value.trim() || null});
     $('askInput').value = ''; $('askConfirm').hidden = true; $('askForm').hidden = false;
   } catch (err){ $('qcNote').textContent = err.message; }
   finally { askBusy = false; $('qcSend').disabled = false; syncDecisionBar(); refreshLive(); }
@@ -527,7 +598,11 @@ $('qcSend').addEventListener('click', async () => {
 /* decision bar */
 function syncDecisionBar(){
   const bar = $('decisionBar');
-  const open = status === 'with_agent' || status === 'waiting_for_rider';
+  const open = HUMAN_ST.includes(status);
+  const pend = Object.values(qa).filter(e => e.status === 'asked_driver').length;
+  const pendR = Object.values(qa).filter(e => e.status === 'asked_rider').length;
+  $('dbPending').textContent = [pend ? T('driverPending') : '', pendR ? T('riderPending') : ''].filter(Boolean).join(' ');
+  $('dbPending').hidden = !(pend || pendR);
   bar.hidden = !(isSupport() && summary && (open || status === 'resolved_by_human'));
   bar.querySelectorAll('.db-buttons button').forEach(b => { b.disabled = !open; });
   bar.querySelector('.db-buttons').hidden = status === 'resolved_by_human';
@@ -585,12 +660,151 @@ function renderFills(){
   });
 }
 function renderIdentity(){
-  $('whoami').textContent = isSupport() ? T('tpSignedSupport') : T('tpSignedIn')(me.name || me.rider_id, me.rider_id);
+  if (isSupport()) $('whoami').textContent = T('tpSignedSupport');
+  else if (me.role === 'driver') $('whoami').textContent = T('drvSignedIn')(me.name || me.driver_id, me.driver_id);
+  else $('whoami').textContent = T('tpSignedIn')(me.name || me.rider_id, me.rider_id);
 }
 function greet(){
-  if (isSupport()) return;
+  if (isSupport() || !me.rider_id) return;
   riderRow('left', T('sRyde')).textContent = T('hello')(me.name || me.rider_id);
 }
+
+/* ---------------------------------------------------------------- LEFT: driver view (receive and reply only) */
+const driverChat = $('driverChat');
+function driverScroll(){ driverChat.scrollTop = driverChat.scrollHeight; }
+function driverRow(side, sender, cls){
+  const row = mk('div', `rm ${side}` + (cls ? ' ' + cls : ''));
+  if (sender) row.appendChild(mk('div', 'rm-who', sender));
+  const b = mk('div', 'rm-bubble'); row.appendChild(b);
+  driverChat.insertBefore(row, $('driverTyping') || null);
+  return b;
+}
+function driverTyping(on){
+  let t = $('driverTyping');
+  if (on && !t){
+    t = mk('div', 'rm left rm-typing'); t.id = 'driverTyping';
+    t.appendChild(mk('div', 'rm-who', T('sSupport')));
+    const b = mk('div', 'rm-bubble'); b.innerHTML = '<span class="dots"><i></i><i></i><i></i></span>';
+    t.appendChild(b); driverChat.appendChild(t);
+  } else if (!on && t) t.remove();
+  driverScroll();
+}
+function renderDriverQuestion(q){
+  driverQs[q.id] = q;
+  let host = driverChat.querySelector(`[data-qid="${CSS.escape(q.id)}"]`);
+  if (!host){ host = mk('div', 'drv-q'); host.dataset.qid = q.id; driverChat.insertBefore(host, $('driverTyping') || null); }
+  host.innerHTML = '';
+  const row = mk('div', 'rm left support'); row.appendChild(mk('div', 'rm-who', `${T('sSupport')} · ${q.reference}`));
+  const b = mk('div', 'rm-bubble');
+  const card = mk('div', 'tc drv-trip');
+  card.appendChild(mk('div', 'tc-route', `${q.trip.pickup || '?'} → ${q.trip.dropoff || '?'}`));
+  card.appendChild(mk('div', 'tc-meta', [R.fmtTime(q.trip.date), q.rider_first_name ? T('drvRider')(q.rider_first_name) : null].filter(Boolean).join(' · ')));
+  b.appendChild(card);
+  b.appendChild(mk('p', 'drv-text', q.text));
+  row.appendChild(b); host.appendChild(row);
+  if (q.reply){
+    const me_ = mk('div', 'rm right me'); const rb = mk('div', 'rm-bubble', q.reply.text); me_.appendChild(rb); host.appendChild(me_);
+    const ack = mk('div', 'rm left'); ack.appendChild(mk('div', 'rm-who', 'Ryde')); ack.appendChild(mk('div', 'rm-bubble', T('drvAck'))); host.appendChild(ack);
+  }
+  $('driverEmpty').hidden = Object.keys(driverQs).length > 0;
+  driverScroll(); syncRiderInput(); refreshLive();
+}
+async function loadDriverInbox(){
+  driverChat.querySelectorAll('.drv-q').forEach(n => n.remove());
+  driverQs = {};
+  $('driverPick').hidden = true;
+  try {
+    const d = await api('/api/driver/questions');
+    (d.questions || []).forEach(renderDriverQuestion);
+  } catch (e){ return; }
+  $('driverEmpty').hidden = Object.keys(driverQs).length > 0;
+  if (driverStream) driverStream.close();
+  driverStream = new EventSource('/api/driver/events');
+  driverStream.onmessage = e => {
+    let ev; try { ev = JSON.parse(e.data); } catch (err){ return; }
+    if (ev.type === 'support_typing') driverTyping(true);
+    else if (ev.type === 'driver_question'){ driverTyping(false); renderDriverQuestion(ev.question); }
+    else if (ev.type === 'driver_reply_ack') renderDriverQuestion(ev.question);
+    if (view !== 'driver') pollToggle();
+  };
+  syncRiderInput();
+}
+async function sendDriverReply(text){
+  const waiting = Object.values(driverQs).filter(q => q.status === 'waiting');
+  if (!waiting.length){ driverRow('left', 'Ryde', 'error').textContent = T('drvNoPending'); return; }
+  busy = true; syncRiderInput();
+  try {
+    const r = await api('/api/driver/reply', {text, question_id: waiting[waiting.length - 1].id});
+    renderDriverQuestion(r.question);
+    $('riderInput').value = ''; growRider();
+    pollToggle();
+  } catch (e){ driverRow('left', 'Ryde', 'error').textContent = e.message; }
+  finally { busy = false; syncRiderInput(); refreshLive(); $('riderInput').focus(); }
+}
+
+/* the Rider | Driver toggle (demo): the server switches the session role; the rider session is kept inside */
+async function switchRole(body){
+  await api('/api/session/role', body);
+  me = await api('/api/auth/me');
+}
+function applyView(v){
+  view = v;
+  $('tgRider').setAttribute('aria-pressed', v === 'rider' ? 'true' : 'false');
+  $('tgDriver').setAttribute('aria-pressed', v === 'driver' ? 'true' : 'false');
+  riderChat.hidden = v !== 'rider'; driverChat.hidden = v !== 'driver';
+  $('ticketBar').hidden = v !== 'rider' || !(caseId && $('tbRef').textContent);
+  $('phoneSub').textContent = v === 'driver' ? T('drvHelp') : T('tpHelp');
+  $('riderInput').placeholder = v === 'driver' ? T('drvPh') : T('tpRiderPh');
+  const stories = ((me && me.stories) || []).length;
+  $('fills').hidden = v === 'driver'; document.querySelector('.tp-fill-lbl').hidden = v === 'driver' || !stories;
+  renderIdentity(); syncRiderInput(); refreshLive();
+  $('riderInput').focus();
+}
+async function setView(v){
+  if (v === view || busy) return;
+  try {
+    if (v === 'driver'){
+      if (me.role === 'rider'){
+        if (caseId) await switchRole({role: 'driver', case_id: caseId});
+        else { applyView('driver'); showDriverPick(); return; }       // no open case: pick a demo driver
+      }
+      applyView('driver'); await loadDriverInbox();
+    } else {
+      if (me.role === 'driver'){
+        if (!me.home) return;
+        await switchRole({role: 'rider'});
+      }
+      if (driverStream){ driverStream.close(); driverStream = null; }
+      applyView('rider');
+    }
+  } catch (e){ (v === 'driver' ? driverRow : riderRow)('left', 'Ryde', 'error').textContent = e.message; }
+  pollToggle();
+}
+function showDriverPick(){
+  const sel = $('driverPickSelect'); sel.innerHTML = '';
+  ((toggleState && toggleState.drivers) || []).forEach(d => {
+    const o = mk('option', null, `${d.name} (${d.driver_id})`); o.value = d.driver_id; sel.appendChild(o);
+  });
+  $('driverPick').hidden = false; $('driverEmpty').hidden = true;
+}
+$('driverPickBtn').addEventListener('click', async () => {
+  try { await switchRole({role: 'driver', driver_id: $('driverPickSelect').value}); applyView('driver'); await loadDriverInbox(); }
+  catch (e){ driverRow('left', 'Ryde', 'error').textContent = e.message; }
+  pollToggle();
+});
+$('tgRider').addEventListener('click', () => setView('rider'));
+$('tgDriver').addEventListener('click', () => setView('driver'));
+function badge(btn, n){ const b = btn.querySelector('.tg-badge'); b.hidden = !n; b.textContent = n || ''; btn.setAttribute('aria-label', btn.textContent.trim()); }
+async function pollToggle(){
+  if (isSupport()) return;
+  try { toggleState = await api('/api/session/toggle'); } catch (e){ return; }
+  $('roleToggle').hidden = !(toggleState.can_switch || me.role === 'driver');
+  $('riderTitle').hidden = !$('roleToggle').hidden;
+  $('tgRider').disabled = !toggleState.rider;
+  badge($('tgRider'), toggleState.rider ? toggleState.rider.pending : 0);
+  badge($('tgDriver'), toggleState.driver ? toggleState.driver.pending : 0);
+}
+
 function clearCaseViews(){
   closeStreams();
   status = null; summary = null; qa = {}; roomWorking = false; askBusy = false; decisionAction = null;
@@ -618,6 +832,8 @@ $('signOutBtn').addEventListener('click', async () => {
 });
 $('langSelect').addEventListener('change', e => {
   R.setLang(e.target.value); renderFills(); renderIdentity(); refreshLive();
+  if (!isSupport()) applyView(view);
+  Object.values(driverQs).forEach(renderDriverQuestion);
   if (status) $('tbStatus').textContent = (T('rs') || {})[status] || status;
   if (!isSupport()) $('consoleIdleSub').textContent = T('tpRiderConsole');
   renderSummary(); renderQA(); renderQueue();
@@ -629,7 +845,13 @@ async function boot(){
   try { me = await api('/api/auth/me'); } catch (e) { return; }      // 401: api() already went to the login page
   document.body.classList.toggle('as-support', isSupport());
   renderIdentity(); renderFills();
-  if (isSupport()){
+  if (!isSupport()){ await pollToggle(); toggleTimer = setInterval(pollToggle, 2500); }
+  if (me.role === 'driver'){
+    $('consoleIdleSub').textContent = T('tpRiderConsole');
+    $('riderEmpty').hidden = true;
+    greet();
+    applyView('driver'); await loadDriverInbox();
+  } else if (isSupport()){
     $('supportView').hidden = false; $('riderForm').hidden = true; $('riderEmpty').hidden = true;
     showPane('human');
     loadQueue(); queueTimer = setInterval(loadQueue, 3000);

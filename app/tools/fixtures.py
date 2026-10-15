@@ -332,6 +332,10 @@ def list_disputes() -> list[dict]:
     return out
 
 
+def list_driver_ids() -> list[str]:
+    return [p.stem for p in sorted((FIXTURES_DIR / "profiles" / "drivers").glob("*.json"))]
+
+
 def list_rider_ids() -> list[str]:
     return [p.stem for p in sorted((FIXTURES_DIR / "profiles" / "riders").glob("*.json"))]
 
