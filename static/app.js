@@ -1,38 +1,53 @@
-/* RydeResolve front-end. English by default, EN | 中文 toggle (choice remembered in this browser). */
+/* RydeResolve front-end — the dispute plays out as a group chat between the agents.
+   English by default, EN | 中文 toggle (choice remembered in this browser).
+   The SSE event stream and the API are consumed exactly as the backend emits them. */
+
 const I18N = {
   en: {
     tagline:'Multi-agent autonomous dispute resolution · Tencent Cloud AI CAN DO IT 2026',
     loading:'Loading…', backendTitle:'Choose the backend that drives the agents',
     beDefault:'Default backend', beLlm:'Real LLM', beDet:'Deterministic fallback',
     presetTitle:'Preset tickets, one-click replay', replay:'Replay', replaying:'Replaying…',
-    fileHead:'File a new dispute', fileHint:'Write it in your own words; the system works out the dispute type',
-    placeholder:'e.g. The driver went round and round and the fare was way higher than the estimate',
+    fileHint:'Write it in your own words; the system works out the dispute type',
+    placeholder:'Describe what went wrong, in your own words…',
     tryHint:'Try:', chipEn:'English', chipSl:'Singlish', chipMs:'Malay', chipTa:'Tamil', chipZh:'Chinese',
     tripLbl:'Trip', submit:'Submit and rule', ruling_btn:'Ruling…',
     fileFoot:"Evidence can only come from a real trip: GPS, chat and app events are pulled by the platform, you don't supply them.",
     a_intake:'Intake agent', a_rider:'Rider advocate', a_driver:'Driver advocate', a_judge:'Judge', a_safety:'Safety net',
+    p_rider:'Rider', p_system:'Policy engine',
     idle:'Idle', working:'Gathering…', finished:'Done', reasoning:'Reasoning',
-    emptyHint:'Write a complaint in your own words above, pick a trip and press "Submit and rule".<br>The system first works out the dispute type, then two advocate agents gather evidence in parallel and a judge verifies it independently before ruling.<br><span style="font-size:12px">(The dropdown at the top right replays the preset tickets.)</span>',
+    emptyHint:'<strong>A dispute is settled here as a group chat.</strong><br>'
+      + 'Write the complaint in your own words in the composer below, pick the trip and press “Submit and rule”.<br>'
+      + 'The intake agent classifies it, a rider advocate and a driver advocate gather evidence and argue in parallel, '
+      + 'then a judge verifies the evidence independently and rules.'
+      + '<span class="es-note">The dropdown in the header replays the preset tickets.</span>',
     badgeLlm:(p,m)=>`${p} · ${m}`, badgeDet:'Deterministic fallback · no API key', badgeFail:'Health check failed',
     t_route:'Route', t_noshow:'No-show', t_fare:'Fare', t_property:'Property', t_safety:'Safety', t_routeFull:'Route deviation', t_noshowFull:'No-show charge',
     chipFare:'Fare', chipProp:'Cleaning fee', chipSafe:'Safety', a_safetycase:'Safety case file',
-    ppHead:'Policy v2.1 path', ppPath:{ai_final:'AI final ruling',ai_ruling_if_confident:'AI ruling if confident',human_review:'Human review'}, ppReq:'Required confidence', ppFraud:'Fraud flag raises the bar to 95%', ppClauses:'Clauses', ppBreak:'Confidence breakdown',
+    ppHead:'Policy v2.1 path', ppPath:{ai_final:'AI final ruling',ai_ruling_if_confident:'AI ruling if confident',human_review:'Human review'},
+    ppReq:'Required confidence', ppFraud:'Fraud flag raises the bar to 95%', ppClauses:'Clauses', ppBreak:'Confidence breakdown',
     cbk:{evidence_completeness:'Evidence completeness',policy_clarity:'Policy clarity',precedent_alignment:'Precedent alignment',party_credibility:'Party credibility'},
-    goodwill:'Goodwill credit', pendApproval:' · AI recommendation, human approval required', recHead:'AI recommendation (not executed)',
+    goodwill:'Goodwill credit', pendApproval:'AI recommendation, human approval required', recHead:'AI recommendation (not executed)',
     sfHead:'Safety case file for the human reviewer', sfInterim:'Suggested interim measures (policy 5.3)', sfNote:'The AI has not determined fault or recommended a resolution.',
-    argsResult:'Arguments / result', ok:'✓ done', fail:'✗ failed', pending:'…',
-    noCase:'No case', riderCase:'Rider case', driverCase:'Driver case', claim:'Claim', ask:'Request', clauses:'Clauses cited',
-    cbHead:"Rider's own words", cbTrip:'Trip', cbFoot:'No dispute type selected: the intake agent decides it',
+    evLead:'Pulled evidence', evArgs:'Arguments', evResult:'Result', ok:'done', fail:'failed', pending:'…',
+    noCase:'No case submitted', riderCase:'Rider case', driverCase:'Driver case', caseLabel:'Case submitted',
+    claim:'Claim', ask:'Request', clauses:'Clauses', keyEv:'Key evidence',
+    cbHead:"Rider's own words", cbTrip:'Trip', cbFoot:'No dispute type selected — the intake agent decides it',
     tgHead:'Intake result', tgConf:'Classification confidence', tgClaim:'Normalized claim', tgClaimed:'claimed',
     tgSigs:'Signals matched', tgFoot:id=>`Ticket ${id} filed, moving to the advocates`,
-    snHead:'Safety net check (deterministic rules, independent of the model)', snPoints:'Distinct evidence points',
-    snCount:(c,t)=>`${c} / minimum ${t}`, snEmpty:'empty or near-empty ✗', snOk:'enough ✓', snShort:'too few ✗', snMet:'met ✓',
-    snTrig:'Override triggered → forced escalation to a human', snPass:"Not triggered, the model's ruling stands",
+    snHead:'Evidence sufficiency check (deterministic rules, independent of the model)', snPoints:'Distinct evidence points',
+    snCount:(c,t)=>`${c} / minimum ${t}`, snEmpty:'near-empty', snOk:'enough', snShort:'too few', snMet:'met',
+    snTrig:'Override triggered → forced escalation to a human', snPass:"Not triggered — the model's ruling stands",
     snFlag:"Safety net override: evidence base too thin, forced escalation (the model's confidence does not count)",
-    refund:'Refund', conf:'Confidence', escalated:' · escalated to a human', evTitle:'Evidence cited in verification',
+    refund:'Refund', conf:'Confidence', escalated:'Escalated to a human', evTitle:'Evidence cited in verification',
+    finalRuling:'Final ruling', elapsed:s=>`settled in ${s}s`, typingAria:'is working',
     maHead:ov=>`Model's independent assessment (judge agent's raw output${ov?', overridden by the safety net':''})`,
     maRuling:'Ruling', maRefund:'Refund',
     rl:{upheld:'Upheld (refund)', rejected:'Rejected', partial:'Partially upheld', escalated:'Escalated to human'},
+    tl:{get_trip_data:'Trip data',get_gps_telemetry:'GPS',get_chat_logs:'Chat log',get_app_events:'App events',
+        get_rider_profile:'Rider profile',get_driver_profile:'Driver profile',get_policy:'Policy',
+        get_traffic_reference:'Traffic',get_fare_breakdown:'Fare breakdown',get_damage_evidence:'Damage photos',
+        search_precedents:'Precedents'},
     rateLimit:'Real LLM quota / rate limit (429). Switch the backend at the top right to "Deterministic fallback" and run again: same flow, same tools, same rulings, only the reasoning steps are scripted.\n\n',
   },
   zh: {
@@ -40,34 +55,46 @@ const I18N = {
     loading:'载入中…', backendTitle:'选择驱动智能体的后端',
     beDefault:'默认后端', beLlm:'真实 LLM', beDet:'确定性回退',
     presetTitle:'预置工单，一键重放', replay:'重放', replaying:'重放中…',
-    fileHead:'提交新争议', fileHint:'用你自己的话写，系统自己判定争议类型',
-    placeholder:'例：司机绕了一大圈才到，明明半小时的路走了一个多小时，还多收我钱',
+    fileHint:'用你自己的话写，系统自己判定争议类型',
+    placeholder:'用你自己的话说说发生了什么…',
     tryHint:'试试：', chipEn:'英文', chipSl:'新加坡式英语', chipMs:'马来语', chipTa:'泰米尔语', chipZh:'中文',
     tripLbl:'关联行程', submit:'提交并裁决', ruling_btn:'裁决中…',
     fileFoot:'证据只能来自真实发生过的行程：GPS、聊天、App 事件都由平台调取，不需要你提供。',
     a_intake:'受理分类智能体', a_rider:'乘客辩护智能体', a_driver:'司机辩护智能体', a_judge:'法官智能体', a_safety:'安全网校验',
+    p_rider:'乘客', p_system:'政策引擎',
     idle:'待命', working:'取证中…', finished:'已完成', reasoning:'推理',
-    emptyHint:'在上方用你自己的话写一条投诉，选好行程，点「提交并裁决」。<br>系统会先判定争议类型，再由两位辩护智能体并行取证、法官独立核验给出裁决。<br><span style="font-size:12px">（右上角下拉可重放预置工单）</span>',
+    emptyHint:'<strong>这里以群聊的方式裁决一场争议。</strong><br>'
+      + '在下方输入框用你自己的话写下投诉，选好行程，点「提交并裁决」。<br>'
+      + '受理智能体先判定争议类型，乘客方与司机方辩护智能体并行取证、各执一词，'
+      + '法官再独立核验证据并给出裁决。'
+      + '<span class="es-note">顶栏的下拉可重放预置工单。</span>',
     badgeLlm:(p,m)=>`${p} · ${m}`, badgeDet:'确定性回退 · 无需 API key', badgeFail:'健康检查失败',
     t_route:'绕路', t_noshow:'爽约', t_fare:'车费', t_property:'财物', t_safety:'安全', t_routeFull:'绕路多收费', t_noshowFull:'爽约取消费',
     chipFare:'车费争议', chipProp:'清洁费', chipSafe:'安全事件', a_safetycase:'安全案件材料',
-    ppHead:'政策 v2.1 裁决路径', ppPath:{ai_final:'AI 终局裁决',ai_ruling_if_confident:'置信度足够时 AI 裁决',human_review:'人工复核'}, ppReq:'所需置信度', ppFraud:'欺诈标记将门槛提高到 95%', ppClauses:'条款', ppBreak:'置信度构成',
+    ppHead:'政策 v2.1 裁决路径', ppPath:{ai_final:'AI 终局裁决',ai_ruling_if_confident:'置信度足够时 AI 裁决',human_review:'人工复核'},
+    ppReq:'所需置信度', ppFraud:'欺诈标记将门槛提高到 95%', ppClauses:'条款', ppBreak:'置信度构成',
     cbk:{evidence_completeness:'证据完整度',policy_clarity:'政策清晰度',precedent_alignment:'先例一致度',party_credibility:'当事人可信度'},
-    goodwill:'善意补偿', pendApproval:' · AI 建议，需人工批准', recHead:'AI 建议（未执行）',
+    goodwill:'善意补偿', pendApproval:'AI 建议，需人工批准', recHead:'AI 建议（未执行）',
     sfHead:'供人工复核的安全案件材料', sfInterim:'建议的临时措施（政策 5.3）', sfNote:'AI 未判定责任，也未建议处理方案。',
-    argsResult:'参数 / 结果', ok:'✓ 完成', fail:'✗ 失败', pending:'…',
-    noCase:'无案件', riderCase:'乘客方案件', driverCase:'司机方案件', claim:'主张', ask:'诉求', clauses:'引用条款',
+    evLead:'调取的证据', evArgs:'调用参数', evResult:'返回结果', ok:'完成', fail:'失败', pending:'…',
+    noCase:'未提交案件', riderCase:'乘客方案件', driverCase:'司机方案件', caseLabel:'已提交案件',
+    claim:'主张', ask:'诉求', clauses:'引用条款', keyEv:'关键证据',
     cbHead:'乘客原话', cbTrip:'行程', cbFoot:'未选择争议类型 —— 类型由受理分类智能体判定',
     tgHead:'受理分类结果', tgConf:'分类置信度', tgClaim:'归一化主张', tgClaimed:'主张',
     tgSigs:'命中信号', tgFoot:id=>`工单 ${id} 已建档，进入辩护阶段`,
-    snHead:'安全网校验（确定性规则，与模型无关）', snPoints:'独立数据点',
-    snCount:(c,t)=>`${c} 条 / 下限 ${t}`, snEmpty:'空或近空 ✗', snOk:'充足 ✓', snShort:'不足 ✗', snMet:'达标 ✓',
-    snTrig:'触发覆盖 → 强制升级人工', snPass:'未触发，维持模型裁决',
+    snHead:'证据充分性校验（确定性规则，与模型无关）', snPoints:'独立数据点',
+    snCount:(c,t)=>`${c} / 下限 ${t}`, snEmpty:'空或近空', snOk:'充足', snShort:'不足', snMet:'达标',
+    snTrig:'触发覆盖 → 强制升级人工', snPass:'未触发 —— 维持模型裁决',
     snFlag:'安全网覆盖：证据基础不足，强制升级人工（模型置信度不作数）',
-    refund:'退费', conf:'置信度', escalated:' · 已升级人工', evTitle:'核验引用的证据',
+    refund:'退费', conf:'置信度', escalated:'已升级人工', evTitle:'核验引用的证据',
+    finalRuling:'最终裁决', elapsed:s=>`${s} 秒完成`, typingAria:'正在处理',
     maHead:ov=>`模型独立判断（法官智能体原始输出${ov?'，已被安全网覆盖':''}）`,
     maRuling:'裁决', maRefund:'退款',
     rl:{upheld:'支持（退费）', rejected:'驳回', partial:'部分支持', escalated:'升级人工'},
+    tl:{get_trip_data:'行程数据',get_gps_telemetry:'GPS',get_chat_logs:'聊天记录',get_app_events:'App 事件',
+        get_rider_profile:'乘客档案',get_driver_profile:'司机档案',get_policy:'政策条款',
+        get_traffic_reference:'路况参考',get_fare_breakdown:'费用明细',get_damage_evidence:'损坏证据',
+        search_precedents:'先例检索'},
     rateLimit:'真实 LLM 额度/限流（429）。请把右上角后端切换为「确定性回退」再跑一次 —— 流程、工具与裁决结果完全一致，只是推理步骤由剧本驱动。\n\n',
   },
 };
@@ -78,25 +105,42 @@ try { const s = localStorage.getItem('rr_lang'); if (s === 'zh' || s === 'en') L
 const T = k => (I18N[LANG][k] !== undefined ? I18N[LANG][k] : I18N.en[k]);
 const esc = s => String(s == null ? '' : s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
 
-const AGENTS = {
-  intake:{key:'a_intake',cls:'intake'}, rider_advocate:{key:'a_rider',cls:'rider'},
-  driver_advocate:{key:'a_driver',cls:'driver'}, judge:{key:'a_judge',cls:'judge'}, safety_net:{key:'a_safety',cls:'safety'},
-  safety_case:{key:'a_safetycase',cls:'safety'},
+/* ---------------------------------------------------------------- participants */
+const PARTICIPANTS = {
+  rider:           {ini:'R',  key:'p_rider',      side:'left'},
+  intake:          {ini:'IN', key:'a_intake',     side:'center'},
+  rider_advocate:  {ini:'RA', key:'a_rider',      side:'left'},
+  driver_advocate: {ini:'DA', key:'a_driver',     side:'right'},
+  judge:           {ini:'J',  key:'a_judge',      side:'center'},
+  safety_net:      {ini:'SN', key:'a_safety',     side:'center'},
+  safety_case:     {ini:'SC', key:'a_safetycase', side:'center'},
+  system:          {ini:'PY', key:'p_system',     side:'center'},
 };
-const agentName = a => AGENTS[a] ? T(AGENTS[a].key) : a;
+const ROSTER = ['rider','intake','rider_advocate','driver_advocate','judge','safety_net'];
+const partName = w => T((PARTICIPANTS[w] || PARTICIPANTS.system).key);
+const toolLabel = t => (T('tl') || {})[t] || t;
+/* Confidence scores arrive as 1, 0.92, 0.5 … — show them all to two decimals. */
+const conf2 = v => (typeof v === 'number' && isFinite(v)) ? v.toFixed(2) : String(v);
 
 const el = id => document.getElementById(id);
-const timeline = el('timeline'), runBtn = el('runBtn'), fileBtn = el('fileBtn');
+const chat = el('chat'), typingZone = el('typingZone'), roster = el('roster');
+const runBtn = el('runBtn'), fileBtn = el('fileBtn');
 const sel = el('disputeSelect'), tripSel = el('tripSelect');
 const complaintInput = el('complaintInput'), modeBadge = el('modeBadge');
 
-let lastToolEl = {};
 let health = null, disputes = [], trips = [];
-let busy = null;   // 'file' | 'run' | null
+let busy = null;                 // 'file' | 'run' | null
+let bubbleFor = {};              // agent -> the bubble that currently collects its evidence chips
+let pendingChips = {};           // agent -> chips still waiting for a tool_result
+let typingEls = {};              // agent -> typing indicator element
 
-function typeLabel(t){ return ({route_deviation:'t_route',no_show_charge:'t_noshow',fare_dispute:'t_fare',property_damage:'t_property',safety_incident:'t_safety'}[t]) ? T({route_deviation:'t_route',no_show_charge:'t_noshow',fare_dispute:'t_fare',property_damage:'t_property',safety_incident:'t_safety'}[t]) : t; }
-function rulingLabel(r){ return (T('rl')||{})[r] || r; }
+function typeLabel(t){
+  const m = {route_deviation:'t_route',no_show_charge:'t_noshow',fare_dispute:'t_fare',property_damage:'t_property',safety_incident:'t_safety'};
+  return m[t] ? T(m[t]) : t;
+}
+const rulingLabel = r => (T('rl') || {})[r] || r;
 
+/* ---------------------------------------------------------------- static chrome */
 function applyStatic(){
   document.documentElement.lang = LANG === 'zh' ? 'zh-CN' : 'en';
   document.querySelectorAll('[data-i18n]').forEach(n => { n.textContent = T(n.dataset.i18n); });
@@ -105,7 +149,7 @@ function applyStatic(){
   document.querySelectorAll('[data-i18n-ph]').forEach(n => { n.placeholder = T(n.dataset.i18nPh); });
   document.querySelectorAll('#langToggle button').forEach(b => b.classList.toggle('on', b.dataset.lang === LANG));
   document.title = LANG === 'zh' ? 'RydeResolve | 多智能体争议裁决' : 'RydeResolve | Multi-agent dispute resolution';
-  renderBadge(); renderDropdowns();
+  renderBadge(); renderDropdowns(); renderRoster();
   if (busy !== 'file') fileBtn.textContent = T('submit');
   if (busy !== 'run') runBtn.textContent = T('replay');
 }
@@ -122,7 +166,7 @@ function renderDropdowns(){
   sel.innerHTML = ''; tripSel.innerHTML = '';
   disputes.forEach(x => {
     const o = document.createElement('option'); o.value = x.dispute_id;
-    o.textContent = `${x.dispute_id} · ${typeLabel(x.dispute_type)} · ${x.description.slice(0,28)}…`;
+    o.textContent = `${x.dispute_id} · ${typeLabel(x.dispute_type)} · ${x.description.slice(0,24)}…`;
     sel.appendChild(o);
   });
   trips.forEach(x => {
@@ -132,6 +176,624 @@ function renderDropdowns(){
   });
   if (cur) sel.value = cur; if (curT) tripSel.value = curT;
 }
+
+/* Participant strip: who is in this chat, and who is working right now. */
+function renderRoster(){
+  const state = {};
+  roster.querySelectorAll('.roster-item').forEach(n => {
+    state[n.dataset.who] = n.classList.contains('active') ? 'active' : (n.classList.contains('done') ? 'done' : '');
+  });
+  roster.innerHTML = '';
+  ROSTER.forEach(w => {
+    const p = PARTICIPANTS[w];
+    const d = document.createElement('div');
+    d.className = `roster-item who-${w} ${state[w] || ''}`.trim();
+    d.dataset.who = w;
+    d.innerHTML = '<span class="av" aria-hidden="true"></span><span class="roster-name"></span>';
+    d.querySelector('.av').textContent = p.ini;
+    d.querySelector('.roster-name').textContent = partName(w);
+    roster.appendChild(d);
+  });
+}
+function setRoster(who, status){
+  const n = roster.querySelector(`.roster-item[data-who="${who}"]`); if (!n) return;
+  n.classList.toggle('active', status === 'active');
+  if (status === 'done') n.classList.add('done');
+}
+
+/* ---------------------------------------------------------------- scrolling */
+let stick = true, scrollQueued = false;
+const atBottom = () => (window.innerHeight + window.scrollY) >= document.documentElement.scrollHeight - 260;
+/* Only a deliberate scroll by the reader detaches the view; the smooth scrolling we do
+   ourselves fires plenty of mid-flight scroll events and must not switch following off. */
+['wheel','touchmove','keydown'].forEach(t =>
+  window.addEventListener(t, () => { stick = atBottom(); }, {passive:true}));
+window.addEventListener('scroll', () => { if (atBottom()) stick = true; }, {passive:true});
+function autoscroll(){
+  if (!stick || scrollQueued) return;
+  scrollQueued = true;
+  requestAnimationFrame(() => {
+    scrollQueued = false;
+    window.scrollTo({top: document.documentElement.scrollHeight, behavior:'smooth'});
+  });
+}
+
+/* ---------------------------------------------------------------- chat primitives */
+function append(node){ chat.insertBefore(node, typingZone); autoscroll(); }
+
+function msgRow(who, label){
+  const p = PARTICIPANTS[who] || PARTICIPANTS.system;
+  const row = document.createElement('div');
+  row.className = `msg ${p.side} who-${who}`;
+  const av = document.createElement('div');
+  av.className = 'av'; av.textContent = p.ini; av.setAttribute('aria-hidden','true');
+  const stack = document.createElement('div'); stack.className = 'stack';
+  const meta = document.createElement('div'); meta.className = 'meta';
+  const nm = document.createElement('span'); nm.className = 'nm'; nm.textContent = partName(who);
+  meta.appendChild(nm);
+  if (label){ const pl = document.createElement('span'); pl.className = 'pill'; pl.textContent = label; meta.appendChild(pl); }
+  stack.appendChild(meta);
+  row.appendChild(av); row.appendChild(stack);
+  return {row, stack};
+}
+
+function bubble(stack, extraCls){
+  const b = document.createElement('div');
+  b.className = 'bubble' + (extraCls ? ' ' + extraCls : '');
+  stack.appendChild(b);
+  return b;
+}
+
+function addDivider(text){
+  const d = document.createElement('div'); d.className = 'divider';
+  const s = document.createElement('span'); s.textContent = text;
+  d.appendChild(s); append(d);
+}
+
+/* Consecutive messages from the same agent stay in one bubble (and share one evidence
+   row) until the agent finishes or the phase moves on — otherwise a scripted run turns
+   into a wall of one-line bubbles. */
+function appendLine(b, text){
+  const p = document.createElement('p'); p.className = 'line'; p.textContent = text;
+  const ev = b.querySelector(':scope > .evidence');
+  if (ev) b.insertBefore(p, ev); else b.appendChild(p);
+}
+function openBubble(agent){
+  const b = bubbleFor[agent];
+  return (b && b.isConnected && !b.dataset.sealed) ? b : null;
+}
+function seal(agent){
+  const b = bubbleFor[agent];
+  if (b) b.dataset.sealed = '1';
+  delete bubbleFor[agent];
+}
+function sealAll(){ Object.keys(bubbleFor).forEach(seal); }
+
+function addThinking(agent, content){
+  let b = openBubble(agent);
+  if (b){ appendLine(b, content); autoscroll(); return b; }
+  const who = PARTICIPANTS[agent] ? agent : 'system';
+  const {row, stack} = msgRow(who);
+  b = bubble(stack);
+  appendLine(b, content);
+  append(row);
+  bubbleFor[agent] = b;
+  return b;
+}
+
+/* ---------------------------------------------------------------- evidence chips */
+/* Tool calls never get their own row: they collapse into a "pulled evidence" line
+   inside the bubble the agent is currently speaking from. Consecutive calls from the
+   same agent share one chip row; a new reasoning message starts a new one. */
+function evidenceHost(agent){
+  let b = openBubble(agent);
+  if (!b){
+    const who = PARTICIPANTS[agent] ? agent : 'system';
+    const {row, stack} = msgRow(who);
+    b = bubble(stack, 'bare');
+    append(row);
+    bubbleFor[agent] = b;
+  }
+  let ev = b.querySelector(':scope > .evidence');
+  if (!ev){
+    ev = document.createElement('div'); ev.className = 'evidence';
+    const head = document.createElement('div'); head.className = 'ev-head';
+    const lead = document.createElement('span'); lead.className = 'ev-lead'; lead.textContent = T('evLead');
+    head.appendChild(lead);
+    const chips = document.createElement('div'); chips.className = 'ev-chips';
+    ev.appendChild(head); ev.appendChild(chips);
+    b.appendChild(ev);
+  }
+  return ev;
+}
+
+function renderPanel(ev, chip){
+  const old = ev.querySelector('.ev-panel'); if (old) old.remove();
+  const p = document.createElement('div'); p.className = 'ev-panel';
+  const mk = (k, body) => {
+    const r = document.createElement('div'); r.className = 'ep-row';
+    const ks = document.createElement('span'); ks.className = 'ep-k'; ks.textContent = k;
+    const pre = document.createElement('pre'); pre.textContent = body;
+    r.appendChild(ks); r.appendChild(pre); return r;
+  };
+  p.appendChild(mk(`${chip._tool} · ${T('evArgs')}`, JSON.stringify(chip._args || {}, null, 2)));
+  p.appendChild(mk(T('evResult'), chip._result == null ? T('pending') : JSON.stringify(chip._result, null, 2)));
+  ev.appendChild(p);
+}
+
+function toggleChip(ev, chip){
+  const wasOpen = chip.getAttribute('aria-expanded') === 'true';
+  ev.querySelectorAll('.ev-chip[aria-expanded="true"]').forEach(c => c.setAttribute('aria-expanded','false'));
+  const old = ev.querySelector('.ev-panel'); if (old) old.remove();
+  if (wasOpen) return;
+  chip.setAttribute('aria-expanded','true');
+  renderPanel(ev, chip);
+  autoscroll();
+}
+
+function addToolCall(agent, tool, args){
+  const ev = evidenceHost(agent);
+  const chip = document.createElement('button');
+  chip.type = 'button'; chip.className = 'ev-chip';
+  chip.dataset.state = 'pending'; chip.setAttribute('aria-expanded','false');
+  const st = document.createElement('span'); st.className = 'st';
+  const lb = document.createElement('span'); lb.className = 'lb'; lb.textContent = toolLabel(tool);
+  chip.appendChild(st); chip.appendChild(lb);
+  chip._tool = tool; chip._args = args; chip._result = null;
+  chip.addEventListener('click', () => toggleChip(ev, chip));
+  ev.querySelector('.ev-chips').appendChild(chip);
+  (pendingChips[agent] = pendingChips[agent] || []).push(chip);
+  autoscroll();
+}
+
+function addToolResult(agent, tool, ok, result){
+  const q = pendingChips[agent] || [];
+  const i = q.findIndex(c => c._tool === tool && c.dataset.state === 'pending');
+  if (i < 0) return;
+  const chip = q.splice(i, 1)[0];
+  chip.dataset.state = ok ? 'ok' : 'fail';
+  chip._result = result;
+  chip.title = `${toolLabel(tool)} · ${ok ? T('ok') : T('fail')}`;
+  if (chip.getAttribute('aria-expanded') === 'true') renderPanel(chip.closest('.evidence'), chip);
+}
+
+/* ---------------------------------------------------------------- typing indicator */
+function showTyping(agent){
+  const p = PARTICIPANTS[agent];
+  if (!p || typingEls[agent]) return;
+  const t = document.createElement('div');
+  t.className = `typing who-${agent}` + (p.side === 'right' ? ' right' : '');
+  t.setAttribute('aria-label', `${partName(agent)} ${T('typingAria')}`);
+  const av = document.createElement('div'); av.className = 'av'; av.textContent = p.ini; av.setAttribute('aria-hidden','true');
+  const dots = document.createElement('div'); dots.className = 'dots';
+  dots.innerHTML = '<i></i><i></i><i></i>';
+  t.appendChild(av); t.appendChild(dots);
+  typingZone.appendChild(t); typingEls[agent] = t;
+  autoscroll();
+}
+function hideTyping(agent){ const t = typingEls[agent]; if (t){ t.remove(); delete typingEls[agent]; } }
+function hideAllTyping(){ Object.keys(typingEls).forEach(hideTyping); }
+
+/* ---------------------------------------------------------------- message cards */
+function kvList(rows){
+  const w = document.createElement('div'); w.className = 'kv-list';
+  rows.forEach(([k, v, isNode]) => {
+    const r = document.createElement('div'); r.className = 'kv';
+    const ks = document.createElement('span'); ks.className = 'k'; ks.textContent = k;
+    const vs = document.createElement('span'); vs.className = 'v';
+    if (isNode) vs.appendChild(v); else vs.textContent = v;
+    r.appendChild(ks); r.appendChild(vs); w.appendChild(r);
+  });
+  return w;
+}
+function tagList(items, cls){
+  const w = document.createElement('div'); w.className = 'taglist';
+  (items || []).forEach(x => { const t = document.createElement('span'); t.className = 'tag' + (cls ? ' ' + cls : ''); t.textContent = x; w.appendChild(t); });
+  return w;
+}
+function bullets(items, cls){
+  const ul = document.createElement('ul'); ul.className = 'bullets' + (cls ? ' ' + cls : '');
+  (items || []).forEach(x => { const li = document.createElement('li'); li.textContent = x; ul.appendChild(li); });
+  return ul;
+}
+function section(title, node){
+  const s = document.createElement('div'); s.className = 'sub';
+  const h = document.createElement('h4'); h.textContent = title;
+  s.appendChild(h); s.appendChild(node); return s;
+}
+function heading(text){ const h = document.createElement('h4'); h.textContent = text; return h; }
+
+let complaintShown = false;
+function addComplaint(text, tripId, foot){
+  const {row, stack} = msgRow('rider', `${T('cbTrip')} ${tripId}`);
+  const b = bubble(stack, 'complaint');
+  const q = document.createElement('div'); q.className = 'c-quote'; q.textContent = text;
+  const f = document.createElement('div'); f.className = 'c-foot'; f.textContent = foot || T('cbFoot');
+  b.appendChild(q); b.appendChild(f);
+  append(row);
+  complaintShown = true;
+  setRoster('rider', 'done');
+}
+
+function addTriage(t){
+  const {row, stack} = msgRow('intake');
+  const b = bubble(stack, 'card triage');
+  b.appendChild(heading(T('tgHead')));
+  const line = document.createElement('div'); line.className = 'panel-line';
+  const badge = document.createElement('span'); badge.className = 'tag rose';
+  badge.textContent = t.dispute_type_label || typeLabel(t.dispute_type);
+  const raw = document.createElement('span'); raw.className = 't-type'; raw.textContent = t.dispute_type;
+  const cf = document.createElement('span');
+  cf.innerHTML = `${esc(T('tgConf'))} <b>${esc(conf2(t.classification_confidence))}</b>`;
+  line.appendChild(badge); line.appendChild(raw); line.appendChild(cf);
+  b.appendChild(line);
+  const claim = t.normalized_claim + (t.requested_amount != null ? ` · ${T('tgClaimed')} ${CUR}${t.requested_amount}` : '');
+  const kv = kvList([[T('tgClaim'), claim]]);
+  kv.style.marginTop = '11px';
+  b.appendChild(kv);
+  const reason = document.createElement('p'); reason.className = 'note'; reason.textContent = t.classification_reasoning;
+  b.appendChild(reason);
+  if ((t.detected_signals || []).length) b.appendChild(section(T('tgSigs'), tagList(t.detected_signals)));
+  const foot = document.createElement('p'); foot.className = 'note'; foot.textContent = T('tgFoot')(t.dispute_id || '-');
+  b.appendChild(foot);
+  append(row);
+  seal('intake');
+}
+
+function addCaseCard(who, c){
+  const {row, stack} = msgRow(who, c ? T('caseLabel') : null);
+  const b = bubble(stack, 'card case-card');
+  b.appendChild(heading(who === 'rider_advocate' ? T('riderCase') : T('driverCase')));
+  if (!c){
+    const p = document.createElement('p'); p.className = 'note'; p.textContent = T('noCase');
+    b.appendChild(p); append(row); return;
+  }
+  const ask = c.requested_outcome + (c.requested_amount != null ? ` · ${CUR}${c.requested_amount}` : '');
+  b.appendChild(kvList([
+    [T('claim'), c.claim],
+    [T('ask'), ask],
+    [T('clauses'), tagList((c.policy_clauses_referenced || []).length ? c.policy_clauses_referenced : ['-']), true],
+  ]));
+  if ((c.evidence_cited || []).length) b.appendChild(section(T('keyEv'), bullets(c.evidence_cited)));
+  append(row);
+}
+
+function addSafetyNet(sn){
+  const existing = openBubble('safety_net');
+  let b, row = null;
+  if (existing){ b = existing; b.classList.add('card'); b.classList.remove('bare'); }
+  else { const m = msgRow('safety_net'); row = m.row; b = bubble(m.stack, 'card'); }
+  const parts = document.createDocumentFragment();
+  parts.appendChild(heading(T('snHead')));
+  const chk = sn.checks || {}, src = chk.evidence_sources || {};
+  const rows = document.createElement('div'); rows.className = 'sn-rows';
+  const mkRow = (k, v, okFlag, flagTxt) => {
+    const r = document.createElement('div'); r.className = 'sn-row';
+    const ks = document.createElement('span'); ks.className = 'sk'; ks.textContent = k;
+    const vs = document.createElement('span'); vs.className = 'sv'; vs.textContent = v;
+    const fs = document.createElement('span'); fs.className = 'sf ' + (okFlag ? 'good' : 'bad'); fs.textContent = flagTxt;
+    r.appendChild(ks); r.appendChild(vs); r.appendChild(fs); rows.appendChild(r);
+  };
+  const short = chk.distinct_evidence_points < chk.min_evidence_points;
+  mkRow(T('snPoints'), T('snCount')(chk.distinct_evidence_points, chk.min_evidence_points), !short, short ? T('snShort') : T('snMet'));
+  Object.keys(src).forEach(k => {
+    const i = src[k];
+    mkRow(k, T('snCount')(i.count, i.threshold), !i.near_empty, i.near_empty ? T('snEmpty') : T('snOk'));
+  });
+  parts.appendChild(rows);
+  if ((sn.reasons || []).length){
+    const ul = bullets(sn.reasons); ul.classList.add('sn-reasons');
+    parts.appendChild(ul);
+  }
+  const v = document.createElement('div');
+  v.className = 'sn-verdict ' + (sn.triggered ? 'trig' : 'pass');
+  v.textContent = sn.triggered ? T('snTrig') : T('snPass');
+  parts.appendChild(v);
+  const ev = b.querySelector(':scope > .evidence');
+  if (ev) b.insertBefore(parts, ev); else b.appendChild(parts);
+  if (row) append(row); else autoscroll();
+}
+
+function addError(ev){
+  let msg = (ev.message || '') + '\n' + (ev.trace || '');
+  if (/429|quota|rate|RESOURCE_EXHAUSTED/i.test(msg)) msg = T('rateLimit') + msg;
+  const d = document.createElement('div'); d.className = 'err-box'; d.textContent = msg.trim();
+  append(d);
+}
+
+/* ---------------------------------------------------------------- ruling card */
+function metric(label, value, money){
+  const d = document.createElement('div'); d.className = 'metric' + (money ? ' money' : '');
+  const k = document.createElement('span'); k.className = 'mk'; k.textContent = label;
+  const v = document.createElement('span'); v.className = 'mv'; v.textContent = value;
+  d.appendChild(k); d.appendChild(v); return d;
+}
+function panel(title){
+  const p = document.createElement('div'); p.className = 'panel';
+  p.appendChild(heading(title)); return p;
+}
+function note(text){ const p = document.createElement('p'); p.className = 'note'; p.textContent = text; return p; }
+
+function addRuling(r, elapsedMs){
+  const sn = r.safety_net || null, ma = r.model_assessment || null;
+  const card = document.createElement('article');
+  const cls = {upheld:'r-upheld',rejected:'r-rejected',partial:'r-partial',escalated:'r-escalated'}[r.ruling] || 'r-partial';
+  card.className = 'ruling ' + cls;
+
+  const strip = document.createElement('div'); strip.className = 'r-strip';
+  const body = document.createElement('div'); body.className = 'r-body';
+  card.appendChild(strip); card.appendChild(body);
+
+  /* header: badge + metrics */
+  const top = document.createElement('div'); top.className = 'r-top';
+  const lab = document.createElement('span'); lab.className = 'r-label';
+  lab.textContent = T('finalRuling');
+  if (elapsedMs >= 200){
+    const t = document.createElement('span'); t.className = 'r-elapsed';
+    t.textContent = ' · ' + T('elapsed')((elapsedMs / 1000).toFixed(1));
+    lab.appendChild(t);
+  }
+  top.appendChild(lab);
+  const badge = document.createElement('span'); badge.className = 'r-badge'; badge.textContent = rulingLabel(r.ruling);
+  top.appendChild(badge);
+  const flagTxt = r.ruling === 'escalated' ? T('escalated') : (r.escalation_required ? T('pendApproval') : '');
+  if (flagTxt){ const t = document.createElement('span'); t.className = 'tag'; t.textContent = flagTxt; top.appendChild(t); }
+  const mw = document.createElement('div'); mw.className = 'r-metrics';
+  if (r.refund_amount != null) mw.appendChild(metric(T('refund'), CUR + r.refund_amount, true));
+  if (r.goodwill_credit) mw.appendChild(metric(T('goodwill'), CUR + r.goodwill_credit, true));
+  if (r.confidence_score != null) mw.appendChild(metric(T('conf'), conf2(r.confidence_score)));
+  if (mw.children.length) top.appendChild(mw);
+  body.appendChild(top);
+
+  if (sn && sn.triggered){
+    const n = document.createElement('div'); n.className = 'r-note'; n.textContent = T('snFlag');
+    body.appendChild(n);
+  }
+
+  const reason = document.createElement('p'); reason.className = 'r-reason'; reason.textContent = r.reasoning || '';
+  body.appendChild(reason);
+
+  if ((r.evidence_cited || []).length){
+    const p = panel(T('evTitle'));
+    p.appendChild(bullets(r.evidence_cited, 'check'));
+    body.appendChild(p);
+  }
+
+  /* policy path + confidence breakdown */
+  const pp = r.policy_path;
+  if (pp){
+    const p = panel(T('ppHead'));
+    const line = document.createElement('div'); line.className = 'panel-line';
+    const b1 = document.createElement('span'); b1.className = 'tag blue';
+    b1.textContent = (T('ppPath') || {})[pp.path] || pp.path;
+    line.appendChild(b1);
+    const cl = document.createElement('span');
+    cl.textContent = `${T('ppClauses')}: ${(r.policy_clauses || []).join(', ') || pp.clause || '-'}`;
+    line.appendChild(cl);
+    if (pp.required_confidence != null){
+      const rc = document.createElement('span');
+      rc.innerHTML = `${esc(T('ppReq'))} <b>${esc(conf2(pp.required_confidence))}</b>`;
+      line.appendChild(rc);
+    }
+    p.appendChild(line);
+    if (pp.fraud_flag) p.appendChild(note(T('ppFraud')));
+    (pp.reasons || []).forEach(x => p.appendChild(note(x)));
+    if (r.confidence_breakdown){
+      const h = document.createElement('h4'); h.textContent = T('ppBreak');
+      h.style.margin = '14px 0 0';
+      p.appendChild(h);
+      const bars = document.createElement('div'); bars.className = 'bars';
+      Object.keys(r.confidence_breakdown).forEach(k => {
+        const val = Number(r.confidence_breakdown[k]);
+        const row = document.createElement('div'); row.className = 'bar';
+        const bl = document.createElement('span'); bl.className = 'bl'; bl.textContent = (T('cbk') || {})[k] || k;
+        const bt = document.createElement('span'); bt.className = 'bt';
+        const bf = document.createElement('span'); bf.className = 'bf';
+        bf.style.width = Math.max(0, Math.min(100, (isFinite(val) ? val : 0) * 100)) + '%';
+        bt.appendChild(bf);
+        const bv = document.createElement('span'); bv.className = 'bv';
+        bv.textContent = isFinite(val) ? val.toFixed(2) : String(r.confidence_breakdown[k]);
+        row.appendChild(bl); row.appendChild(bt); row.appendChild(bv);
+        bars.appendChild(row);
+      });
+      p.appendChild(bars);
+    }
+    body.appendChild(p);
+  }
+
+  /* AI recommendation (not executed) */
+  if (r.recommendation){
+    const p = panel(T('recHead'));
+    p.appendChild(kvList([
+      [T('maRuling'), rulingLabel(r.recommendation.ruling)],
+      [T('maRefund'), r.recommendation.refund_amount != null ? CUR + r.recommendation.refund_amount : '-'],
+    ]));
+    body.appendChild(p);
+  }
+
+  /* safety case file */
+  if (r.case_file){
+    const p = panel(T('sfHead'));
+    p.appendChild(bullets(r.case_file.facts));
+    p.appendChild(section(T('sfInterim'), bullets(r.case_file.interim_measures)));
+    p.appendChild(note(T('sfNote')));
+    body.appendChild(p);
+  }
+
+  /* the model's own assessment, kept even when the safety net overrode it */
+  if (ma){
+    const p = panel(T('maHead')(sn && sn.triggered));
+    p.appendChild(kvList([
+      [T('maRuling'), rulingLabel(ma.ruling)],
+      [T('maRefund'), ma.refund_amount != null ? CUR + ma.refund_amount : '-'],
+      [T('conf'), ma.confidence_score != null ? conf2(ma.confidence_score) : '-'],
+    ]));
+    if (ma.reasoning) p.appendChild(note(ma.reasoning));
+    if ((ma.evidence_cited || []).length) p.appendChild(section(T('evTitle'), bullets(ma.evidence_cited)));
+    body.appendChild(p);
+  }
+
+  if (r.escalation_required && r.escalation_summary){
+    const e = document.createElement('div'); e.className = 'esc-box'; e.textContent = r.escalation_summary;
+    body.appendChild(e);
+  }
+
+  append(card);
+}
+
+/* ---------------------------------------------------------------- event -> chat */
+function render(ev){
+  switch (ev.type){
+    case 'phase':
+      sealAll();
+      if (ev.message) addDivider(ev.message);
+      if (ev.phase === 'intake'){
+        // A preset replay has no complaint_received event: the rider's own words
+        // arrive on the ticket, and they still open the conversation.
+        if (!complaintShown && ev.ticket && ev.ticket.description){
+          const t = ev.ticket;
+          const amt = t.requested_amount != null ? ` · ${T('tgClaimed')} ${CUR}${t.requested_amount}` : '';
+          addComplaint(t.description, t.trip_id, typeLabel(t.dispute_type) + amt);
+        }
+        setRoster('intake','active');
+        if (!complaintShown) showTyping('intake');
+      }
+      else if (ev.phase === 'safety_intake'){ setRoster('intake','done'); setRoster('safety_net','active'); showTyping('safety_case'); }
+      else if (ev.phase === 'advocates'){
+        setRoster('intake','done');
+        setRoster('rider_advocate','active'); setRoster('driver_advocate','active');
+        showTyping('rider_advocate'); showTyping('driver_advocate');
+      }
+      else if (ev.phase === 'cases_submitted'){
+        hideTyping('rider_advocate'); hideTyping('driver_advocate');
+        setRoster('rider_advocate','done'); setRoster('driver_advocate','done');
+        queue.unshift({type:'_case', who:'rider_advocate', case: ev.rider_case},
+                      {type:'_case', who:'driver_advocate', case: ev.driver_case});
+      }
+      else if (ev.phase === 'judge'){ setRoster('judge','active'); showTyping('judge'); }
+      else if (ev.phase === 'safety_net'){ setRoster('safety_net','active'); showTyping('safety_net'); }
+      break;
+    case '_case': addCaseCard(ev.who, ev.case); break;
+    case 'complaint_received': addComplaint(ev.complaint, ev.trip_id); showTyping('intake'); break;
+    case 'triage_result': hideTyping('intake'); setRoster('intake','done'); seal('intake'); addTriage(ev); break;
+    case 'agent_start': showTyping(ev.agent); break;
+    case 'agent_final': hideTyping(ev.agent); seal(ev.agent); break;
+    case 'thinking': hideTyping(ev.agent); addThinking(ev.agent, ev.content); showTyping(ev.agent); break;
+    case 'warning': hideTyping(ev.agent); seal(ev.agent); addThinking(ev.agent, ev.content); seal(ev.agent); break;
+    case 'tool_call': addToolCall(ev.agent, ev.tool, ev.args); break;
+    case 'tool_result': addToolResult(ev.agent, ev.tool, ev.ok, ev.result); break;
+    case 'safety_net': hideTyping('safety_net'); setRoster('safety_net','done'); addSafetyNet(ev); break;
+    case 'ruling':
+      hideAllTyping(); sealAll();
+      setRoster('judge','done'); setRoster('safety_net','done');
+      addRuling(ev.ruling, ev.elapsed_ms);
+      break;
+    case 'error': hideAllTyping(); addError(ev); break;
+    case 'done': hideAllTyping(); break;
+  }
+}
+
+/* ---------------------------------------------------------------- paced queue
+   Messages are released one at a time so the run reads like a conversation, but the
+   total artificial delay is capped (PACE_BUDGET) so the ruling is never held back by
+   more than a few seconds. A delay is only ever spent when events are actually backed
+   up — with a real LLM backend the stream paces itself and nothing is added. */
+const PACE_BUDGET = 2200, PACE_MIN = 160, PACE_MAX = 520;
+const WEIGHT = {
+  thinking:1, complaint_received:1, triage_result:1, safety_net:1, warning:1, error:1, _case:1,
+  phase:0.55, ruling:0.6, tool_call:0.15, tool_result:0, agent_start:0, agent_final:0, done:0,
+};
+let queue = [], pumping = false, paceLeft = PACE_BUDGET;
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+const frame = () => new Promise(r => requestAnimationFrame(() => r()));
+
+function enqueue(ev){ queue.push(ev); if (!pumping) pump(); }
+
+async function pump(){
+  pumping = true;
+  while (queue.length){
+    const ev = queue.shift();
+    try { render(ev); } catch (e){ console.error('render failed', ev && ev.type, e); }
+    const w = WEIGHT[ev.type] != null ? WEIGHT[ev.type] : 0.5;
+    let gap = 0;
+    if (w > 0 && paceLeft > 0 && queue.length > 0){
+      const waiting = queue.reduce((n, e) => n + ((WEIGHT[e.type] != null ? WEIGHT[e.type] : 0.5) >= 0.55 ? 1 : 0), 0);
+      const base = Math.max(PACE_MIN, Math.min(PACE_MAX, paceLeft / (waiting + 1)));
+      gap = Math.min(paceLeft, base * w);
+      paceLeft -= gap;
+    }
+    // Bookkeeping events (tool results, agent start/final) carry no weight and must not
+    // cost a frame each — only what the reader actually sees is allowed to hold the queue.
+    if (gap > 0) await sleep(gap);
+    else if (w > 0) await frame();
+  }
+  pumping = false;
+}
+
+/* ---------------------------------------------------------------- run control */
+function resetUI(){
+  queue = []; paceLeft = PACE_BUDGET; complaintShown = false;
+  bubbleFor = {}; pendingChips = {}; typingEls = {};
+  chat.querySelectorAll(':scope > *').forEach(n => { if (n !== typingZone) n.remove(); });
+  typingZone.innerHTML = '';
+  roster.querySelectorAll('.roster-item').forEach(n => n.classList.remove('active','done'));
+  stick = true;
+}
+
+function extraQuery(){
+  const be = (el('backendSelect') || {}).value || '';
+  return (be ? `&mode=${encodeURIComponent(be)}` : '') + `&lang=${LANG}`;
+}
+
+function openStream(url, btn, busyText, kind){
+  btn.disabled = true; btn.textContent = busyText; busy = kind; resetUI();
+  const es = new EventSource(url);
+  const restore = () => { busy = null; btn.disabled = false; btn.textContent = btn === fileBtn ? T('submit') : T('replay'); };
+  es.onmessage = e => {
+    let ev; try { ev = JSON.parse(e.data); } catch (err){ console.error('bad event', err); return; }
+    ev.agent = ev.agent || ev.role;      // safety-net events carry `role` only
+    if (ev.type === 'done'){ es.close(); restore(); }
+    enqueue(ev);
+  };
+  es.onerror = () => { es.close(); restore(); hideAllTyping(); };
+  const watcher = setInterval(() => { if (es.readyState === 2){ clearInterval(watcher); restore(); } }, 400);
+}
+
+function runFreeform(){
+  const text = (complaintInput.value || '').trim(), tripId = tripSel.value;
+  if (!text){ complaintInput.focus(); return; }
+  if (!tripId) return;
+  openStream(`/api/file/stream?trip_id=${encodeURIComponent(tripId)}&complaint=${encodeURIComponent(text)}${extraQuery()}`,
+             fileBtn, T('ruling_btn'), 'file');
+}
+function runPreset(){
+  const id = sel.value; if (!id) return;
+  openStream(`/api/resolve/${id}/stream?${extraQuery().replace(/^&/,'')}`, runBtn, T('replaying'), 'run');
+}
+
+/* ---------------------------------------------------------------- wiring */
+document.querySelectorAll('#langToggle button').forEach(b => b.addEventListener('click', () => {
+  LANG = b.dataset.lang;
+  try { localStorage.setItem('rr_lang', LANG); } catch (e) {}
+  applyStatic();
+  // Results already on screen stay in the language they were produced in; re-run to see them in the new one.
+}));
+
+document.querySelectorAll('.chip').forEach(c => c.addEventListener('click', () => {
+  complaintInput.value = c.dataset.text;
+  growInput(); complaintInput.focus();
+}));
+
+function growInput(){
+  complaintInput.style.height = 'auto';
+  complaintInput.style.height = Math.min(140, Math.max(46, complaintInput.scrollHeight)) + 'px';
+}
+complaintInput.addEventListener('input', growInput);
+complaintInput.addEventListener('keydown', e => {
+  if (e.key === 'Enter' && !e.shiftKey && !e.isComposing){ e.preventDefault(); runFreeform(); }
+});
+fileBtn.addEventListener('click', runFreeform);
+runBtn.addEventListener('click', runPreset);
 
 async function boot(){
   applyStatic();
@@ -144,198 +806,4 @@ async function boot(){
   renderDropdowns();
   sel.disabled = false; runBtn.disabled = false; tripSel.disabled = false; fileBtn.disabled = false;
 }
-
-document.querySelectorAll('#langToggle button').forEach(b => b.addEventListener('click', () => {
-  LANG = b.dataset.lang;
-  try { localStorage.setItem('rr_lang', LANG); } catch (e) {}
-  applyStatic();
-  // Results already on screen stay in the language they were produced in; re-run to see them in the new one.
-}));
-
-document.querySelectorAll('.chip').forEach(c => c.addEventListener('click', () => {
-  complaintInput.value = c.dataset.text; complaintInput.focus();
-}));
-
-function resetUI(){
-  timeline.innerHTML = ''; lastToolEl = {};
-  document.querySelectorAll('.agent-card').forEach(c => { c.classList.remove('active','done'); c.querySelector('.ac-status').textContent = T('idle'); });
-}
-function setAgentStatus(agent, status){
-  const card = document.querySelector(`.agent-card[data-agent="${agent}"]`); if (!card) return;
-  const st = card.querySelector('.ac-status');
-  if (status === 'active'){ card.classList.add('active'); card.classList.remove('done'); st.textContent = T('working'); }
-  else if (status === 'done'){ card.classList.remove('active'); card.classList.add('done'); st.textContent = T('finished'); }
-}
-
-function scroll(){ window.scrollTo({top:document.body.scrollHeight, behavior:'smooth'}); }
-function addPhase(msg){
-  const w = document.createElement('div'); w.className = 'phase';
-  w.innerHTML = `<span class="ttl">${esc(msg)}</span><span class="bar"></span>`; timeline.appendChild(w);
-}
-function addThinking(agent, content){
-  const cls = (AGENTS[agent]||{}).cls || '';
-  const t = document.getElementById('tpl-thinking').content.cloneNode(true);
-  if (cls) t.querySelector('.thinking').classList.add(cls);
-  t.querySelector('.who').textContent = agentName(agent);
-  t.querySelector('.lbl').textContent = T('reasoning');
-  t.querySelector('.msg-body').textContent = content; timeline.appendChild(t); scroll();
-}
-function addToolCall(agent, tool, args, summary){
-  const w = document.createElement('div'); w.className = 'tool';
-  w.innerHTML = `
-    <div class="tc-head"><span class="fn">${esc(tool)}(</span><span class="arr">${esc((summary||'').replace(/^[^(]*\((.*)\)/,'$1'))}</span><span class="fn">)</span>
-      <span class="tc-status">${T('pending')}</span></div>
-    <details><summary>${T('argsResult')}</summary><pre>${esc(JSON.stringify(args,null,2))}</pre></details>`;
-  timeline.appendChild(w); lastToolEl[agent] = w; scroll();
-}
-function addToolResult(agent, tool, ok, result){
-  const w = lastToolEl[agent]; if (!w) return;
-  const st = w.querySelector('.tc-status');
-  st.textContent = ok ? T('ok') : T('fail'); st.className = 'tc-status ' + (ok ? 'ok' : 'err');
-  w.querySelector('pre').textContent = JSON.stringify(result, null, 2); scroll();
-}
-function caseCard(cls, c){
-  const d = document.createElement('div'); d.className = 'case ' + cls;
-  if (!c){ d.innerHTML = `<h4>${T('noCase')}</h4>`; return d; }
-  const ev = (c.evidence_cited||[]).map(e => `<div class="ev">${esc(e)}</div>`).join('');
-  d.innerHTML = `<h4>${cls==='rider'?T('riderCase'):T('driverCase')}</h4>
-    <div class="claim"><b>${T('claim')}:</b> ${esc(c.claim)}</div>
-    <div class="claim"><b>${T('ask')}:</b> ${esc(c.requested_outcome)}${c.requested_amount!=null?` · ${CUR}${esc(c.requested_amount)}`:''}</div>
-    <div class="ev-title" style="color:var(--mut);font-size:11px;margin-top:6px">${T('clauses')}: ${esc((c.policy_clauses_referenced||[]).join(', ')||'-')}</div>${ev}`;
-  return d;
-}
-function addCases(rider, driver){
-  const w = document.createElement('div'); w.className = 'cases';
-  w.appendChild(caseCard('rider', rider)); w.appendChild(caseCard('driver', driver));
-  timeline.appendChild(w); scroll();
-}
-function addComplaint(text, tripId){
-  const d = document.createElement('div'); d.className = 'complaint-box';
-  d.innerHTML = `<div class="cb-head">${T('cbHead')}<span class="cb-trip">${T('cbTrip')} ${esc(tripId)}</span></div>
-    <div class="cb-body">${esc(text)}</div><div class="cb-foot">${T('cbFoot')}</div>`;
-  timeline.appendChild(d); scroll();
-}
-function addTriage(t){
-  const d = document.createElement('div'); d.className = 'triage-box';
-  const sigs = (t.detected_signals||[]).map(s => `<span class="tg-sig">${esc(s)}</span>`).join('');
-  d.innerHTML = `
-    <div class="tg-head">${T('tgHead')}</div>
-    <div class="tg-line"><span class="tg-badge">${esc(t.dispute_type_label || typeLabel(t.dispute_type))}</span>
-      <span class="tg-type">${esc(t.dispute_type)}</span>
-      <span class="tg-conf">${T('tgConf')} <b>${esc(t.classification_confidence)}</b></span></div>
-    <div class="tg-claim"><b>${T('tgClaim')}:</b> ${esc(t.normalized_claim)}${t.requested_amount!=null?` · ${T('tgClaimed')} ${CUR}${esc(t.requested_amount)}`:''}</div>
-    <div class="tg-reason">${esc(t.classification_reasoning)}</div>
-    ${sigs?`<div class="tg-sigs">${T('tgSigs')}: ${sigs}</div>`:''}
-    <div class="tg-foot">${T('tgFoot')(esc(t.dispute_id||'-'))}</div>`;
-  timeline.appendChild(d); scroll();
-}
-function addSafetyNet(sn){
-  const card = document.createElement('div'); card.className = 'safety-box' + (sn.triggered?' triggered':' passed');
-  const chk = sn.checks||{}, src = chk.evidence_sources||{};
-  const rows = Object.keys(src).map(k => { const i = src[k];
-    return `<div class="sn-row"><span class="sn-k">${esc(k)}</span><span class="sn-v">${T('snCount')(i.count,i.threshold)}</span>
-      <span class="sn-f ${i.near_empty?'bad':'good'}">${i.near_empty?T('snEmpty'):T('snOk')}</span></div>`; }).join('');
-  const reasons = (sn.reasons||[]).map(x => `<div class="sn-reason">✗ ${esc(x)}</div>`).join('');
-  const short = chk.distinct_evidence_points < chk.min_evidence_points;
-  card.innerHTML = `<div class="sn-head">${T('snHead')}</div>
-    <div class="sn-row"><span class="sn-k">${T('snPoints')}</span>
-      <span class="sn-v">${T('snCount')(chk.distinct_evidence_points, chk.min_evidence_points)}</span>
-      <span class="sn-f ${short?'bad':'good'}">${short?T('snShort'):T('snMet')}</span></div>
-    ${rows}${reasons}<div class="sn-verdict">${sn.triggered?T('snTrig'):T('snPass')}</div>`;
-  timeline.appendChild(card); scroll();
-}
-function addRuling(r){
-  const card = document.createElement('div'); const ma = r.model_assessment||null, sn = r.safety_net||null;
-  card.className = 'ruling' + (r.ruling==='escalated'?' escalated':'');
-  const cls = {upheld:'upheld',rejected:'rejected',partial:'partial',escalated:'escalated'}[r.ruling]||'partial';
-  const ev = (r.evidence_cited||[]).map(e => `<div class="r-ev">${esc(e)}</div>`).join('');
-  const refund = r.refund_amount!=null ? `<div class="refund">${T('refund')} <b>${CUR}${esc(r.refund_amount)}</b></div>` : '';
-  const gw = r.goodwill_credit ? `<div class="refund">${T('goodwill')} <b>${CUR}${esc(r.goodwill_credit)}</b></div>` : '';
-  const pp = r.policy_path;
-  let ppBox = '';
-  if (pp){
-    const bk = r.confidence_breakdown ? Object.keys(r.confidence_breakdown).map(k => `<span class="tg-sig">${esc((T('cbk')||{})[k]||k)} ${esc(r.confidence_breakdown[k])}</span>`).join('') : '';
-    ppBox = `<div class="triage-box"><div class="tg-head">${T('ppHead')}</div>
-      <div class="tg-line"><span class="tg-badge">${esc((T('ppPath')||{})[pp.path]||pp.path)}</span>
-      <span class="tg-conf">${T('ppClauses')}: ${esc((r.policy_clauses||[]).join(', ')||pp.clause)}</span>
-      ${pp.required_confidence!=null?`<span class="tg-conf">${T('ppReq')} <b>${esc(pp.required_confidence)}</b></span>`:''}</div>
-      ${pp.fraud_flag?`<div class="tg-reason">${T('ppFraud')}</div>`:''}
-      ${(pp.reasons||[]).map(x=>`<div class="tg-reason">${esc(x)}</div>`).join('')}
-      ${bk?`<div class="tg-sigs">${T('ppBreak')}: ${bk}</div>`:''}</div>`;
-  }
-  const rec = r.recommendation ? `<div class="ma-box"><div class="ma-head">${T('recHead')}</div><div class="ma-line"><b>${T('maRuling')}</b> ${esc(rulingLabel(r.recommendation.ruling))}　<b>${T('maRefund')}</b> ${r.recommendation.refund_amount!=null?CUR+esc(r.recommendation.refund_amount):'-'}</div></div>` : '';
-  let sfBox = '';
-  if (r.case_file){
-    sfBox = `<div class="ma-box"><div class="ma-head">${T('sfHead')}</div>${(r.case_file.facts||[]).map(x=>`<div class="r-ev">${esc(x)}</div>`).join('')}
-      <div class="ma-head" style="margin-top:8px">${T('sfInterim')}</div>${(r.case_file.interim_measures||[]).map(x=>`<div class="r-ev">${esc(x)}</div>`).join('')}
-      <div class="ma-reason">${T('sfNote')}</div></div>`;
-  }
-  const esc_ = (r.escalation_required && r.escalation_summary) ? `<div class="esc-box">${esc(r.escalation_summary)}</div>` : '';
-  let maBox = '';
-  if (ma){
-    const maEv = (ma.evidence_cited||[]).map(e => `<div class="r-ev">${esc(e)}</div>`).join('');
-    maBox = `<div class="ma-box"><div class="ma-head">${T('maHead')(sn&&sn.triggered)}</div>
-      <div class="ma-line"><b>${T('maRuling')}</b> ${esc(rulingLabel(ma.ruling))}　<b>${T('maRefund')}</b> ${ma.refund_amount!=null?CUR+esc(ma.refund_amount):'-'}　<b>${T('conf')}</b> ${esc(ma.confidence_score)}</div>
-      <div class="ma-reason">${esc(ma.reasoning)}</div>${maEv}</div>`;
-  }
-  card.innerHTML = `<div class="r-head"><span class="badge ${cls}">${esc(rulingLabel(r.ruling))}</span>
-      <span class="conf">${T('conf')} <b>${esc(r.confidence_score)}</b>${r.ruling==='escalated'?T('escalated'):(r.escalation_required?T('pendApproval'):'')}</span>${refund}${gw}</div>
-    ${sn&&sn.triggered?`<div class="sn-flag">${T('snFlag')}</div>`:''}
-    <div class="r-reason">${esc(r.reasoning)}</div><div class="r-ev-title">${T('evTitle')}</div>${ev}${ppBox}${rec}${sfBox}${maBox}${esc_}`;
-  timeline.appendChild(card); scroll();
-}
-
-function appendEvent(ev){
-  ev.agent = ev.agent || ev.role;   // safety-net events carry `role` only
-  switch (ev.type){
-    case 'phase':
-      addPhase(ev.message);
-      if (ev.phase==='intake') setAgentStatus('intake','active');
-      else if (ev.phase==='advocates'){ setAgentStatus('rider_advocate','active'); setAgentStatus('driver_advocate','active'); }
-      else if (ev.phase==='cases_submitted'){ setAgentStatus('rider_advocate','done'); setAgentStatus('driver_advocate','done'); addCases(ev.rider_case, ev.driver_case); }
-      else if (ev.phase==='judge') setAgentStatus('judge','active');
-      else if (ev.phase==='safety_net') setAgentStatus('safety_net','active');
-      else if (ev.phase==='safety_intake') setAgentStatus('safety_net','active');
-      break;
-    case 'complaint_received': addComplaint(ev.complaint, ev.trip_id); break;
-    case 'triage_result': setAgentStatus('intake','done'); addTriage(ev); break;
-    case 'thinking': addThinking(ev.agent, ev.content); break;
-    case 'tool_call': addToolCall(ev.agent, ev.tool, ev.args, ev.summary); break;
-    case 'tool_result': addToolResult(ev.agent, ev.tool, ev.ok, ev.result); break;
-    case 'safety_net': setAgentStatus('safety_net','done'); addSafetyNet(ev); break;
-    case 'ruling': setAgentStatus('judge','done'); setAgentStatus('safety_net','done'); addRuling(ev.ruling); break;
-    case 'warning': addThinking(ev.agent, ev.content); break;
-    case 'done': break;
-    case 'error': {
-      const d = document.createElement('div'); d.className = 'err';
-      let msg = ev.message + '\n' + (ev.trace||'');
-      if (/429|quota|rate|RESOURCE_EXHAUSTED/i.test(msg)) msg = T('rateLimit') + msg;
-      d.textContent = msg; timeline.appendChild(d); scroll(); } break;
-  }
-}
-
-function extraQuery(){
-  const be = (document.getElementById('backendSelect')||{}).value || '';
-  return (be ? `&mode=${encodeURIComponent(be)}` : '') + `&lang=${LANG}`;
-}
-function openStream(url, btn, busyText, kind){
-  btn.disabled = true; btn.textContent = busyText; busy = kind; resetUI();
-  const es = new EventSource(url);
-  const restore = () => { busy = null; btn.disabled = false; btn.textContent = btn===fileBtn ? T('submit') : T('replay'); };
-  es.onmessage = e => { const ev = JSON.parse(e.data); if (ev.type==='done'){ es.close(); restore(); return; } appendEvent(ev); };
-  es.onerror = () => { es.close(); restore(); };
-  const watcher = setInterval(() => { if (es.readyState===2){ clearInterval(watcher); restore(); } }, 400);
-}
-function runFreeform(){
-  const text = (complaintInput.value||'').trim(), tripId = tripSel.value;
-  if (!text){ complaintInput.focus(); return; } if (!tripId) return;
-  openStream(`/api/file/stream?trip_id=${encodeURIComponent(tripId)}&complaint=${encodeURIComponent(text)}${extraQuery()}`, fileBtn, T('ruling_btn'), 'file');
-}
-function runPreset(){
-  const id = sel.value; if (!id) return;
-  openStream(`/api/resolve/${id}/stream?${extraQuery().replace(/^&/,'')}`, runBtn, T('replaying'), 'run');
-}
-fileBtn.addEventListener('click', runFreeform);
-runBtn.addEventListener('click', runPreset);
-complaintInput.addEventListener('keydown', e => { if ((e.metaKey||e.ctrlKey) && e.key==='Enter') runFreeform(); });
 boot();
