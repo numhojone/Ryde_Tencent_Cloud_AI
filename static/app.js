@@ -12,12 +12,12 @@ const I18N = {
     placeholder:'Describe what went wrong, in your own words…',
     tryHint:'Try:', chipEn:'English', chipSl:'Singlish', chipMs:'Malay', chipTa:'Tamil', chipZh:'Chinese',
     tripLbl:'Trip', submit:'Submit and rule', ruling_btn:'Ruling…',
-    fileFoot:"Evidence can only come from a real trip: GPS, chat and app events are pulled by the platform, you don't supply them.",
+    fileFoot:"Your story picks the category and the trip; the platform's own records (GPS, chat, fares, app events) decide the ruling.",
     a_intake:'Intake agent', a_rider:'Rider advocate', a_driver:'Driver advocate', a_judge:'Judge', a_safety:'Safety net',
     p_rider:'Rider', p_system:'Policy engine',
     idle:'Idle', working:'Gathering…', finished:'Done', reasoning:'Reasoning',
     emptyHint:'<strong>A dispute is settled here as a group chat.</strong><br>'
-      + 'Write the complaint in your own words in the composer below, pick the trip and press “Submit and rule”.<br>'
+      + 'Write the complaint in your own words below and press “Submit and rule”. The trip is matched from your story, or you can pick it.<br>'
       + 'The intake agent classifies it, a rider advocate and a driver advocate gather evidence and argue in parallel, '
       + 'then a judge verifies the evidence independently and rules.'
       + '<span class="es-note">The dropdown in the header replays the preset tickets.</span>',
@@ -49,6 +49,21 @@ const I18N = {
         get_traffic_reference:'Traffic',get_fare_breakdown:'Fare breakdown',get_damage_evidence:'Damage photos',
         search_precedents:'Precedents'},
     rateLimit:'Real LLM quota / rate limit (429). Switch the backend at the top right to "Deterministic fallback" and run again: same flow, same tools, same rulings, only the reasoning steps are scripted.\n\n',
+    tripAuto:'Auto-detect from my story', cbAuto:'Trip: auto-detect', chipVague:'Vague',
+    cbFootAuto:'No dispute type or trip selected: the intake agent works both out from these words',
+    tmMatched:(id, p, d)=>`Matched your trip ${id} (${p} to ${d})`, tmConf:'Match confidence', tmWhy:'Why this trip',
+    tuPick:'Pick the trip and I will file the same words against it:', tuNone:'no matching details',
+    tuScore:'score', st_completed:'completed', st_cancelled:'cancelled',
+    tkHead:'Ticket filed', tkType:'Dispute type', tkAmount:'Claimed amount', tkRes:'Requested resolution', tkTrip:'Trip',
+    tkFiled:'Filed', tkNotStated:'not stated', tkFacts:'Extracted from the story', tkMissing:'Would help, but not in the story',
+    tkCheck:'Story vs platform records', tkCheckNote:'Informational only: this never changes the ruling.',
+    tkJson:'View ticket JSON', tkNoFacts:'No specific facts stated', tkAutoMatched:'auto-matched',
+    ccStatus:{consistent:'consistent', discrepancy:'discrepancy', not_in_record:'not in record'}, ccRecord:'record',
+    fk:{quoted_amount:'Quoted / expected', charged_amount:'Charged', claimed_difference:'Difference claimed', fee_type:'Fee type',
+        pickup_place:'Pickup', dropoff_place:'Drop-off', time_mentions:'Time', driver_actions:'Driver', rider_actions:'Rider',
+        safety_indicators:'Safety indicators', detected_language:'Language'},
+    fee:{cleaning_fee:'Cleaning fee', cancellation_fee:'Cancellation fee', damage_fee:'Damage fee'},
+    langName:{en:'English', 'en-SG':'Singlish', ms:'Malay', ta:'Tamil', zh:'Chinese'},
   },
   zh: {
     tagline:'多智能体自主争议裁决 · 腾讯云 AI CAN DO IT 2026',
@@ -59,12 +74,12 @@ const I18N = {
     placeholder:'用你自己的话说说发生了什么…',
     tryHint:'试试：', chipEn:'英文', chipSl:'新加坡式英语', chipMs:'马来语', chipTa:'泰米尔语', chipZh:'中文',
     tripLbl:'关联行程', submit:'提交并裁决', ruling_btn:'裁决中…',
-    fileFoot:'证据只能来自真实发生过的行程：GPS、聊天、App 事件都由平台调取，不需要你提供。',
+    fileFoot:'你的描述决定争议类型和行程；裁决依据平台自己的记录（GPS、聊天、车费、App 事件）。',
     a_intake:'受理分类智能体', a_rider:'乘客辩护智能体', a_driver:'司机辩护智能体', a_judge:'法官智能体', a_safety:'安全网校验',
     p_rider:'乘客', p_system:'政策引擎',
     idle:'待命', working:'取证中…', finished:'已完成', reasoning:'推理',
     emptyHint:'<strong>这里以群聊的方式裁决一场争议。</strong><br>'
-      + '在下方输入框用你自己的话写下投诉，选好行程，点「提交并裁决」。<br>'
+      + '在下方输入框用你自己的话写下投诉，点「提交并裁决」。行程会根据你的描述自动匹配，也可以手动选择。<br>'
       + '受理智能体先判定争议类型，乘客方与司机方辩护智能体并行取证、各执一词，'
       + '法官再独立核验证据并给出裁决。'
       + '<span class="es-note">顶栏的下拉可重放预置工单。</span>',
@@ -96,6 +111,21 @@ const I18N = {
         get_traffic_reference:'路况参考',get_fare_breakdown:'费用明细',get_damage_evidence:'损坏证据',
         search_precedents:'先例检索'},
     rateLimit:'真实 LLM 额度/限流（429）。请把右上角后端切换为「确定性回退」再跑一次 —— 流程、工具与裁决结果完全一致，只是推理步骤由剧本驱动。\n\n',
+    tripAuto:'根据我的描述自动识别', cbAuto:'行程：自动识别', chipVague:'描述含糊',
+    cbFootAuto:'未选择争议类型和行程：受理智能体会从这段话里判断',
+    tmMatched:(id, p, d)=>`已匹配到你的行程 ${id}（${p} 至 ${d}）`, tmConf:'匹配置信度', tmWhy:'匹配依据',
+    tuPick:'请选择行程，我会用同一段话针对该行程建档：', tuNone:'无匹配细节',
+    tuScore:'得分', st_completed:'已完成', st_cancelled:'已取消',
+    tkHead:'工单已建档', tkType:'争议类型', tkAmount:'主张金额', tkRes:'诉求', tkTrip:'行程',
+    tkFiled:'建档时间', tkNotStated:'未提及', tkFacts:'从描述中提取的事实', tkMissing:'有帮助但描述中未提及',
+    tkCheck:'描述与平台记录对照', tkCheckNote:'仅供参考：不会影响裁决。',
+    tkJson:'查看工单 JSON', tkNoFacts:'未提及具体事实', tkAutoMatched:'自动匹配',
+    ccStatus:{consistent:'一致', discrepancy:'不一致', not_in_record:'记录中无此项'}, ccRecord:'记录',
+    fk:{quoted_amount:'报价 / 预期', charged_amount:'被收取', claimed_difference:'主张差额', fee_type:'费用类型',
+        pickup_place:'上车点', dropoff_place:'下车点', time_mentions:'时间', driver_actions:'司机', rider_actions:'乘客',
+        safety_indicators:'安全指标', detected_language:'语言'},
+    fee:{cleaning_fee:'清洁费', cancellation_fee:'取消费', damage_fee:'损坏费'},
+    langName:{en:'英语', 'en-SG':'新加坡式英语', ms:'马来语', ta:'泰米尔语', zh:'中文'},
   },
 };
 const CUR = 'S$';
@@ -173,12 +203,14 @@ function renderDropdowns(){
     o.textContent = `${x.dispute_id} · ${typeLabel(x.dispute_type)} · ${x.description.slice(0,24)}…`;
     sel.appendChild(o);
   });
+  const auto = document.createElement('option'); auto.value = 'auto'; auto.textContent = T('tripAuto');
+  tripSel.appendChild(auto);
   trips.forEach(x => {
     const o = document.createElement('option'); o.value = x.trip_id;
     o.textContent = `${x.trip_id} · ${x.route}${x.outcome ? ' · ' + x.outcome : ''}`;
     tripSel.appendChild(o);
   });
-  if (cur) sel.value = cur; if (curT) tripSel.value = curT;
+  if (cur) sel.value = cur; tripSel.value = curT || 'auto';
 }
 
 /* Participant strip: who is in this chat, and who is working right now. */
@@ -409,37 +441,134 @@ function heading(text){ const h = document.createElement('h4'); h.textContent = 
 
 let complaintShown = false;
 function addComplaint(text, tripId, foot){
-  const {row, stack} = msgRow('rider', `${T('cbTrip')} ${tripId}`);
+  const {row, stack} = msgRow('rider', tripId ? `${T('cbTrip')} ${tripId}` : T('cbAuto'));
   const b = bubble(stack, 'complaint');
   const q = document.createElement('div'); q.className = 'c-quote'; q.textContent = text;
-  const f = document.createElement('div'); f.className = 'c-foot'; f.textContent = foot || T('cbFoot');
+  const f = document.createElement('div'); f.className = 'c-foot'; f.textContent = foot || (tripId ? T('cbFoot') : T('cbFootAuto'));
   b.appendChild(q); b.appendChild(f);
   append(row);
   complaintShown = true;
   setRoster('rider', 'done');
 }
 
-function addTriage(t){
+/* ---- story -> trip */
+const splitRoute = r => { const p = String(r || '').split(' → '); return [p[0] || '?', p[1] || '?']; };
+function fmtTime(iso){
+  if (!iso) return '';
+  const d = new Date(iso); if (isNaN(d)) return iso;
+  return d.toLocaleString(LANG === 'zh' ? 'zh-CN' : 'en-SG',
+    {timeZone:'Asia/Singapore', day:'numeric', month:'short', hour:'2-digit', minute:'2-digit'});
+}
+
+function addTripMatched(ev){
   const {row, stack} = msgRow('intake');
-  const b = bubble(stack, 'card triage');
-  b.appendChild(heading(T('tgHead')));
+  const b = bubble(stack, 'card trip-match');
+  const [p, d] = splitRoute(ev.route);
+  const line = document.createElement('p'); line.className = 'tm-line'; line.textContent = T('tmMatched')(ev.trip_id, p, d);
+  b.appendChild(line);
+  const meta = document.createElement('div'); meta.className = 'panel-line';
+  meta.innerHTML = `${esc(T('tmConf'))} <b>${esc(conf2(ev.confidence))}</b>`;
+  b.appendChild(meta);
+  if ((ev.reasons || []).length) b.appendChild(section(T('tmWhy'), tagList(ev.reasons, 'blue')));
+  append(row);
+}
+
+function addTripUnresolved(ev){
+  const {row, stack} = msgRow('intake');
+  const b = bubble(stack, 'card trip-pick-card');
+  const msg = document.createElement('p'); msg.className = 'tm-line'; msg.textContent = ev.message || '';
+  b.appendChild(msg);
+  b.appendChild(note(T('tuPick')));
+  const list = document.createElement('div'); list.className = 'cand-list';
+  (ev.candidates || []).forEach(c => {
+    const btn = document.createElement('button'); btn.type = 'button'; btn.className = 'cand';
+    const [p, d] = splitRoute(c.route);
+    const top = document.createElement('span'); top.className = 'cand-route'; top.textContent = `${p} → ${d}`;
+    const sub = document.createElement('span'); sub.className = 'cand-sub';
+    sub.textContent = [c.trip_id, fmtTime(c.time), T('st_' + c.status) || c.status].filter(Boolean).join(' · ');
+    btn.appendChild(top); btn.appendChild(sub);
+    if ((c.reasons || []).length) btn.appendChild(tagList(c.reasons.slice(0, 3)));
+    btn.addEventListener('click', () => { if (!busy) resubmitWithTrip(c.trip_id); });
+    list.appendChild(btn);
+  });
+  b.appendChild(list);
+  append(row);
+  seal('intake');
+}
+
+/* ---- the filed ticket, in the official format */
+let lastTriage = null;
+function money(v){ return (typeof v === 'number' && isFinite(v)) ? CUR + v.toFixed(2) : String(v); }
+function factValue(k, v){
+  if (Array.isArray(v)) return v.length ? tagList(v) : null;
+  if (v == null || v === '') return null;
+  if (/_amount$|_difference$/.test(k)) return money(v);
+  if (k === 'fee_type') return (T('fee') || {})[v] || v;
+  if (k === 'detected_language') return (T('langName') || {})[v] || v;
+  return String(v);
+}
+
+function addTicket(ev){
+  const t = ev.ticket || {}, f = t.extracted_facts || {}, tr = lastTriage || {};
+  const {row, stack} = msgRow('intake', t.dispute_id);
+  const b = bubble(stack, 'card ticket');
+  b.appendChild(heading(T('tkHead')));
   const line = document.createElement('div'); line.className = 'panel-line';
   const badge = document.createElement('span'); badge.className = 'tag rose';
-  badge.textContent = t.dispute_type_label || typeLabel(t.dispute_type);
+  badge.textContent = ev.dispute_type_label || typeLabel(t.dispute_type);
   const raw = document.createElement('span'); raw.className = 't-type'; raw.textContent = t.dispute_type;
   const cf = document.createElement('span');
-  cf.innerHTML = `${esc(T('tgConf'))} <b>${esc(conf2(t.classification_confidence))}</b>`;
+  const conf = ev.classification_confidence != null ? ev.classification_confidence : tr.classification_confidence;
+  cf.innerHTML = `${esc(T('tgConf'))} <b>${esc(conf2(conf))}</b>`;
   line.appendChild(badge); line.appendChild(raw); line.appendChild(cf);
   b.appendChild(line);
-  const claim = t.normalized_claim + (t.requested_amount != null ? ` · ${T('tgClaimed')} ${CUR}${t.requested_amount}` : '');
-  const kv = kvList([[T('tgClaim'), claim]]);
-  kv.style.marginTop = '11px';
+
+  const tm = ev.trip_match;
+  const trip = t.trip_id + (tm ? ` · ${tm.route} · ${T('tkAutoMatched')} ${conf2(tm.confidence)}` : '');
+  const kv = kvList([
+    [T('tkAmount'), t.requested_amount != null ? money(t.requested_amount) : T('tkNotStated')],
+    [T('tkRes'), t.requested_resolution || '-'],
+    [T('tkTrip'), trip],
+    [T('tkFiled'), fmtTime(t.filed_at)],
+  ]);
+  kv.classList.add('tk-kv');
   b.appendChild(kv);
-  const reason = document.createElement('p'); reason.className = 'note'; reason.textContent = t.classification_reasoning;
-  b.appendChild(reason);
-  if ((t.detected_signals || []).length) b.appendChild(section(T('tgSigs'), tagList(t.detected_signals)));
-  const foot = document.createElement('p'); foot.className = 'note'; foot.textContent = T('tgFoot')(t.dispute_id || '-');
-  b.appendChild(foot);
+  if (tr.classification_reasoning) b.appendChild(note(tr.classification_reasoning));
+  const sigs = ev.detected_signals || tr.detected_signals || [];
+  if (sigs.length) b.appendChild(section(T('tgSigs'), tagList(sigs)));
+
+  const rows = [];
+  Object.keys(T('fk')).forEach(k => {
+    const v = factValue(k, f[k]);
+    if (v != null) rows.push([(T('fk') || {})[k] || k, v, typeof v !== 'string']);
+  });
+  b.appendChild(section(T('tkFacts'), rows.length ? kvList(rows) : note(T('tkNoFacts'))));
+
+  if ((t.missing_info || []).length) b.appendChild(section(T('tkMissing'), bullets(t.missing_info)));
+
+  if ((t.claim_check || []).length){
+    const box = document.createElement('div'); box.className = 'sn-rows cc-rows';
+    t.claim_check.forEach(c => {
+      const r = document.createElement('div'); r.className = 'sn-row';
+      const ks = document.createElement('span'); ks.className = 'sk'; ks.textContent = c.label || c.claim;
+      const unit = /speed|distance/.test(c.claim) ? (v => String(v)) : money;
+      const vs = document.createElement('span'); vs.className = 'sv';
+      vs.textContent = unit(c.story_value) + (c.record_value != null ? `  ·  ${T('ccRecord')} ${unit(c.record_value)}` : '');
+      const fs = document.createElement('span');
+      fs.className = 'sf ' + (c.status === 'consistent' ? 'good' : c.status === 'discrepancy' ? 'bad' : 'na');
+      fs.textContent = (T('ccStatus') || {})[c.status] || c.status;
+      r.appendChild(ks); r.appendChild(vs); r.appendChild(fs); box.appendChild(r);
+    });
+    const s = section(T('tkCheck'), box);
+    s.appendChild(note(T('tkCheckNote')));
+    b.appendChild(s);
+  }
+
+  const det = document.createElement('details'); det.className = 'tk-json';
+  const sum = document.createElement('summary'); sum.textContent = T('tkJson');
+  const pre = document.createElement('pre'); pre.textContent = JSON.stringify(t, null, 2);
+  det.appendChild(sum); det.appendChild(pre);
+  b.appendChild(det);
   append(row);
   seal('intake');
 }
@@ -679,7 +808,11 @@ function render(ev){
       break;
     case '_case': addCaseCard(ev.who, ev.case); break;
     case 'complaint_received': addComplaint(ev.complaint, ev.trip_id); showTyping('intake'); break;
-    case 'triage_result': hideTyping('intake'); setRoster('intake','done'); seal('intake'); addTriage(ev); break;
+    case 'trip_matched': addTripMatched(ev); break;
+    case 'trip_unresolved': hideTyping('intake'); setRoster('intake','done'); sealAll(); addTripUnresolved(ev); break;
+    // The ticket card (ticket_filed) replaces the triage card; keep the triage for its confidence and reasoning.
+    case 'triage_result': lastTriage = ev; break;
+    case 'ticket_filed': hideTyping('intake'); setRoster('intake','done'); seal('intake'); addTicket(ev); break;
     case 'agent_start': showTyping(ev.agent); break;
     case 'agent_final': hideTyping(ev.agent); seal(ev.agent); break;
     case 'thinking': hideTyping(ev.agent); addThinking(ev.agent, ev.content); showTyping(ev.agent); break;
@@ -704,7 +837,8 @@ function render(ev){
    up — with a real LLM backend the stream paces itself and nothing is added. */
 const PACE_BUDGET = 2200, PACE_MIN = 160, PACE_MAX = 520;
 const WEIGHT = {
-  thinking:1, complaint_received:1, triage_result:1, safety_net:1, warning:1, error:1, _case:1,
+  thinking:1, complaint_received:1, triage_result:0, safety_net:1, warning:1, error:1, _case:1,
+  trip_matched:1, trip_unresolved:1, ticket_filed:1,
   phase:0.55, ruling:0.6, tool_call:0.15, tool_result:0, agent_start:0, agent_final:0, done:0,
 };
 let queue = [], pumping = false, paceLeft = PACE_BUDGET;
@@ -736,7 +870,7 @@ async function pump(){
 
 /* ---------------------------------------------------------------- run control */
 function resetUI(){
-  queue = []; paceLeft = PACE_BUDGET; complaintShown = false;
+  queue = []; paceLeft = PACE_BUDGET; complaintShown = false; lastTriage = null;
   bubbleFor = {}; pendingChips = {}; typingEls = {};
   chat.querySelectorAll(':scope > *').forEach(n => { if (n !== typingZone) n.remove(); });
   typingZone.innerHTML = '';
@@ -764,11 +898,20 @@ function openStream(url, btn, busyText, kind){
 }
 
 function runFreeform(){
-  const text = (complaintInput.value || '').trim(), tripId = tripSel.value;
+  const text = (complaintInput.value || '').trim(), tripId = tripSel.value || 'auto';
   if (!text){ complaintInput.focus(); return; }
-  if (!tripId) return;
+  if (busy) return;
+  lastStory = text;
   openStream(`/api/file/stream?trip_id=${encodeURIComponent(tripId)}&complaint=${encodeURIComponent(text)}${extraQuery()}`,
              fileBtn, T('ruling_btn'), 'file');
+}
+/* The rider picked one of the candidate trips: file the same words against it. */
+let lastStory = '';
+function resubmitWithTrip(tripId){
+  tripSel.value = tripId;
+  if (lastStory) complaintInput.value = lastStory;
+  growInput();
+  runFreeform();
 }
 function runPreset(){
   const id = sel.value; if (!id) return;

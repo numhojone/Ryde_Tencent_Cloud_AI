@@ -323,8 +323,35 @@ button,select,textarea,input{font-family:inherit}
 .sn-reasons li{color:var(--brand)}
 .sn-reasons li:before{background:var(--brand)}
 
-/* --- triage card --- */
-.triage .t-type{font-family:var(--mono);font-size:11.5px;color:var(--mut)}
+/* --- ticket card (replaces the triage card) --- */
+.ticket .t-type{font-family:var(--mono);font-size:11.5px;color:var(--mut)}
+.ticket .tk-kv{margin-top:11px}
+.ticket .kv .k{min-width:118px}
+.ticket .kv .v .taglist{margin-top:1px}
+.sn-row .sf.na{color:var(--mut);background:var(--surface-3)}
+.cc-rows .sv{white-space:normal;text-align:right}
+.tk-json{margin-top:13px;padding-top:11px;border-top:1px solid var(--line)}
+.tk-json summary{cursor:pointer;font-size:12.5px;font-weight:600;color:var(--accent);list-style-position:inside}
+.tk-json summary:focus-visible{outline:2px solid var(--brand);outline-offset:2px;border-radius:4px}
+.tk-json pre{
+  margin:9px 0 0;padding:10px 12px;border:1px solid var(--line);border-radius:var(--radius-sm);background:var(--surface);
+  font-family:var(--mono);font-size:11.5px;line-height:1.5;color:var(--txt-2);
+  white-space:pre-wrap;overflow-wrap:anywhere;max-height:360px;overflow:auto;
+}
+
+/* --- trip matched / which trip --- */
+.tm-line{margin:0 0 6px;font-size:14.5px;line-height:1.55;color:var(--txt);font-weight:550}
+.cand-list{display:flex;flex-direction:column;gap:8px;margin-top:11px}
+.cand{
+  display:flex;flex-direction:column;align-items:flex-start;gap:4px;text-align:left;width:100%;
+  background:var(--surface);border:1px solid var(--line-2);border-radius:12px;padding:10px 13px;cursor:pointer;
+  color:var(--txt);font-size:14px;line-height:1.45;
+}
+.cand:hover{border-color:var(--brand);background:var(--brand-tint)}
+.cand:focus-visible{outline:2px solid var(--brand);outline-offset:2px}
+.cand .cand-route{font-weight:600;overflow-wrap:anywhere}
+.cand .cand-sub{font-size:12px;color:var(--mut);overflow-wrap:anywhere}
+.cand .taglist{margin-top:3px}
 
 /* ============================= ruling ============================= */
 .ruling{
@@ -413,7 +440,7 @@ button,select,textarea,input{font-family:inherit}
 .composer-bar{display:grid;grid-template-columns:auto 1fr auto;gap:9px;align-items:end}
 .trip-pick{display:flex;flex-direction:column;gap:4px;min-width:0}
 .trip-pick .lbl-sm{font-size:10.5px;letter-spacing:.03em;text-transform:uppercase;color:var(--mut)}
-.trip-pick .select{max-width:190px;padding:9px 10px}
+.trip-pick .select{max-width:230px;min-width:212px;padding:9px 10px}
 #complaintInput{
   width:100%;min-height:46px;max-height:140px;resize:none;
   background:var(--surface-2);color:var(--txt);border:1px solid var(--line-2);
@@ -453,6 +480,7 @@ button,select,textarea,input{font-family:inherit}
   .trip-pick{grid-column:1 / -1;flex-direction:row;align-items:center;gap:8px;min-width:0}
   .trip-pick .lbl-sm{flex:none}
   .trip-pick .select{flex:1;min-width:0;width:100%;max-width:none}
+  .ticket .kv .k{min-width:96px}
   .btn.primary{padding:11px 14px;font-size:13px}
   .r-body{padding:16px 15px 18px}
   .r-metrics{margin-left:0;width:100%}

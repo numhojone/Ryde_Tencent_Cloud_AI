@@ -157,6 +157,35 @@ def list_trips() -> list[dict]:
     return out
 
 
+def list_place_names() -> list[str]:
+    """Every pickup / drop-off place name in the trip fixtures (the gazetteer for story extraction)."""
+    names: list[str] = []
+    for p in sorted((FIXTURES_DIR / "trips").glob("*.json")):
+        td = _load_trip(p.stem).get("trip_data", {}) or {}
+        for k in ("pickup_location", "dropoff_location"):
+            n = (td.get(k) or {}).get("name")
+            if n and n not in names:
+                names.append(n)
+    return names
+
+
+def load_rider_trips() -> list[dict]:
+    """The rider's recent trips as the platform recorded them, for matching a story to a trip.
+
+    Each item is the trip_data record plus the app events and the GPS peak speed. Platform records only:
+    nothing from fixtures/expected.
+    """
+    out = []
+    for p in sorted((FIXTURES_DIR / "trips").glob("*.json")):
+        trip = _load_trip(p.stem)
+        td = dict(trip.get("trip_data", {}) or {})
+        td["trip_id"] = p.stem
+        td["app_events"] = trip.get("app_events", [])
+        td["gps_max_speed_kmh"] = max([pt.get("speed_kmh", 0) or 0 for pt in trip.get("gps_telemetry", [])], default=None)
+        out.append(td)
+    return out
+
+
 def get_trip_parties(trip_id: str) -> dict:
     """按 trip_id 取当事双方 ID。自由文本投诉里乘客不会提供自己的 ID，由系统按行程补齐。"""
     parties = _load_json("trip_parties.json")

@@ -6,44 +6,87 @@ resolve() 是异步生成器，逐条 yield 事件，供 SSE 实时推送。
 from __future__ import annotations
 
 import asyncio
+import datetime as _dt
 import time
+import uuid as _uuid
 from typing import AsyncGenerator
+from zoneinfo import ZoneInfo
 
 from app.agents.driver_advocate import DriverAdvocate
-from app.agents.intake import IntakeAgent, type_label
+from app.agents.intake import IntakeAgent, classify_by_rules, type_label
+from app.extract import extract_facts
+from app.models import TriageResult
+from app.trip_match import claim_check, match_trip
 from app.agents.judge import Judge
 from app.agents.rider_advocate import RiderAdvocate
 from app.config import settings
 from app.i18n import L, norm_lang
 from app.safety_net import apply as apply_safety_net
-from app.tools.fixtures import get_trip_parties, load_dispute_ticket
+from app.tools.fixtures import get_trip_parties, load_dispute_ticket, load_rider_trips
 from app.tools import call_tool, summarize_for_log
 
 
 _SENTINEL = object()
+_SGT = ZoneInfo("Asia/Singapore")
 
 
-async def _triage_draft(draft: dict, emit, mode: str | None, lang: str = "en") -> dict:
+async def _match_draft_trip(draft: dict, emit, lang: str) -> dict | None:
+    """No trip given: tie the story to one of the rider's recent trips, in code, before the intake agent.
+
+    Returns the match, or None when the story does not point to one trip clearly enough (then
+    trip_unresolved is emitted and nothing is ruled: a story cannot stand in for the trip's records).
+    """
+    story = draft["complaint"]
+    cat, signals = classify_by_rules(story)
+    facts = extract_facts(story, lang)
+    m = match_trip(story, facts, load_rider_trips(), category=cat if signals else None, lang=lang)
+    if m["trip_id"]:
+        await emit({"type": "trip_matched", "trip_id": m["trip_id"], "route": m["route"], "confidence": m["confidence"],
+                    "reasons": m["reasons"], "candidates": m["candidates"]})
+        return m
+    await emit({"type": "trip_unresolved",
+                "message": L(lang, "I couldn't tell which of your recent trips this is about. Which one do you mean?",
+                                   "我无法确定你说的是最近哪一趟行程。是下面哪一趟？"),
+                "candidates": m["candidates"]})
+    return None
+
+
+async def _triage_draft(draft: dict, emit, mode: str | None, lang: str = "en") -> dict | None:
     """把乘客自由文本投诉转成一张正式工单。
 
     关键：description 保留乘客原话，不做任何改写 —— 下游三个智能体读到的就是用户敲进去的那句话。
+    Returns None when no trip was given and none could be matched.
     """
     await emit({"type": "phase", "phase": "intake",
                 "message": L(lang, "Intake: reading the rider's complaint and working out the dispute type", "受理乘客提交的投诉，智能体解读争议类型")})
-    await emit({"type": "complaint_received", "trip_id": draft["trip_id"],
+    await emit({"type": "complaint_received", "trip_id": draft.get("trip_id"),
                 "complaint": draft["complaint"]})
+
+    match = None
+    if not draft.get("trip_id"):
+        match = await _match_draft_trip(draft, emit, lang)
+        if not match:
+            return None
+        draft = {**draft, "trip_id": match["trip_id"], "match": match}
 
     ia = IntakeAgent(emit, mode=mode, lang=lang)
     res = await ia.run({"draft": draft})
-    triage = res.output.model_dump() if res.output else None
-    if not triage:
-        raise RuntimeError(L(lang, "The intake agent produced no classification", "受理分类智能体未产出分类结果"))
+    if isinstance(res.output, TriageResult):
+        triage = res.output.model_dump()
+    else:
+        # Missing or malformed model output: use the rule-based intake on the same story and trip.
+        status = (ia._gathered.get("get_trip_data") or {}).get("status")
+        triage = ia.rule_result({"draft": draft}, status).model_dump()
+        await emit({"type": "warning", "agent": "intake", "role": "intake",
+                    "content": L(lang, "Intake output could not be validated; used the rule-based extractor instead.",
+                                       "受理输出未通过校验，已改用规则提取器。")})
 
     parties = get_trip_parties(draft["trip_id"])
-    import datetime as _dt
-    import uuid as _uuid
     dispute_id = f"DISP-{_uuid.uuid4().hex[:6].upper()}"
-    ticket = {
+    record = next((t for t in load_rider_trips() if t["trip_id"] == draft["trip_id"]), {})
+    facts = triage["extracted_facts"]
+    # The ticket in the same format as the sample tickets (fixtures/disputes), plus what the story says.
+    official = {
         "dispute_id": dispute_id,
         "trip_id": draft["trip_id"],
         "filed_by": "rider",
@@ -52,12 +95,17 @@ async def _triage_draft(draft: dict, emit, mode: str | None, lang: str = "en") -
         "dispute_type": triage["dispute_type"],
         # 乘客原话，一字不改地交给下游
         "description": draft["complaint"],
-        "filed_at": _dt.datetime.now().astimezone().isoformat(),
+        "filed_at": _dt.datetime.now(_SGT).isoformat(timespec="seconds"),
+        "status": "open",
         "requested_resolution": triage.get("requested_resolution"),
         "requested_amount": triage.get("requested_amount"),
-        "source": "free_text",
-        "triage": triage,
+        "extracted_facts": facts,
+        "missing_info": triage.get("missing_info", []),
+        # Story vs platform records. Informational only: not passed to the agents that rule.
+        "claim_check": claim_check(draft["complaint"], facts, record, lang),
     }
+    ticket = {k: v for k, v in official.items() if k != "claim_check"}
+    ticket.update({"source": "free_text", "triage": triage})
     await emit({
         "type": "triage_result",
         "dispute_id": dispute_id,
@@ -70,6 +118,11 @@ async def _triage_draft(draft: dict, emit, mode: str | None, lang: str = "en") -
         "requested_amount": triage.get("requested_amount"),
         "complaint": draft["complaint"],
     })
+    await emit({"type": "ticket_filed", "ticket": official,
+                "dispute_type_label": type_label(official["dispute_type"], lang),
+                "classification_confidence": triage["classification_confidence"],
+                "detected_signals": triage.get("detected_signals", []),
+                "trip_match": {k: match[k] for k in ("trip_id", "route", "confidence", "reasons")} if match else None})
     return ticket
 
 
@@ -118,6 +171,9 @@ async def _run_flow(dispute_id: str, emit, mode: str | None = None,
                     draft: dict | None = None, lang: str = "en") -> None:
     if draft is not None:
         ticket = await _triage_draft(draft, emit, mode, lang)
+        if ticket is None:                     # no trip resolved: never rule on a story alone
+            await emit({"type": "done"})
+            return
     else:
         ticket = load_dispute_ticket(dispute_id)
     t0 = time.time()

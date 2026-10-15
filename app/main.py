@@ -4,7 +4,7 @@ Endpoints:
 - GET  /                          web UI
 - GET  /api/health                mode / provider / model
 - GET  /api/disputes, /api/trips  sample disputes and trips
-- GET  /api/file/stream           free-text complaint + trip -> SSE event stream (main demo path)
+- GET  /api/file/stream           free-text complaint (+ optional trip; else auto-matched) -> SSE event stream
 - POST /api/file                  same, synchronous (tests / integration)
 - GET  /api/resolve/{id}/stream   SSE for a preset dispute
 - POST /api/resolve/{id}          synchronous run of a preset dispute
@@ -57,26 +57,32 @@ async def get_trips():
 
 
 def _norm_draft(trip_id: str | None, complaint: str | None, lang: str = "en") -> dict | None:
-    """Validate and normalise a free-text complaint draft."""
+    """Validate and normalise a free-text complaint draft.
+
+    trip_id is optional: empty or "auto" means match the story to one of the rider's recent trips.
+    """
     if not complaint or not complaint.strip():
         return None
     tid = (trip_id or "").strip()
-    if not tid:
-        raise HTTPException(status_code=400, detail=L(lang, "trip_id is required: evidence must come from a real trip", "缺少 trip_id：证据必须来自一条真实行程"))
+    if tid.lower() == "auto":
+        tid = ""
     text = complaint.strip()
     if len(text) > 2000:
         raise HTTPException(status_code=400, detail=L(lang, "Complaint too long (max 2000 characters)", "投诉内容过长（上限 2000 字）"))
-    return {"trip_id": tid, "complaint": text}
+    return {"trip_id": tid or None, "complaint": text}
 
 
 @app.get("/api/file/stream")
-async def file_stream(trip_id: str, complaint: str, mode: str | None = None, lang: str | None = None):
+async def file_stream(complaint: str, trip_id: str | None = None, mode: str | None = None, lang: str | None = None):
     """Free-text complaint + SSE stream.
 
-    The rider supplies only their own words + a trip; the intake agent decides the dispute type.
+    The rider supplies only their own words, and optionally a trip (omitted / "auto": matched from the story);
+    the intake agent decides the dispute type.
     """
     lang = norm_lang(lang)
     draft = _norm_draft(trip_id, complaint, lang)
+    if draft is None:
+        raise HTTPException(status_code=400, detail=L(lang, "complaint text is required", "缺少 complaint 投诉原文"))
     m = _norm_mode(mode)
 
     async def event_gen():
@@ -103,6 +109,11 @@ async def file_sync(payload: dict):
         events.append(ev)
         if ev.get("type") == "ruling":
             ruling = ev.get("ruling")
+    unresolved = next((e for e in events if e.get("type") == "trip_unresolved"), None)
+    if unresolved:
+        # No trip could be matched to the story: nothing is ruled, the rider picks a trip and re-submits.
+        return {"status": "trip_unresolved", "message": unresolved.get("message"),
+                "candidates": unresolved.get("candidates", []), "ruling": None, "events": events}
     if ruling is None:
         raise HTTPException(status_code=500, detail=L(lang, "No ruling produced", "未产生裁决"))
     err = next((e for e in events if e.get("type") == "error"), None)
@@ -112,10 +123,14 @@ async def file_sync(payload: dict):
     ticket = next((e.get("ticket") for e in events
                    if e.get("type") == "phase" and e.get("phase") == "intake" and e.get("ticket")), None)
     triage = next((e for e in events if e.get("type") == "triage_result"), None)
+    filed = next((e.get("ticket") for e in events if e.get("type") == "ticket_filed"), None)
+    matched = next((e for e in events if e.get("type") == "trip_matched"), None)
     return {
         "dispute_id": ruling.get("dispute_id"),
         "triage": {k: v for k, v in (triage or {}).items() if k != "type"},
         "ticket": ticket,
+        "filed_ticket": filed,
+        "trip_match": {k: v for k, v in matched.items() if k != "type"} if matched else None,
         "ruling": ruling,
         "events": events,
     }

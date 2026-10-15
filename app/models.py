@@ -21,6 +21,21 @@ class DisputeTicket(BaseModel):
     requested_amount: Optional[float] = None
 
 
+class ExtractedFacts(BaseModel):
+    """Facts the rider's story states. Anything the story does not say is null / empty: never inferred."""
+    quoted_amount: Optional[float] = None
+    charged_amount: Optional[float] = None
+    claimed_difference: Optional[float] = None
+    fee_type: Optional[Literal["cleaning_fee", "cancellation_fee", "damage_fee"]] = None
+    pickup_place: Optional[str] = None
+    dropoff_place: Optional[str] = None
+    time_mentions: list[str] = Field(default_factory=list)
+    driver_actions: list[str] = Field(default_factory=list)
+    rider_actions: list[str] = Field(default_factory=list)
+    safety_indicators: list[str] = Field(default_factory=list)
+    detected_language: Optional[str] = None
+
+
 class TriageResult(BaseModel):
     """受理分类智能体的输出：把乘客自由文本投诉归类到平台支持的争议类型。"""
     dispute_type: str
@@ -31,6 +46,8 @@ class TriageResult(BaseModel):
     requested_resolution: Optional[str] = None
     detected_signals: list[str] = Field(default_factory=list, description="Signals in the complaint that drove the classification")
     safety_flag: bool = Field(default=False, description="Complaint contains safety indicators (policy 5.2): always human review")
+    extracted_facts: ExtractedFacts = Field(default_factory=ExtractedFacts)
+    missing_info: list[str] = Field(default_factory=list, description="What would help the case but the story did not say")
 
 
 class AdvocateCase(BaseModel):

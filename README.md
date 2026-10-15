@@ -8,10 +8,22 @@ Built for the **Tencent Cloud AI CAN DO IT Hackathon, Singapore 2026** (Ryde / A
 
 ---
 
+## Story in, structured ticket out
+
+The rider types what happened in their own words. The system:
+
+1. **Matches the story to one of the rider's recent trips** (`app/trip_match.py`), in code, before any agent runs. Each trip is scored on place names in the story vs its pickup / drop-off (fuzzy, case-insensitive, with local aliases such as 樟宜机场), amounts vs its quote / fare / fee fields, distance, duration and speed vs its records, dates and times, and whether the suggested category is possible for that trip (a cancelled trip cannot be a route deviation). A trip is chosen only when its score is high enough **and** clearly ahead of the next one; otherwise the rider is shown the top 3 and picks one. Nothing is ruled without a trip.
+2. **Turns the story into a ticket in the same format as the sample tickets** (`dispute_id, trip_id, filed_by, rider_id, driver_id, dispute_type, description, filed_at, status, requested_resolution, requested_amount`), with `description` kept verbatim, plus `extracted_facts` (quoted / charged amount, claimed difference, fee type, pickup / drop-off, time mentions, driver and rider actions, safety indicators, language), `missing_info`, and a `claim_check` that compares the story's numbers with the trip's records.
+3. Rules exactly as before, from the platform's records.
+
+**The honest limit:** the story only selects the category and the trip. The ruling comes from the platform's records for that trip (GPS, chat, fare logs, app events), never from the story. `claim_check` is shown to the reader and is not passed to the agents that rule. Extracted facts are only what the story states; anything it does not say is `null`. In LLM mode the model's facts are checked against the story (numbers must appear in it) and replaced by the rule extractor if malformed. In deterministic mode the extractor is regex / keyword based: it knows the place names in the trip fixtures and common phrasings in English, Singlish, Malay, Tamil and Chinese, and will miss wording outside those.
+
 ## How it works
 
 ```
- Rider's own words + trip
+ Rider's own words (+ optional trip)
+          |
+   [ Trip match ]  story -> one of the rider's recent trips, or "which trip?" (no ruling)
           |
    [ Intake agent ]  route_deviation | no_show_charge | fare_dispute | property_damage | safety_incident
           |                                                         |
@@ -77,7 +89,7 @@ Any OpenAI-compatible endpoint works (default: Google AI Studio, Gemini; Tencent
 
 ## Using it
 
-- Write a complaint in your own words (English, Singlish, Malay, Tamil or Chinese), pick a trip, press **Submit and rule**. You never choose the dispute type.
+- Write a complaint in your own words (English, Singlish, Malay, Tamil or Chinese) and press **Submit and rule**. The trip selector defaults to **Auto-detect from my story**; you can still pick a trip by hand. You never choose the dispute type. If the story does not point to one trip, the intake agent asks which one and offers the candidates as buttons.
 - **EN | 中文** toggle switches the interface and the agents' output language; rulings, clause numbers and amounts are identical in both.
 - The dropdown replays six preset tickets: DISP-001 route deviation, DISP-002 no-show, DISP-003 fare dispute (all from the official Ryde datasets), plus DISP-004 property damage, DISP-005 safety incident and DISP-006 sparse evidence (synthetic).
 
@@ -87,8 +99,10 @@ Any OpenAI-compatible endpoint works (default: Google AI Studio, Gemini; Tencent
 |---|---|
 | `GET /api/health` | mode, provider, model |
 | `GET /api/disputes`, `GET /api/trips` | preset tickets, trips a complaint can be filed against |
-| `GET /api/file/stream?trip_id=&complaint=&lang=en\|zh&mode=` | free-text complaint, SSE stream of every step |
-| `POST /api/file` | same, synchronous |
+| `GET /api/file/stream?complaint=&trip_id=&lang=en\|zh&mode=` | free-text complaint, SSE stream of every step. `trip_id` optional: empty or `auto` matches it from the story; an explicit one skips matching |
+| `POST /api/file` | same, synchronous; returns `status: trip_unresolved` with candidates and no ruling when no trip matches |
+
+New SSE events (existing ones unchanged): `trip_matched {trip_id, route, confidence, reasons, candidates}`, `trip_unresolved {message, candidates}` (followed by `done`, no ruling), `ticket_filed {ticket}`.
 | `GET /api/resolve/{id}/stream`, `POST /api/resolve/{id}` | replay a preset ticket |
 
 ## Data
@@ -99,7 +113,9 @@ Any OpenAI-compatible endpoint works (default: Google AI Studio, Gemini; Tencent
 
 ```
 app/main.py            FastAPI + SSE
-app/orchestrator.py    intake -> advocates (parallel) -> judge -> thresholds -> safety net; safety incident path
+app/orchestrator.py    trip match -> intake -> advocates (parallel) -> judge -> thresholds -> safety net; safety incident path
+app/trip_match.py      story -> trip scoring, claim_check (story vs records, informational)
+app/extract.py         rule-based story -> extracted_facts, missing_info
 app/agents/            base loop, intake, advocates, judge, cases.py, analysis.py (deterministic policy facts)
 app/thresholds.py      policy section 6 in code
 app/safety_net.py      evidence-sufficiency check per dispute type
@@ -115,6 +131,7 @@ PROJECT_DESCRIPTION.md submission write-up
 
 - The real-LLM path has not been re-run since the Policy v2.1 rebuild (it was verified on the earlier synthetic version). Offline results above are verified; treat live-model behaviour on the new dispute types as untested until you run it with a key.
 - Fixture data only: no live GPS, payment or refund execution. Rulings are decided, not executed.
-- Deterministic mode uses keyword rules for intake; arbitrary phrasing relies on the real LLM.
+- Deterministic mode uses keyword rules for intake and fact extraction; arbitrary phrasing relies on the real LLM. Trip matching only knows the six fixture trips (all treated as "the rider's recent trips") and their place names plus a small alias list.
+- The LLM path of the new ticket extraction has not been run against a live model; its validation and fallback are covered by offline tests only.
 - "At the pickup location" has no distance in the policy; we use 100 m as an operational definition. The confidence weights are our own.
 - Free-tier LLM quotas can return 429; the UI offers the deterministic fallback.

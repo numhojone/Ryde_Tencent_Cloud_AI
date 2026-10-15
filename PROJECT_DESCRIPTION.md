@@ -25,10 +25,11 @@ Disputes are high volume and small per ticket, so manual triage is slow and inco
 ## 3. Solution Design
 
 ```
-Complaint -> Intake -> Advocates (parallel) -> Judge -> Policy thresholds (6) -> Safety net -> Ruling | Human review
+Complaint -> Trip match -> Intake -> Advocates (parallel) -> Judge -> Policy thresholds (6) -> Safety net -> Ruling | Human review
                  \-> safety indicators (5.2) -> Safety case file -> Human review (no AI ruling)
 ```
 
+- **Story in, ticket out**: the rider types only their story. Code matches it to one of their recent trips (places, amounts, distances, times, category vs trip status) and asks "which trip?" with the top 3 candidates when it is not clearly one; nothing is ruled without a trip. The intake turns the story into a ticket in the official sample format, plus `extracted_facts` (only what the story states), `missing_info`, and an informational `claim_check` against the trip's records. The story picks the category and the trip; the platform's records decide the ruling.
 - **Intake agent**: five types; any safety indicator in the text forces the safety path regardless of the type the filer chose (5.2). Works in English, Singlish, Malay, Tamil and Chinese.
 - **Advocates** (rider, driver) run in parallel and cite only tool data.
 - **Judge** re-queries 11 read-only tools, applies clauses by number (1.2 to 1.4, 2.1 to 2.4, 3.2 to 3.4, 4.2 to 4.4), searches precedents (section 7) and calibrates confidence from the four factors in policy 6.3.
@@ -66,3 +67,4 @@ Complaint -> Intake -> Advocates (parallel) -> Judge -> Policy thresholds (6) ->
 - The official route sample recommends a partial refund although 6.1 sends deviations over 2 km to a human; we return the recommendation flagged as needing human approval.
 - Confidence weighting (40/30/15/15) and the 100 m pickup radius are our own definitions.
 - Fixture-based: no live GPS, payments or refund execution.
+- Trip auto-match and fact extraction are tested offline on the six fixture trips with stories in English, Singlish, Malay, Tamil and Chinese; the deterministic extractor is keyword based and the LLM extraction path has not been run against a live model.
