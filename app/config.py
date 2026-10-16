@@ -37,7 +37,8 @@ class Settings:
     # --- LLM ---
     # "llm" = call an OpenAI-compatible model (needs LLM_API_KEY); "deterministic" = scripted fallback, no key needed.
     # Legacy HUNYUAN_* variable names are still accepted as aliases.
-    llm_mode: str = field(default_factory=lambda: os.environ.get("LLM_MODE", "deterministic"))
+    # an empty value (e.g. a blank variable on a hosting dashboard) counts as unset: Offline demo
+    llm_mode: str = field(default_factory=lambda: (os.environ.get("LLM_MODE") or "deterministic").strip().lower())
     llm_api_key: str = field(default_factory=lambda: _env_first("LLM_API_KEY", "GEMINI_API_KEY", "HUNYUAN_API_KEY"))
     llm_base_url: str = field(default_factory=lambda: _env_first(
         "LLM_BASE_URL", "HUNYUAN_BASE_URL", default="https://generativelanguage.googleapis.com/v1beta/openai/"))
@@ -54,7 +55,7 @@ class Settings:
 
     # --- 服务 ---
     host: str = field(default_factory=lambda: os.environ.get("HOST", "0.0.0.0"))
-    port: int = field(default_factory=lambda: int(os.environ.get("PORT", "8000")))
+    port: int = field(default_factory=lambda: int(os.environ.get("PORT") or "8000"))   # Render sets PORT; 8000 locally
 
     # backwards-compatible aliases
     @property

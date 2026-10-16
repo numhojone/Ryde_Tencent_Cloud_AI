@@ -1,5 +1,7 @@
-openai>=1.40.0
-fastapi>=0.110.0
-uvicorn[standard]>=0.29.0
-pydantic>=2.6.0
-python-dotenv>=1.0.0
+# Runtime dependencies (everything the app imports). Install: pip install -r requirements.txt
+fastapi>=0.110.0          # web framework, SSE responses
+uvicorn[standard]>=0.29.0 # ASGI server (start command: uvicorn app.main:app)
+pydantic>=2.6.0           # data models
+openai>=1.40.0            # OpenAI-compatible client for Gemini / Hunyuan (pulls in httpx)
+python-dotenv>=1.0.0      # optional .env loading for local runs
+tzdata>=2024.1            # time-zone data for zoneinfo("Asia/Singapore") on systems without it

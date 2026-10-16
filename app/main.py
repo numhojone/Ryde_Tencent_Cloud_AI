@@ -64,22 +64,32 @@ async def auth_accounts():
     return {"riders": A.accounts()}
 
 
+def _https(request: Request) -> bool:
+    """Was this request made over HTTPS? Behind a TLS-terminating proxy (Render) the app itself sees plain http, so the
+    proxy's X-Forwarded-Proto header decides. It only switches the cookie's Secure flag on: a forged header on plain
+    http just stops that browser from sending its own cookie back."""
+    proto = (request.headers.get("x-forwarded-proto") or "").split(",")[0].strip().lower()
+    return proto == "https" or request.url.scheme == "https"
+
+
 @app.post("/api/auth/login")
-async def auth_login(payload: dict):
+async def auth_login(payload: dict, request: Request):
     """Sign in as one of the dataset's riders ({"rider_id": ...}). There is no other role."""
     rid = (payload.get("rider_id") or "").strip()
     if payload.get("role") not in (None, "rider") or rid not in {a["rider_id"] for a in A.accounts()}:
         raise HTTPException(status_code=400, detail="Unknown demo account")
     sess = {"role": "rider", "rider_id": rid}
     resp = JSONResponse({"ok": True, **sess})
-    resp.set_cookie(A.COOKIE, A.sign(sess), max_age=A.MAX_AGE, httponly=True, samesite="lax", path="/")
+    # Secure over HTTPS (the deployed site); left off on plain http so local runs keep working
+    resp.set_cookie(A.COOKIE, A.sign(sess), max_age=A.MAX_AGE, httponly=True, samesite="lax", path="/",
+                    secure=_https(request))
     return resp
 
 
 @app.post("/api/auth/logout")
-async def auth_logout():
+async def auth_logout(request: Request):
     resp = JSONResponse({"ok": True})
-    resp.delete_cookie(A.COOKIE, path="/")
+    resp.delete_cookie(A.COOKIE, path="/", secure=_https(request), httponly=True, samesite="lax")
     return resp
 
 

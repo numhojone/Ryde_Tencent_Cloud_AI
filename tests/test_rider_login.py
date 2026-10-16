@@ -203,3 +203,14 @@ def test_a_ride_has_one_case_and_choosing_it_again_reopens_it(client):
     again = client.post("/api/cases", json={"story": "long detour again", "trip_id": trip, **DET}).json()
     assert again["existing"] and again["id"] == first["id"] and again["reference"] == first["reference"]
     assert len([c for c in client.get("/api/cases").json()["cases"] if c["trip_id"] in (trip, None)]) == 1
+
+
+def test_session_cookie_is_secure_behind_https_but_works_on_plain_http(client):
+    plain = client.post("/api/auth/login", json={"rider_id": "R-3312"}).headers["set-cookie"].lower()
+    assert "secure" not in plain                               # local http: the browser must still send it back
+    behind = client.post("/api/auth/login", json={"rider_id": "R-3312"},
+                         headers={"X-Forwarded-Proto": "https"}).headers["set-cookie"].lower()
+    assert "secure" in behind and "httponly" in behind and "samesite=lax" in behind
+    client.cookies.clear()
+    client.post("/api/auth/login", json={"rider_id": "R-3312"})       # plain http: the cookie comes back and works
+    assert client.get("/api/auth/me").status_code == 200

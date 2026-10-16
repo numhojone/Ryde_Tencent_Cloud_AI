@@ -1,0 +1,22 @@
+# Render Blueprint: one free Python web service.
+# Secrets are never stored here: every variable below is listed by name and filled in on the Render dashboard
+# (sync: false), except SECRET_KEY, which Render generates. With no LLM key the app runs in Offline demo mode.
+services:
+  - type: web
+    name: rydeResolve
+    runtime: python
+    plan: free
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT
+    healthCheckPath: /api/health
+    envVars:
+      - key: SECRET_KEY          # signs the session cookie
+        generateValue: true
+      - key: LLM_MODE            # "llm" for Live AI; leave empty for Offline demo
+        sync: false
+      - key: LLM_API_KEY         # Gemini (or other OpenAI-compatible) key; without it the app stays offline
+        sync: false
+      - key: LLM_BASE_URL        # optional; default is Google AI Studio (Gemini)
+        sync: false
+      - key: LLM_MODEL           # optional; default gemini-3.5-flash-lite
+        sync: false
