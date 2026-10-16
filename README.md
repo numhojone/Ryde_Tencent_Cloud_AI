@@ -1,231 +1,444 @@
 # RydeResolve
 
-**Autonomous dispute resolution where every ruling is policy-checked and evidence-audited.**
+**Autonomous dispute resolution where every ruling is audited.**
 
-A multi-agent system that resolves ride-hailing disputes end to end under the **Ryde Dispute Resolution Policy v2.1**: it reads the rider's complaint in their own words, gathers evidence with tools, argues both sides, rules by numbered policy clause, applies the policy's ruling thresholds in code, and then a **deterministic safety net** refuses to act automatically when the evidence behind a ruling is too thin, whatever the model's confidence says. Safety incidents are never ruled by the AI (policy section 5).
+RydeResolve is a multi-agent system that resolves ride-hailing disputes. A rider describes a problem in plain words. Specialised agents investigate it from GPS, chat and trip data, and the system either issues a policy-based ruling or escalates to a human agent with the case already summarised.
 
-Built for the **Tencent Cloud AI CAN DO IT Hackathon, Singapore 2026** (Ryde / AI Agent Digital Native track), developed with WorkBuddy / CodeBuddy and Claude.
+Built for the Tencent Cloud AI CAN DO IT Hackathon, Singapore 2026, Ryde challenge (Digital Native track).
 
----
+The design rule behind everything: **the AI reads and explains, and policy code decides.** The language model never sets a refund amount or a ruling. Those come from Ryde Policy v2.1 implemented as code, so every outcome cites a clause and can be audited.
 
-## Story in, structured ticket out
-
-The rider types what happened in their own words. The system:
-
-1. **Matches the story to one of the rider's recent trips** (`app/trip_match.py`), in code, before any agent runs. Each trip is scored on place names in the story vs its pickup / drop-off (fuzzy, case-insensitive, with local aliases such as 樟宜机场), amounts vs its quote / fare / fee fields, distance, duration and speed vs its records, dates and times, and whether the suggested category is possible for that trip (a cancelled trip cannot be a route deviation). A trip is chosen only when its score is high enough **and** clearly ahead of the next one; otherwise the rider is shown the top 3 and picks one. Nothing is ruled without a trip.
-2. **Turns the story into a ticket in the same format as the sample tickets** (`dispute_id, trip_id, filed_by, rider_id, driver_id, dispute_type, description, filed_at, status, requested_resolution, requested_amount`), with `description` kept verbatim, plus `extracted_facts` (quoted / charged amount, claimed difference, fee type, pickup / drop-off, time mentions, driver and rider actions, safety indicators, language), `missing_info`, and a `claim_check` that compares the story's numbers with the trip's records.
-3. Rules exactly as before, from the platform's records.
-
-**The honest limit:** the story only selects the category and the trip. The ruling comes from the platform's records for that trip (GPS, chat, fare logs, app events), never from the story. `claim_check` is shown to the reader and is not passed to the agents that rule. Extracted facts are only what the story states; anything it does not say is `null`. In LLM mode the model's facts are checked against the story (numbers must appear in it) and replaced by the rule extractor if malformed. In deterministic mode the extractor is regex / keyword based: it knows the place names in the trip fixtures and common phrasings in English, Singlish, Malay, Tamil and Chinese, and will miss wording outside those.
-
-## Three-pane demo, with rider login
-
-`/` starts with a demo login ("Ryde Support"). It offers **one role only: Rider**, and lists exactly the six riders in `fixtures/profiles/riders/` as "Name (R-xxxx)", with the name each profile carries. There is no password; this is a demo login, not real authentication. The server sets a signed session cookie (HMAC with `SECRET_KEY` from `.env`, HttpOnly, SameSite=Lax) and reads the rider ID only from it, never from the browser or the story. Nobody signs in as a driver or a support agent: the support console and the driver view are demo panes inside the signed-in rider's own screen, and everything they show is that rider's own cases. The original single chat is still at `/classic` (behind the same login).
-
-| Pane | What it is |
-|---|---|
-| **Rider** (left) | The customer's app. Stage 1: the rider says what happened and confirms which of **their own** rides it was. Stage 2: the case runs. Stage 3: one plain-language outcome card (decision, amount, one-line reason, policy section), or "passed to a Ryde support agent" with the case reference and no amount promised, plus any questions from support. A **Rider \| Driver** toggle in the header switches to the driver view of the same cases. |
-| **Agent room** (middle) | The existing group chat. Idle ("Waiting for a case") until the rider confirms a ride; then intake, both advocates, judge, policy thresholds and safety net run live. |
-| **Support console** (right) | The rider's own cases that need a person: the summary card, evidence chips, "Ask about this case" (recipient Rider, Driver or Auto) and the decision bar. |
-
-**Stage 1, finding the ride** (`app/rider_match.py`, deterministic in both modes). The rider's rides are loaded first, from the session's rider ID, and nothing else is looked at. A story that names another rider, another rider's trip ID or a driver who never drove this rider gets "I can only look at trips on your account." with no hint whether it exists; "show me my rides" lists only their own. Otherwise: the intake rules pick the category (no signal: one clarifying question); the rider's rides are filtered by their ticket type (falling back to the trip evidence); the story ranks them (places, dates, weekdays, today / yesterday, time of day, amounts, driver name). One clear match gets "Is this the one?"; several close ones get a picker (date and time, route, fare, status, why it might match); none of that kind gets the rider's full list. Choosing a ride reuses that ride's ticket (dispute ID, trip, driver); the rider's story becomes the ticket's description. If the story sounds like another kind of dispute than the ride's ticket, the rider is asked before anything starts (policy 5.2 still makes any story with safety indicators a safety incident). A ride has one case: choosing it again reopens that case. `property_damage` is shown as "Property damage / cleaning fee". A rider's rides are the trips `fixtures/trip_parties.json` gives them: their 10 dataset trips plus their sample trip, if one of the six samples is theirs.
-
-**Scoping:** every tool that returns trip data (`get_trip_data`, GPS, chat, app events, fare breakdown, damage evidence, traffic) and the rider / driver profiles only return the signed-in rider's data; another rider's trip gives the same "not found" as a trip that does not exist. Every endpoint that takes a case or trip ID answers 404 for one that is not the rider's own, including the console and driver-view endpoints. In Live AI mode only the rider's own records can reach a prompt.
-
-**Driver view (no driver login, no driver chooser):** shows, for each of the rider's cases, that case's own driver as the server resolves it from the trip ("Driver: Nur Aisyah (D-4410)"), a trip card (date, pickup to drop-off), support's questions and the reply box; the toggle badges count unanswered questions on each side. The driver view shows no rider story, amount or profile, only the rider's first name.
-
-In the console, "Ask about this case" has a recipient: **Auto** (default), Rider or Driver; the driver is always the case's own driver, never chosen by name. Auto is decided in code (who the question is about, and topic words: waiting, calling, arriving, the route and why, traffic, the vehicle, drop-off for the driver; whereabouts, photos, what they saw, felt or were told for the rider); when it is unsure it picks the rider and says so, and in Live AI mode one short model call may decide instead. The person sees "You wrote", "Will be sent as", who it would go to, and the exact wording the rider or driver would receive, and can edit all of it. The case record is searched first (including driver replies); only if it has no answer is the question sent, and the case shows "Waiting for driver reply", "Waiting for rider reply" or both. A reply lands in the record, refreshes the summary and answers the original question with a citation such as "Driver reply, 21:40". The agent room only gets a neutral line ("Support asked the driver for clarification", "Driver replied"). Driver replies and rider stories are untrusted data: they never change a ruling or a recommendation, and when a model reads them they are wrapped as quoted evidence that must not be followed.
-
-Demo, end to end (offline, no key needed):
-
-1. `LLM_MODE=deterministic ./run.sh`, open http://localhost:8000, sign in as **Priya Nair (R-9001)** and pick **Offline demo**.
-2. Click **Route deviation (3 rides fit)**, then **Send**. The picker shows Priya's three route rides (20 Sep, 23 Sep, 12 Oct). Choose **23 Sep, Clementi Mall to Serangoon NEX**.
-3. The agent room runs; the 5.0 km deviation is over the 2 km limit (6.1), so Priya is told a support agent has DISP-152. The console shows the summary: AI recommendation upheld S$4.00.
-4. In the console, ask `why did the drvier go thru Bukit Timah insted of the KPE?`, **Check wording**: Auto picks **Driver**, and you see the driver's wording. **Confirm and ask**.
-5. The **Driver** side of the toggle shows a badge. Click it: "Driver: Nur Aisyah (D-4410)", the 23 Sep trip card, and the question. Reply, e.g. `There was an accident on the KPE so I went through Bukit Timah.`
-6. The console answers the original question citing "Driver reply, HH:MM". Click **Rider** to switch back, then approve, adjust or reject in the console.
-
-How the two new agents work (`app/agents/rephrase.py`, `app/agents/case_qa.py`, both on the existing `BaseAgent`):
-
-- **Rephrase agent**: fixes spelling and grammar and sets a professional tone without changing the meaning; messages to the rider get a short polite wrapper and are addressed to "you". Offline it is deterministic (a small typo dictionary, capitalisation, punctuation, a fixed template). In Live AI mode the model is called only when the text is not already clean or needs translating into Chinese; otherwise no request is spent. Everything a person sends to the rider goes through it.
-- **Case-QA agent**: a deterministic retrieval step always runs first over the recorded case only (ticket, extracted facts, every rider message, the tool outputs, both advocates' arguments). If nothing relevant is retrieved, no model is called: the answer is "not mentioned by the rider" and the question goes to the rider. Otherwise the answer is built from the retrieved snippets only, by the model in Live AI mode (its citations must match snippet sources, else the template answer is used) or by a template offline. Every answer cites its sources, e.g. "Rider message, 21:03", "Chat log, 13:24 (rider)", "GPS log".
-
-Rider-facing messages are in Chinese when the rider writes in Chinese (or the UI is set to 中文), otherwise English. Offline the rephraser cannot translate, so a Chinese rider gets the Chinese template around the agent's question as typed. Cases live in server memory (`app/case_store.py`) and are lost on restart.
-
-## How it works
-
-```
- Rider's own words (+ optional trip)
-          |
-   [ Trip match ]  story -> one of the rider's recent trips, or "which trip?" (no ruling)
-          |
-   [ Intake agent ]  route_deviation | no_show_charge | fare_dispute | property_damage | safety_incident
-          |                                                         |
-          |                                         safety indicators (any dispute type, 5.2)
-   +------+------------------+                                      v
-   |                         |   parallel          [ Safety case file ]  AI gathers evidence, suggests interim
- [ Rider advocate ]   [ Driver advocate ]                                measures (5.3), does NOT rule
-   |                         |
-   +------+------------------+
-          |
-     [ Judge ]   re-queries the tools, applies clauses by number, searches precedents,
-          |      calibrates confidence from 4 factors (policy 6.3)
-   [ Policy thresholds (section 6) ]   monetary tiers, 80% / 95% confidence, route <= 2 km, repair -> human
-          |
-   [ Safety net ]   deterministic evidence-sufficiency check per dispute type
-          |
-  Ruling JSON: upheld | partial | rejected | escalated  (+ policy_path, model_assessment, safety_net blocks)
-          |
-   AI may rule alone? --yes--> rider gets the outcome card (resolved_by_ai)
-          | no
-   [ Support console ]  summary card; case-QA agent (retrieval first, cites sources; asks the rider when the record
-                        has no answer); rephrase agent on everything sent to the rider; a person decides
-          |
-   rider gets the outcome card (resolved_by_human)
-```
-
-**Eleven read-only tools** (they return evidence, never judgments): `get_trip_data`, `get_gps_telemetry`, `get_chat_logs`, `get_app_events`, `get_rider_profile`, `get_driver_profile`, `get_policy`, `get_traffic_reference`, `get_fare_breakdown`, `get_damage_evidence`, `search_precedents`.
-
-### Policy v2.1 coverage
-
-| Dispute | Clauses implemented | Ruling logic |
-|---|---|---|
-| Route deviation | 1.2 to 1.4 | tolerance 1 km; refund = deviation km x distance rate; traffic-justified deviation exempt; driver must inform the rider |
-| No-show charge | 2.1 to 2.4 | 5 min free wait; driver must message **and** call; S$5 fee; driver no-show voids it; S$5 goodwill credit if no contact attempt |
-| Fare dispute | 3.2 to 3.4 | surge increase without notification is refunded; surge-only difference refunded in full |
-| Property damage | 4.2 to 4.4 | photos within 24 h, in-app camera, linked to trip; cleaning capped at S$50; unsupported claim reversed |
-| Safety incident | 5.1 to 5.3 | always human review; AI prepares a case file only |
-
-Section 6 thresholds are applied in `app/thresholds.py`: fare under S$10 AI final, S$10 to S$50 needs 80% confidence, over S$50 human; route deviation over 2 km needs human approval; repair claims always human; any party with a fraud flag raises the confidence bar to 95%. Confidence is calibrated in code from evidence completeness, policy clarity, precedent alignment and party credibility (weights 40/30/15/15, our own heuristic, not specified by the policy).
-
-**A policy question we flagged rather than hid.** The official route-deviation sample (DISP-001, 4.3 km deviation) has a recommended ruling of *partial S$3.44*, while policy 6.1 says deviations over 2 km go to a human. We return the AI recommendation **and** mark it as requiring human approval (`escalation_required = true`, `policy_path.human_approval_only = true`). Set `STRICT_ESCALATION=true` to make such cases `escalated` instead.
-
-### The safety net
-
-After the judge rules, `app/safety_net.py` re-fetches the evidence sources that dispute type depends on and forces `escalated` if:
-
-- **Rule A**: the judge cites fewer than 3 distinct evidence points.
-- **Rule B**: a required source is thin (no-show: GPS < 3, chat < 2, events < 2; route: GPS < 3, chat < 2; fare: no surge log or no chat; property: no damage photo record or no chat).
-
-Neither rule reads the model's confidence. The model's own verdict is kept in `model_assessment`.
+- [Live demo](#live-demo)
+- [What it does](#what-it-does)
+- [Architecture](#architecture)
+- [How a case is resolved](#how-a-case-is-resolved)
+- [The three-pane demo screen](#the-three-pane-demo-screen)
+- [Test data: riders and their disputes](#test-data-riders-and-their-disputes)
+- [Run it locally](#run-it-locally)
+- [Deploy on Render](#deploy-on-render)
+- [Testing](#testing)
+- [Project structure](#project-structure)
+- [API](#api)
+- [Security and privacy design](#security-and-privacy-design)
+- [Demo walkthrough](#demo-walkthrough)
+- [Honest limits](#honest-limits)
+- [Built with](#built-with)
 
 ## Live demo
 
-- Public link: **https://<your-service>.onrender.com** (placeholder: fill in after the first Render deploy)
-- It runs in **Offline demo** mode (deterministic agents, no API key needed) unless a Gemini key is set. To turn on Live AI, set `LLM_API_KEY` and `LLM_MODE=llm` on the Render dashboard; with only the key set, the AI mode menu offers Live AI but starts on Offline demo.
-- Sign in with one of the six demo riders (no password). Cases live in memory, so they reset whenever the service restarts or sleeps (the free plan sleeps when idle; the first request after that takes a little longer).
+- Live link: **[Try RydeResolve Live Demo](https://tencent-ryderesolve-demo.onrender.com)**
+- The public demo runs in **Offline demo mode**: the same agent pipeline with scripted language, so results are repeatable and never hit an AI quota.
+- **Live AI mode** uses Gemini for the language parts. It needs an API key and `LLM_MODE=llm` (see [Run it locally](#run-it-locally)).
+- If the hosted site was idle it may take up to a minute to wake up. Cases are kept in memory and reset when the service restarts.
+- Log in on the first page by choosing one of the demo riders (for example Wong Mei Ling). Only riders log in. Drivers do not.
 
-Deploying on Render: `render.yaml` describes one free Python web service.
+## What it does
 
-| Setting | Value |
+A rider logs in and describes a problem in their own words, for example "The driver took a really long route and I got charged more." RydeResolve then:
+
+1. Turns the story into a structured ticket and finds the matching trip, **searching only that rider's own trips**. If several trips match, it asks "which trip?" with a picker.
+2. Runs a pipeline of agents: Intake, Rider Advocate, Driver Advocate, Judge.
+3. Applies Ryde Policy v2.1 in code to compute the ruling and any refund.
+4. Runs a deterministic **Safety Net** that checks there is enough evidence to rule at all.
+5. Either shows the ruling to the rider, or tells the rider that an agent will be in touch and hands a summarised case to the support console.
+
+### Dispute categories handled
+
+| Category | Examples | Typical outcome |
+|---|---|---|
+| Route deviation | Detour, extra distance charged | Refund of excess distance, partial refund, or rejection if traffic-justified; human approval if over 2 km |
+| No-show charge | Driver cancelled, rider charged S$5 | Fee refunded, S$5 goodwill credit if the driver did not make contact, or rejected |
+| Property damage | Cleaning fee, damage claim | Claim rejected and fee reversed if evidence fails policy; repairs go to a human |
+| Safety incident | Threats, harassment | Never decided by AI. The system prepares a case file and escalates |
+
+### Key features
+
+- **Multi-agent pipeline** with distinct roles that argue both sides.
+- **Deterministic policy engine** (Ryde Policy v2.1) so amounts and rulings are not guessed by a model.
+- **Safety Net** that overrides to human review when evidence is thin.
+- **Rider-only login and strict scoping.** A rider can only see and dispute their own trips. The rider id comes from the server session, never from the browser.
+- **Trip picker** when several of a rider's trips match the story.
+- **Three-pane live demo screen**: rider app, agent room and support console on one live case.
+- **Support console**: summarised case, follow-up questions that the AI rephrases professionally, answers drawn from earlier chat when possible, otherwise the question is routed automatically to the rider or driver.
+- **Driver toggle** on the rider pane. It shows the support questions for that exact trip. There is no driver picker, so a question cannot reach the wrong person.
+- **Offline demo mode** that runs the same pipeline with no LLM.
+- **Test ground truth held out** from agents, tools, the UI and prompts.
+
+## Architecture
+
+![Architecture diagram](docs/architecture.png)
+
+*Figure 1: RydeResolve system architecture showing the frontend, FastAPI backend, multi-agent pipeline, and supporting data and models.*
+
+Four blocks, left to right:
+
+- **Front end** (static HTML and JavaScript): login, rider app, agent room, support console, driver toggle.
+- **Back end** (FastAPI): rider-only auth with a signed session cookie, story intake and trip matcher, case API with a live event stream (SSE), case store, driver routing.
+- **Multi-agent pipeline** (orchestrator): Intake agent, Rider Advocate, Driver Advocate, Judge, then the deterministic Safety Net, ending in either **auto-resolved** or **escalated to human**.
+- **Data and models**: read-only evidence tools (trips, GPS, chats, events, profiles, disputes), Ryde Policy v2.1 as code, the LLM (language only), and the held-out expected outcomes used only by tests.
+
+### What the LLM does and does not do
+
+| The LLM does | The LLM does not |
 |---|---|
-| Build | `pip install -r requirements.txt` |
-| Start | `uvicorn app.main:app --host 0.0.0.0 --port $PORT` |
-| Health check | `/api/health` |
-| Python | `.python-version` (3.14, the version the tests were run on) |
-| Variables | `SECRET_KEY` (generated by Render), `LLM_MODE`, `LLM_API_KEY`, `LLM_BASE_URL`, `LLM_MODEL` (all optional, set on the dashboard; no values are stored in the repo) |
+| Reads a rider's story and extracts the dispute type and trip clues | Set refund amounts |
+| Lets the advocate agents argue from the evidence | Decide the policy ruling |
+| Writes plain-language explanations of rulings | Rule on safety incidents |
+| Rephrases support questions professionally | See the held-out expected outcomes |
+| Answers support questions from earlier chat history | Override the Safety Net |
 
-Behind Render's HTTPS the session cookie is marked `Secure` (detected from `X-Forwarded-Proto`); on plain http locally it is not, so local runs keep working. The SSE streams send `Cache-Control: no-cache` and `X-Accel-Buffering: no`, and the case stream sends a keep-alive every 15 seconds.
+## How a case is resolved
 
-## Quick start
-
-Python 3.11+.
-
-```bash
-pip install -r requirements.txt
-./run.sh                 # http://localhost:8000
-pip install -r requirements-dev.txt && python -m pytest -q      # offline tests
+```
+Rider story
+   |
+   v
+Story intake + trip matcher  (searches only this rider's trips; asks "which trip?" if several match)
+   |
+   v
+Intake agent   ->  structures the dispute
+   |
+   +--> Rider Advocate   (argues the rider's side from GPS, chat, events)
+   +--> Driver Advocate  (argues the driver's side from the same evidence)
+   |
+   v
+Judge   (weighs both sides; amounts and rulings come from policy code)
+   |
+   v
+Safety Net  (deterministic)  ->  thin evidence goes to a human
+   |
+   +--> Auto-resolved: refund / partial refund / reject, with the clause cited
+   +--> Escalated: summarised case in the support console, message to the rider
 ```
 
-With no API key it runs in **deterministic mode** (scripted agents, same tools, same policy maths). To use a real model:
+### Ryde Policy v2.1 as implemented
 
-```bash
-cp .env.example .env     # set LLM_MODE=llm and LLM_API_KEY=... (and a random SECRET_KEY for the login cookie)
+| Area | Rule (clause) |
+|---|---|
+| Route deviation | Driver should inform the rider (1.2). Refund is the excess distance times S$0.80 per km (1.3), with a 1 km tolerance. A traffic justification is considered (1.4). |
+| No-show | 5 minutes of free waiting (2.1). S$5 no-show fee (2.2). The driver must message and call (2.3). If the driver is late the fee is void (2.4). S$5 goodwill credit if the driver made no contact. |
+| Fare dispute | Surge and fare rules (3.x). |
+| Property damage | Evidence must be an in-app photo within 24 hours, linked to the trip (4.2). Cleaning is capped at S$50 (4.3). Repairs need a quote and a human. An unsupported claim is reversed (4.4). |
+| Safety | The AI may only prepare a case file. A human decides (5.x). |
+| Thresholds | A deviation over 2 km needs human approval. Repair claims go to a human. A fraud flag raises the confidence bar to 95% (section 6). Anything under 0.6 confidence goes to human review. |
+
+### The Safety Net
+
+A deterministic check that runs after the Judge. It can only push a case toward a human, never loosen a decision.
+
+- **Rule A:** fewer than 3 distinct evidence points.
+- **Rule B:** near-empty evidence sources for the dispute type (route: GPS and chat; no-show: GPS, chat and events; property: photos and chat).
+
+### When the app escalates
+
+Besides the Safety Net, a case goes to a human when it is a safety incident, a repair claim, a deviation over 2 km, the account has a fraud flag (95% confidence bar), or the confidence is below 0.6. When the app escalates a case, it still records the policy recommendation and the model assessment, so the human sees what the policy engine would have ruled.
+
+## The three-pane demo screen
+
+For demo purposes the screen is split into three panels that all work on one live case at the same time. This simulates how the front end and back end work for different users.
+
+| Pane | Who it represents | What it shows |
+|---|---|---|
+| Left: Rider app | The rider | Chat, trip picker, the ruling, or "an agent will be in touch". A **Rider / Driver toggle** shows the support questions for that trip. |
+| Middle: Agent room | The back end | Every agent step, streamed live. |
+| Right: Support console | A human agent | A consolidated case summary. The human can ask follow-up questions. |
+
+Support questions are rephrased by the AI so they are professional and free of spelling mistakes. If the AI has the answer from the earlier chat, it answers. If not, it asks the right person automatically (the rider, or the driver of that exact trip), and the human evaluates from there.
+
+## Test data: riders and their disputes
+
+The data is a **60-ticket synthetic dataset** in the organisers' file format, plus the earlier sample cases (DISP-001 to DISP-006) kept as regression tests. We created multiple rider accounts to show different kinds of disputes, test robustness and simulate real life.
+
+- Each of the 6 riders has 10 tickets.
+- Each rider has at least 2 tickets in every category.
+- Ticket ids, riders and drivers follow the team's 60-ticket file. **The trip evidence (GPS, chat, events, fares) is synthetic.**
+- Ruling "expected outcomes" are computed from Ryde Policy v2.1 by `scripts/build_dataset60.py`, independently of the app. They are used only by tests.
+- Profile figures are as of 2026-10-15.
+
+### Riders at a glance
+
+| Rider | ID | Tickets | Route deviation | No-show | Property damage | Safety | Fraud flags |
+|---|---|---|---|---|---|---|---|
+| Wong Mei Ling | R-3312 | 10 | 3 | 3 | 2 | 2 | 0 |
+| Sarah Tan | R-4521 | 10 | 2 | 3 | 3 | 2 | 0 |
+| Ahmad Faiz | R-5120 | 10 | 2 | 2 | 3 | 3 | 0 |
+| Chloe Ng | R-7001 | 10 | 3 | 3 | 2 | 2 | 0 |
+| Daniel Lim | R-7823 | 10 | 2 | 2 | 3 | 3 | 1 |
+| Priya Nair | R-9001 | 10 | 3 | 2 | 2 | 3 | 0 |
+
+Ticket totals by category: Route deviation 15, No-show 15, Property damage 15, Safety 15.
+
+### Drivers
+
+| Driver | ID | Rating |
+|---|---|---|
+| Rajesh Kumar | D-1187 | 4.7 |
+| Lim Wei Ming | D-2398 | 4.9 |
+| Tan Boon Huat | D-3456 | 4.8 |
+| Nur Aisyah | D-4410 | 4.6 |
+| Hafiz Rahman | D-6021 | 4.2 |
+| Ong Kai Wen | D-7002 | 4.7 |
+
+### Each rider and the disputes they relate to
+
+The "expected outcome" is our reading of Ryde Policy v2.1 for that ticket. "Rider upheld" means the rider's claim is accepted. Where the app escalates a case because of a safety incident, a repair claim, a deviation over 2 km, or a fraud flag, the outcome says so.
+
+### Wong Mei Ling (R-3312)
+
+Account age 413 days, 112 trips, rating 4.8, no fraud flags. Profile figures as of 2026-10-15.
+
+| Ticket | Category | Trip (date, route) | Driver | Expected outcome |
+|---|---|---|---|---|
+| DISP-101 | Route deviation | 18 Sep, one-north to East Coast Park (TRIP-2026-2001) | Rajesh Kumar (D-1187) | Partial refund (S$2.48), needs human approval (deviation over 2 km) |
+| DISP-102 | Route deviation | 20 Sep, Jurong East MRT to Raffles Place MRT (TRIP-2026-2002) | Lim Wei Ming (D-2398) | Rider upheld (S$1.36) |
+| DISP-103 | No-show charge | 23 Sep, Clementi Mall to Ang Mo Kio Hub (TRIP-2026-2003) | Tan Boon Huat (D-3456) | Rider upheld (S$5.00) |
+| DISP-104 | No-show charge | 26 Sep, Marina Bay Sands to Tiong Bahru Plaza (TRIP-2026-2004) | Nur Aisyah (D-4410) | Rejected |
+| DISP-105 | Property damage | 28 Sep, Ang Mo Kio Hub to Orchard MRT (TRIP-2026-2005) | Hafiz Rahman (D-6021) | Rejected |
+| DISP-106 | Property damage | 1 Oct, Bedok Mall to East Coast Park (TRIP-2026-2006) | Ong Kai Wen (D-7002) | Rider upheld (S$30.00) |
+| DISP-107 | Safety incident | 4 Oct, Clementi Mall to Kallang Wave Mall (TRIP-2026-2007) | Rajesh Kumar (D-1187) | Escalated to human (safety incident) |
+| DISP-108 | Safety incident | 6 Oct, Orchard Central to Holland Village (TRIP-2026-2008) | Lim Wei Ming (D-2398) | Escalated to human (safety incident) |
+| DISP-109 | Route deviation | 9 Oct, Changi Business Park to East Coast Park (TRIP-2026-2009) | Tan Boon Huat (D-3456) | Escalated to human (thin evidence) |
+| DISP-110 | No-show charge | 12 Oct, VivoCity to one-north (TRIP-2026-2010) | Nur Aisyah (D-4410) | Rider upheld (S$5.00 + S$5.00 goodwill) |
+
+### Sarah Tan (R-4521)
+
+Account age 573 days, 203 trips, rating 4.8, no fraud flags. Profile figures as of 2026-10-15.
+
+| Ticket | Category | Trip (date, route) | Driver | Expected outcome |
+|---|---|---|---|---|
+| DISP-111 | Route deviation | 18 Sep, Tiong Bahru Plaza to Ang Mo Kio Hub (TRIP-2026-2011) | Hafiz Rahman (D-6021) | Partial refund (S$1.36) |
+| DISP-112 | Route deviation | 21 Sep, Orchard MRT to Pasir Ris Mall (TRIP-2026-2012) | Ong Kai Wen (D-7002) | Rejected |
+| DISP-113 | No-show charge | 23 Sep, Paya Lebar Quarter to Changi Airport T3 (TRIP-2026-2013) | Rajesh Kumar (D-1187) | Rider upheld (S$5.00 + S$5.00 goodwill) |
+| DISP-114 | No-show charge | 26 Sep, HarbourFront Centre to Toa Payoh HDB Hub (TRIP-2026-2014) | Lim Wei Ming (D-2398) | Rider upheld (S$5.00) |
+| DISP-115 | Property damage | 29 Sep, Bugis Junction to Woodlands MRT (TRIP-2026-2015) | Tan Boon Huat (D-3456) | Rider upheld (S$25.00) |
+| DISP-116 | Property damage | 2 Oct, Bedok Mall to Changi Airport T3 (TRIP-2026-2016) | Nur Aisyah (D-4410) | Rider upheld (S$20.00) |
+| DISP-117 | Safety incident | 4 Oct, Punggol Waterway Point to Kallang Wave Mall (TRIP-2026-2017) | Hafiz Rahman (D-6021) | Escalated to human (safety incident) |
+| DISP-118 | Safety incident | 7 Oct, Ang Mo Kio Hub to Clementi Mall (TRIP-2026-2018) | Ong Kai Wen (D-7002) | Escalated to human (safety incident) |
+| DISP-119 | Property damage | 10 Oct, Sengkang Compass One to Changi Business Park (TRIP-2026-2019) | Rajesh Kumar (D-1187) | Rejected, needs human approval (repair claim) |
+| DISP-120 | No-show charge | 12 Oct, Tanjong Pagar Centre to Paya Lebar Quarter (TRIP-2026-2020) | Lim Wei Ming (D-2398) | Rider upheld (S$5.00) |
+
+### Ahmad Faiz (R-5120)
+
+Account age 330 days, 74 trips, rating 4.9, no fraud flags. Profile figures as of 2026-10-15.
+
+| Ticket | Category | Trip (date, route) | Driver | Expected outcome |
+|---|---|---|---|---|
+| DISP-121 | Route deviation | 19 Sep, Buona Vista MRT to Toa Payoh HDB Hub (TRIP-2026-2021) | Tan Boon Huat (D-3456) | Rejected |
+| DISP-122 | Route deviation | 21 Sep, East Coast Park to Buona Vista MRT (TRIP-2026-2022) | Nur Aisyah (D-4410) | Rejected, needs human approval (deviation over 2 km) |
+| DISP-123 | No-show charge | 24 Sep, Novena Square to Changi Business Park (TRIP-2026-2023) | Hafiz Rahman (D-6021) | Escalated to human (thin evidence) |
+| DISP-124 | No-show charge | 27 Sep, Kallang Wave Mall to Bishan Junction 8 (TRIP-2026-2024) | Ong Kai Wen (D-7002) | Rider upheld (S$5.00) |
+| DISP-125 | Property damage | 29 Sep, Jurong East MRT to Orchard Central (TRIP-2026-2025) | Rajesh Kumar (D-1187) | Escalated to human (thin evidence) |
+| DISP-126 | Property damage | 2 Oct, Pasir Ris Mall to Chinatown Point (TRIP-2026-2026) | Lim Wei Ming (D-2398) | Rejected, needs human approval (repair claim) |
+| DISP-127 | Safety incident | 5 Oct, Bishan Junction 8 to Clarke Quay (TRIP-2026-2027) | Tan Boon Huat (D-3456) | Escalated to human (safety incident) |
+| DISP-128 | Safety incident | 7 Oct, Bugis Junction to Sengkang Compass One (TRIP-2026-2028) | Nur Aisyah (D-4410) | Escalated to human (safety incident) |
+| DISP-129 | Property damage | 10 Oct, HarbourFront Centre to Orchard Central (TRIP-2026-2029) | Hafiz Rahman (D-6021) | Rider upheld (S$30.00) |
+| DISP-130 | Safety incident | 13 Oct, Lot One Choa Chu Kang to Sengkang Compass One (TRIP-2026-2030) | Ong Kai Wen (D-7002) | Escalated to human (safety incident) |
+
+### Chloe Ng (R-7001)
+
+Account age 38 days, 18 trips, rating 3.9, no fraud flags. Profile figures as of 2026-10-15.
+
+| Ticket | Category | Trip (date, route) | Driver | Expected outcome |
+|---|---|---|---|---|
+| DISP-131 | Route deviation | 19 Sep, East Coast Park to Changi Business Park (TRIP-2026-2031) | Rajesh Kumar (D-1187) | Partial refund (S$1.36) |
+| DISP-132 | Route deviation | 22 Sep, Punggol Waterway Point to Changi Business Park (TRIP-2026-2032) | Lim Wei Ming (D-2398) | Escalated to human (thin evidence) |
+| DISP-133 | No-show charge | 24 Sep, Bishan Junction 8 to Novena Square (TRIP-2026-2033) | Tan Boon Huat (D-3456) | Rider upheld (S$5.00) |
+| DISP-134 | No-show charge | 27 Sep, Ang Mo Kio Hub to Yishun Northpoint (TRIP-2026-2034) | Nur Aisyah (D-4410) | Escalated to human (thin evidence) |
+| DISP-135 | Property damage | 30 Sep, Bedok Mall to Paya Lebar Quarter (TRIP-2026-2035) | Hafiz Rahman (D-6021) | Rejected |
+| DISP-136 | Property damage | 3 Oct, Tampines Mall to NUS Kent Ridge (TRIP-2026-2036) | Ong Kai Wen (D-7002) | Rider upheld (S$30.00) |
+| DISP-137 | Safety incident | 5 Oct, Novena Square to Clementi Mall (TRIP-2026-2037) | Rajesh Kumar (D-1187) | Escalated to human (safety incident) |
+| DISP-138 | Safety incident | 8 Oct, Lot One Choa Chu Kang to Novena Square (TRIP-2026-2038) | Lim Wei Ming (D-2398) | Escalated to human (safety incident) |
+| DISP-139 | Route deviation | 11 Oct, one-north to Changi Business Park (TRIP-2026-2039) | Tan Boon Huat (D-3456) | Partial refund (S$1.04) |
+| DISP-140 | No-show charge | 13 Oct, Great World to Tampines Mall (TRIP-2026-2040) | Nur Aisyah (D-4410) | Escalated to human (thin evidence) |
+
+### Daniel Lim (R-7823)
+
+Account age 242 days, 50 trips, rating 3.9, 1 fraud flag on the account (raises the confidence bar to 95%, so the app often escalates these tickets). Profile figures as of 2026-10-15.
+
+| Ticket | Category | Trip (date, route) | Driver | Expected outcome |
+|---|---|---|---|---|
+| DISP-141 | Route deviation | 20 Sep, Holland Village to Suntec City (TRIP-2026-2041) | Hafiz Rahman (D-6021) | Rider upheld (S$1.04) |
+| DISP-142 | Route deviation | 22 Sep, Orchard Central to Pasir Ris Mall (TRIP-2026-2042) | Ong Kai Wen (D-7002) | Rider upheld (S$3.04), needs human approval (deviation over 2 km) |
+| DISP-143 | No-show charge | 25 Sep, Changi Airport T3 to East Coast Park (TRIP-2026-2043) | Rajesh Kumar (D-1187) | Rider upheld (S$5.00) |
+| DISP-144 | No-show charge | 28 Sep, Tanjong Pagar Centre to Tampines Mall (TRIP-2026-2044) | Lim Wei Ming (D-2398) | Rider upheld (S$5.00) |
+| DISP-145 | Property damage | 30 Sep, Buona Vista MRT to Yishun Northpoint (TRIP-2026-2045) | Tan Boon Huat (D-3456) | Rejected |
+| DISP-146 | Property damage | 3 Oct, Jurong East MRT to Orchard Central (TRIP-2026-2046) | Nur Aisyah (D-4410) | Rider upheld (S$140.00), needs human approval (repair claim) |
+| DISP-147 | Safety incident | 6 Oct, Changi Business Park to Sengkang Compass One (TRIP-2026-2047) | Hafiz Rahman (D-6021) | Escalated to human (safety incident) |
+| DISP-148 | Safety incident | 8 Oct, Gardens by the Bay to Pasir Ris Mall (TRIP-2026-2048) | Ong Kai Wen (D-7002) | Escalated to human (safety incident) |
+| DISP-149 | Property damage | 11 Oct, Tampines Mall to one-north (TRIP-2026-2049) | Rajesh Kumar (D-1187) | Rider upheld (S$35.00) |
+| DISP-150 | Safety incident | 14 Oct, Great World to Paya Lebar Quarter (TRIP-2026-2050) | Lim Wei Ming (D-2398) | Escalated to human (safety incident) |
+
+### Priya Nair (R-9001)
+
+Account age 76 days, 23 trips, rating 4.5, no fraud flags. Profile figures as of 2026-10-15.
+
+| Ticket | Category | Trip (date, route) | Driver | Expected outcome |
+|---|---|---|---|---|
+| DISP-151 | Route deviation | 20 Sep, Ang Mo Kio Hub to HarbourFront Centre (TRIP-2026-2051) | Tan Boon Huat (D-3456) | Partial refund (S$2.24), needs human approval (deviation over 2 km) |
+| DISP-152 | Route deviation | 23 Sep, Clementi Mall to Serangoon NEX (TRIP-2026-2052) | Nur Aisyah (D-4410) | Rider upheld (S$4.00), needs human approval (deviation over 2 km) |
+| DISP-153 | No-show charge | 25 Sep, Tanjong Pagar Centre to Buona Vista MRT (TRIP-2026-2053) | Hafiz Rahman (D-6021) | Rejected |
+| DISP-154 | No-show charge | 28 Sep, Tiong Bahru Plaza to Toa Payoh HDB Hub (TRIP-2026-2054) | Ong Kai Wen (D-7002) | Rejected |
+| DISP-155 | Property damage | 1 Oct, Bishan Junction 8 to Holland Village (TRIP-2026-2055) | Rajesh Kumar (D-1187) | Rejected |
+| DISP-156 | Property damage | 4 Oct, Orchard Central to one-north (TRIP-2026-2056) | Lim Wei Ming (D-2398) | Rejected |
+| DISP-157 | Safety incident | 6 Oct, Yishun Northpoint to Lot One Choa Chu Kang (TRIP-2026-2057) | Tan Boon Huat (D-3456) | Escalated to human (safety incident) |
+| DISP-158 | Safety incident | 9 Oct, Orchard Central to Tampines Mall (TRIP-2026-2058) | Nur Aisyah (D-4410) | Escalated to human (safety incident) |
+| DISP-159 | Route deviation | 12 Oct, Kovan Hub to Marina Bay Sands (TRIP-2026-2059) | Hafiz Rahman (D-6021) | Rejected, needs human approval (deviation over 2 km) |
+| DISP-160 | Safety incident | 14 Oct, Bedok Mall to Tiong Bahru Plaza (TRIP-2026-2060) | Ong Kai Wen (D-7002) | Escalated to human (safety incident) |
+
+
+### Story files
+
+`fixtures/stories/stories.json` holds 180 rider stories (3 per ticket: precise, vague and casual Singlish), plus 9 negative stories that name another rider's trip. They are used by tests and for demos. The negative stories check that a rider cannot reach another rider's ride.
+
+### Regenerating the dataset
+
+```
+python3 -I scripts/build_dataset60.py
+```
+
+The generator is deterministic (fixed seeds), so reruns produce identical files.
+
+## Run it locally
+
+Requirements: Python 3.12 or newer (tested on 3.14).
+
+```
+git clone https://github.com/numhojone/Ryde_Tencent_Cloud_AI.git
+cd Ryde_Tencent_Cloud_AI
+python3 -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
+cp .env.example .env
 ./run.sh
 ```
 
-Any OpenAI-compatible endpoint works (default: Google AI Studio, Gemini; Tencent Hunyuan via `LLM_BASE_URL` / `LLM_MODEL`). **Never commit `.env`**; it is git-ignored. In LLM mode the model reasons freely, and the section 6 thresholds are still enforced in code from the tool data; the judge's output is cross-checked against the deterministic policy computation (`policy_check`).
+Then open http://localhost:8000 and log in as a demo rider.
 
-## Using it
+### Environment variables
 
-This section describes the classic single-chat UI at `/classic` (sign in first at `/`). It only offers the signed-in rider's own rides and tickets.
+| Variable | Purpose |
+|---|---|
+| `LLM_MODE` | Leave blank (or unset) for **Offline demo mode**. Set to `llm` for **Live AI** (Gemini). |
+| `LLM_API_KEY` | Your Gemini API key. Keep it in `.env`, which is git-ignored. Never commit it. |
+| `LLM_BASE_URL` | OpenAI-compatible endpoint. For Gemini, use Google's OpenAI-compatible URL. |
+| `LLM_MODEL` | Model name, for example a Gemini flash-lite model. |
+| `SECRET_KEY` | Signs the session cookie. Generated automatically on Render. |
+| `PORT` | Server port. Defaults to 8000. |
 
-- Write a complaint in your own words (English, Singlish, Malay, Tamil or Chinese) and press **Submit and rule**. The trip selector defaults to **Auto-detect from my story**; you can still pick a trip by hand. You never choose the dispute type. If the story does not point to one trip, the intake agent asks which one and offers the candidates as buttons.
-- **EN | 中文** toggle switches the interface and the agents' output language; rulings, clause numbers and amounts are identical in both.
-- The dropdown replays six preset tickets: DISP-001 route deviation, DISP-002 no-show, DISP-003 fare dispute (all from the official Ryde datasets), plus DISP-004 property damage, DISP-005 safety incident and DISP-006 sparse evidence (synthetic).
+Live AI mode needs both `LLM_API_KEY` and `LLM_MODE=llm`. With only a key set, the mode menu offers Live AI but starts in Offline demo.
+
+Free AI quotas are small (roughly 20 requests per day on a free Gemini tier, and one case uses several). Offline demo is recommended for repeatable runs.
+
+## Deploy on Render
+
+The repo includes `render.yaml`.
+
+1. Push the repo to GitHub.
+2. On render.com sign in with GitHub, choose New, then Blueprint, and pick this repo.
+3. Leave the `LLM_*` variables blank to run in Offline demo mode, or add them in the dashboard for Live AI.
+4. Start command: `uvicorn app.main:app --host 0.0.0.0 --port $PORT`. The health check path is `/api/health`.
+
+The free plan sleeps when idle, and cases are held in memory, so they reset on restart. This is fine for a demo.
+
+## Testing
+
+```
+pip install -r requirements-dev.txt
+pytest -q
+```
+
+More than 360 automated tests cover:
+
+- Rulings for all 60 tickets against the expected outcomes, in English and Chinese.
+- Rider isolation: a rider can never see or dispute another rider's trip.
+- Ground-truth leakage: expected outcomes never reach agents, tools, the UI or prompts.
+- Story intake: precise, vague and Singlish stories, and negative stories.
+- Login, driver toggle, the three-pane flow and the safety rules (safety cases are never ruled by AI).
+- Dataset shape and consistency.
+
+## Project structure
+
+```
+app/
+  main.py              FastAPI app, routes, SSE stream
+  auth.py              rider-only demo login, signed session cookie
+  config.py            settings from environment variables
+  llm.py               LLM client (Gemini through an OpenAI-compatible API) and Offline mode
+  orchestrator.py      runs the agent pipeline for a case
+  case_store.py        in-memory cases, messages, threads
+  rider_match.py       finds the rider's matching trip, scoped to the rider
+  agents/              Intake, Rider Advocate, Driver Advocate, Judge, story intake, Safety Net, policy thresholds
+  tools/fixtures.py    read-only evidence tools over the fixture files
+static/                login page and the three-pane front end
+fixtures/
+  disputes/            tickets
+  trips/               trips with GPS, chats, events and fares
+  profiles/            rider and driver profiles
+  expected/            held-out expected outcomes (tests only)
+  stories/             rider stories for tests and demos
+  trip_parties.json    which rider and driver belong to each trip
+scripts/
+  build_dataset60.py   deterministic generator for the 60-ticket dataset
+  smoke_three_pane.py  smoke test for the three-pane flow
+tests/                 automated tests
+render.yaml            Render deployment settings
+```
 
 ## API
 
 | Endpoint | Purpose |
 |---|---|
-| `GET /api/health` | mode, provider, model |
-| `GET /api/disputes`, `GET /api/trips` | preset tickets, trips a complaint can be filed against |
-| `GET /api/file/stream?complaint=&trip_id=&lang=en\|zh&mode=` | free-text complaint, SSE stream of every step. `trip_id` optional: empty or `auto` matches it from the story; an explicit one skips matching |
-| `POST /api/file` | same, synchronous; returns `status: trip_unresolved` with candidates and no ruling when no trip matches |
-| `GET /api/resolve/{id}/stream`, `POST /api/resolve/{id}` | replay a preset ticket |
-| `GET /api/auth/accounts`, `POST /api/auth/login` `{rider_id}`, `POST /api/auth/logout`, `GET /api/auth/me` | demo login, riders only (no password); sets / clears the signed session cookie; `me` carries the quick-fill stories built from the rider's own rides |
-| `POST /api/rider/find-trip` `{story, lang?}` | stage 1: `state` foreign / list / clarify / none / confirm / pick, with trip cards from the signed-in rider's rides only |
-| `POST /api/cases` `{story, trip_id, confirm_type?, mode?, lang?}` | start (or reopen) the case on one of the rider's rides; 404 for anyone else's; 409 with `mismatch` when the story's type differs from the ride's ticket |
-| `GET /api/cases`, `GET /api/cases/{id}` | the signed-in rider's own cases; someone else's case is 404 |
-| `GET /api/cases/{id}/events` | one SSE stream per case; every event carries `pane`: `rider`, `room`, `human` or `case` (status). The tag is `pane` because orchestrator events already use `role` for the agent |
-| `POST /api/cases/{id}/rider-message` `{text, trip_id?}` | the rider's reply (or which trip it was) |
-| `POST /api/cases/{id}/human/rephrase` `{text, purpose: qa\|rider\|driver\|note}` | "You wrote" / "Will be sent as" |
-| `POST /api/cases/{id}/human/ask` `{question, original?, recipient: auto\|rider\|driver, party_text?}` | case-QA answer from the record, or the question goes to the rider or the driver |
-| `POST /api/cases/{id}/human/route` `{question}` | who Auto would send the question to, and why |
-| `GET /api/driver-view`, `POST /api/driver-view/reply` `{case_id, text, question_id?}` | the driver view of the signed-in rider's own cases (404 for any other case) |
-| `POST /api/cases/{id}/human/decision` `{action: approve\|adjust\|reject\|request_info, amount?, note?}` | the person's decision (adjust needs an amount and a note) |
+| `GET /api/auth/accounts` | List demo rider accounts for the login page |
+| `POST /api/auth/login` | Log in as a rider |
+| `GET /api/auth/me` | Current session |
+| `POST /api/auth/logout` | Log out |
+| `GET /api/health` | Health check |
+| `POST /api/rider/find-trip` | Match a story to the rider's own trips |
+| `GET /api/cases` | The signed-in rider's cases |
+| `POST /api/cases` | Create a case from a story and a chosen trip |
+| `GET /api/cases/{id}/events` | Live event stream (SSE) for a case |
+| `GET /api/driver-view` | The driver-side view of questions for the rider's trip |
 
-All endpoints except `/api/health` and the login ones need a rider session (401 otherwise). The console (`human/*`) and driver-view endpoints work on the signed-in rider's own cases only (404 otherwise).
+## Security and privacy design
 
-Free-text SSE events (existing ones unchanged): `trip_matched {trip_id, route, confidence, reasons, candidates}`, `trip_unresolved {message, candidates}` (followed by `done`, no ruling), `ticket_filed {ticket}`.
-Case statuses: `intake`, `in_review`, `resolved_by_ai`, `with_agent`, `waiting_for_rider`, `waiting_for_driver`, `waiting_for_both`, `resolved_by_human`.
+- **Rider-only login.** The rider id lives in the server session. The browser is never trusted to say who it is.
+- **Strict scoping.** Every trip search and case lookup is limited to the signed-in rider's own trips. Negative tests check that another rider's trip cannot appear.
+- **Held-out ground truth.** Expected outcomes live in `fixtures/expected/` and are read only by tests.
+- **No secrets in the repo.** API keys go in `.env`, which is git-ignored. The only environment file committed is `.env.example` with names and no values.
+- **Safety incidents are never decided by AI.** They are escalated with a prepared case file.
 
-## Data
+## Demo walkthrough
 
-`fixtures/` holds trips, profiles, `policies/policy_v2_1.json`, `precedents.json` and tickets. Ground-truth outcomes for tests live in `fixtures/expected/` and are never returned by any tool or shown in the UI; tool paths outside the readable folders are refused.
+Log in as Wong Mei Ling (R-3312). Offline demo mode is recommended.
 
-### Test data
+| Case | Type this | What it shows |
+|---|---|---|
+| Route deviation (DISP-101) | `The driver took a really long route and I got charged more.` then pick one-north to East Coast Park, 18 Sep | Trip picker, agents arguing, partial refund of S$2.48, needs human approval (over 2 km), support console, question rephrase, driver toggle |
+| No-show (DISP-110) | `I had a pickup at VivoCity on 12 October at 16:15 but the driver cancelled and I was charged a S$5 no-show fee. Please refund it.` | Resolved without a human: S$5 refunded plus S$5 goodwill credit |
+| Property damage (DISP-106) | `After my ride from Bedok Mall to East Coast Park on 1 October I was charged a S$30 cleaning fee. I did not cause any damage. Please reverse it.` | Photo not taken in the app, so the fee is reversed (policy 4.4) |
+| Safety (DISP-107) | `On 4 October on my ride from Clementi Mall to Kallang Wave Mall, the driver shouted at me and threatened to drop me off on the road. I want this reviewed.` | No AI ruling, case file prepared, human takes over |
+| Thin evidence (DISP-109) | `On 9 October I took a Ryde from Changi Business Park to East Coast Park and paid S$16.88 when the estimate was S$14.24. The driver went a much longer way. Please refund the extra.` | Safety Net overrides and sends it to a human |
 
-- **3 official samples** from the official Ryde datasets, used as provided: DISP-001 route deviation, DISP-002 no-show, DISP-003 fare dispute.
-- **3 earlier synthetic samples** written for this project: DISP-004 cleaning claim, DISP-005 safety incident, DISP-006 thin evidence. Expected offline results for the six samples: DISP-001 partial S$3.44 (human approval required), DISP-002 rejected, DISP-003 upheld S$4.50, DISP-004 upheld S$35, DISP-005 escalated, DISP-006 escalated.
-- **60 tickets, DISP-101 to DISP-160.** Their dispute IDs, trip IDs, riders, drivers (IDs and names), dispute types and rider-driver pairs come from the team's 60-ticket dataset (its cleaning-fee category is our `property_damage`, shown as "Property damage / cleaning fee"). **All trip details and evidence are synthetic**: dates, places, GPS, chats, fares, photos, repair quotes, traffic incidents, the riders' stories and the profile statistics, generated by `scripts/build_dataset60.py` (fixed seeds; it writes to `build/dataset60/`, which is not committed). The files sit with the samples in `fixtures/disputes/`, `fixtures/trips/` and `fixtures/expected/`; `fixtures/trip_parties.json` maps all 66 trips to their rider and driver, and the 12 profiles in `fixtures/profiles/` carry the names the UI shows. Every rider has 10 of these tickets, at least 2 per type (15 per type), and 30 of the 60 must reach a person by a deterministic rule. `fixtures/stories/stories.json` holds 180 free-text stories (3 per ticket) and 9 that name another rider's trip, for testing the story-to-ticket flow; it is test data only.
-- **The expected outcomes in `fixtures/expected/` are our reading of Ryde Policy v2.1**, computed from the policy and each scenario's parameters by the build script, not by calling the app, and not answers from the organisers. Ground truth is never readable by a tool and never reaches an event, the UI or a model prompt (`tests/test_leakage60.py`).
+## Honest limits
 
-## Repository layout
+- The ticket ids, riders and drivers follow the organisers' format, but **the evidence (GPS, chats, events, fares) is synthetic**.
+- Expected outcomes are **our reading of Ryde Policy v2.1**, not an official answer key.
+- The Live AI path has been tested less than Offline demo mode.
+- Cases are stored in memory, so they reset on restart. There is no database.
+- Login is a demo login for riders, not production authentication.
+- We have not measured results on real traffic, so there are no real-world time or cost savings figures.
 
-```
-app/main.py            FastAPI + SSE; / is the three-pane demo, /classic the original chat
-app/case_store.py      in-memory cases for the three-pane demo, event fan-out by pane, human decisions
-app/case_views.py      rider outcome card, support-console summary (built from the recorded case)
-app/auth.py            demo login: signed session cookie, rider / support roles
-app/rider_match.py     stage 1: which of the signed-in rider's trips a story is about
-app/agents/question_router.py  Auto recipient for support questions (rider or driver)
-app/orchestrator.py    trip match -> intake -> advocates (parallel) -> judge -> thresholds -> safety net; safety incident path
-app/trip_match.py      story -> trip scoring, claim_check (story vs records, informational)
-app/extract.py         rule-based story -> extracted_facts, missing_info
-app/agents/            base loop, intake, advocates, judge, cases.py, analysis.py (deterministic policy facts),
-                       rephrase.py and case_qa.py (support console)
-app/thresholds.py      policy section 6 in code
-app/safety_net.py      evidence-sufficiency check per dispute type
-app/tools/             11 tools + OpenAI-style schemas
-static/                login.html/js/css; three.html/js/css (three-pane demo, embeds app.js for the agent room); index.html (classic)
-scripts/smoke_three_pane.py  browser smoke test (Playwright): login, stage 1, escalation, support queue
-scripts/build_dataset60.py  regenerates the 60 dataset tickets, trips, profiles, expected outcomes and stories (into build/dataset60/)
-fixtures/stories/      free-text test stories for the 60 tickets (test data only)
-fixtures/              trips, profiles, policy, precedents, tickets, expected (tests only)
-tests/                 pytest suite (offline)
-architecture.svg/png   diagram
-PROJECT_DESCRIPTION.md submission write-up
-```
+## Built with
 
-## Honest limitations
+- **WorkBuddy / CodeBuddy** (Tencent Cloud): **[ADD: what you used it for]**
+- **Claude Code**: **[ADD: what you used it for, or remove this line]**
+- **FastAPI** and **Uvicorn** for the backend, plain HTML and JavaScript for the front end
+- **Gemini** through an OpenAI-compatible API for the language parts
 
-- The real-LLM path has not been re-run since the Policy v2.1 rebuild (it was verified on the earlier synthetic version). Offline results above are verified; treat live-model behaviour on the new dispute types as untested until you run it with a key.
-- Fixture data only: no live GPS, payment or refund execution. Rulings are decided, not executed.
-- Deterministic mode uses keyword rules for intake and fact extraction; arbitrary phrasing relies on the real LLM. Trip matching only knows the six fixture trips (all treated as "the rider's recent trips") and their place names plus a small alias list.
-- The LLM path of the new ticket extraction has not been run against a live model; its validation and fallback are covered by offline tests only.
-- "At the pickup location" has no distance in the policy; we use 100 m as an operational definition. The confidence weights are our own.
-- Free-tier LLM quotas can return 429; the UI offers the deterministic fallback.
-- The login is a demo: pick one of the six dataset riders, no password. The session cookie is signed but not `Secure` (the demo runs on plain http); without a `SECRET_KEY` in `.env` a random key is used and sessions end when the server restarts. Stage 1 matching is rule-based in both modes (the model is not used to classify or extract there). "Today" / "yesterday" are read against the real date, so they do not match the September 2026 fixture trips.
-- The support console and the driver view are demo panes inside the rider's own screen: in this demo the signed-in rider can see and drive their own case's console and driver view. A real deployment would put them behind separate staff and driver accounts. Offline, a question to a Chinese-speaking party keeps the agent's wording inside the Chinese template (no translation). Auto routing is keyword-based; the person always sees and can change the recipient before anything is sent. Questions and replies live in memory with the case.
-- Three-pane demo: the Live AI paths of the rephrase and case-QA agents have not been run against a live model (to save the free quota); their fallbacks, citation check and "no retrieval, no model call" rule are covered by offline tests. Offline answers are the retrieved snippets in a template, not prose. Retrieval is keyword and topic based, so a question worded unlike the record can miss and be sent to the rider instead. Cases are in memory, single process.
+## Team
+
+**[ADD: team name and members]**
+
+## License
+
+**[ADD: license, or remove this section]**
